@@ -1,0 +1,52 @@
+# Node
+node_modules/
+**/node_modules/
+
+# Builds
+dist/
+build/
+
+# Ambiente
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# Testes e cobertura
+coverage/
+
+# Cache
+.cache/
+.next/
+.vite/
+
+# Uploads locais
+uploads/*
+!uploads/.gitkeep
+
+# Banco local / Docker
+docker/postgres/data/
+postgres-data/
+
+# Prisma
+backend/prisma/migrations/dev.db
+
+# Temporários
+tmp/
+temp/
