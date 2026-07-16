@@ -1,0 +1,58 @@
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+
+export class CreateCompanyDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(120)
+  name!: string;
+
+  @IsString()
+  @MinLength(11)
+  @MaxLength(18)
+  cnpj!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  responsibleName?: string;
+
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(120)
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2)
+  state?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  plan?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}

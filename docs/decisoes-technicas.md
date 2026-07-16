@@ -206,3 +206,39 @@ A expiração do token foi configurada em segundos para evitar conflito de tipag
 
 Também foi ativado o `ValidationPipe` global no `main.ts` para validar DTOs.
 
+## 14. CRUD de empresas clientes
+
+Foi criado o primeiro CRUD real do CryoMap: empresas clientes.
+
+Arquivos principais:
+
+- `backend/src/companies/companies.module.ts`
+- `backend/src/companies/companies.controller.ts`
+- `backend/src/companies/companies.service.ts`
+- `backend/src/companies/dto/create-company.dto.ts`
+- `backend/src/companies/dto/update-company.dto.ts`
+
+Rotas criadas:
+
+- `POST /companies`
+- `GET /companies`
+- `GET /companies/:id`
+- `PATCH /companies/:id`
+- `DELETE /companies/:id`
+
+Todas as rotas de empresas são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Criar empresa.
+- Listar empresas ativas/não excluídas.
+- Buscar empresa por ID.
+- Editar empresa.
+- Inativar empresa com exclusão lógica usando `deleted_at`.
+- Impedir CNPJ duplicado.
+- Normalizar CNPJ salvando apenas números.
+- Converter e-mail para minúsculas.
+- Converter UF para maiúsculas.
+
+Foi necessário ajustar o `AuthModule` para ser global e exportar `JwtModule`, pois o `JwtAuthGuard` é usado em outros módulos, como `CompaniesModule`.
+
