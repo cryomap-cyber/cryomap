@@ -114,3 +114,30 @@ O arquivo `.env` guarda os valores reais de ambiente local.
 O arquivo `.env.example` serve como modelo seguro para versionamento.
 
 O volume `postgres_data` será usado para manter os dados do banco mesmo que o container seja removido.
+
+## 11. Schema inicial do banco
+
+O schema inicial real do CryoMap foi criado com Prisma e PostgreSQL.
+
+Tabelas principais da Beta 1:
+
+- companies
+- users
+- rooms
+- equipments
+- sensors
+- room_temperature_readings
+- equipment_temperature_readings
+- tasks
+- service_records
+- attachments
+- app_settings
+
+Decisões importantes:
+
+- Sensores pertencem somente às salas.
+- Equipamentos não possuem sensores.
+- Temperatura de sala será registrada em `room_temperature_readings`.
+- Temperatura de equipamento será registrada manualmente em `equipment_temperature_readings`.
+- Empresas, usuários, salas, equipamentos, sensores, tarefas e atendimentos terão exclusão lógica usando `deleted_at`.
+- O sistema já fica preparado para MQTT no futuro através do enum `ReadingSource`, que inclui `MQTT`.

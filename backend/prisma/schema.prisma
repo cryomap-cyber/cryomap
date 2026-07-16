@@ -7,11 +7,371 @@ datasource db {
   provider = "postgresql"
 }
 
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum UserRole {
+  MASTER_ADMIN
+  SUPERVISOR
+  CLIENT_USER
+  TECHNICIAN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum ThermalStatus {
+  NORMAL
+  WARNING
+  CRITICAL
+  OFFLINE
+}
+
+enum EquipmentStatus {
+  ACTIVE
+  INACTIVE
+  RUNNING
+  STOPPED
+  MAINTENANCE
+  OFFLINE
+}
+
+enum SensorStatus {
+  ACTIVE
+  INACTIVE
+  OFFLINE
+  MAINTENANCE
+}
+
+enum SensorType {
+  TEMPERATURE
+  HUMIDITY
+  TEMPERATURE_HUMIDITY
+}
+
+enum ReadingSource {
+  MANUAL
+  API
+  MQTT
+  IMPORT
+}
+
+enum EquipmentTemperatureSource {
+  MANUAL
+  IMPORT
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  CANCELED
+  OVERDUE
+}
+
+enum AttachmentType {
+  SERVICE_PHOTO
+  AUVO_REPORT
+  COMPANY_LOGO
+  FLOOR_PLAN
+  OTHER
+}
+
 model AppSetting {
-  id         String   @id @default(uuid())
-  systemName String  @default("CryoMap")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String   @id @default(uuid())
+  systemName    String   @default("CryoMap") @map("system_name")
+  logoPath      String?  @map("logo_path")
+  businessHours Json?    @map("business_hours")
+  parameters    Json?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("app_settings")
+}
+
+model Company {
+  id              String        @id @default(uuid())
+  name            String
+  cnpj            String        @unique
+  responsibleName String?       @map("responsible_name")
+  email           String?
+  phone           String?
+  address         String?
+  city            String?
+  state           String?
+  status          CompanyStatus @default(ACTIVE)
+  plan            String?
+  notes           String?
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  deletedAt       DateTime?     @map("deleted_at")
+
+  users                        User[]
+  rooms                        Room[]
+  equipments                   Equipment[]
+  sensors                      Sensor[]
+  roomTemperatureReadings      RoomTemperatureReading[]
+  equipmentTemperatureReadings EquipmentTemperatureReading[]
+  tasks                        Task[]
+  serviceRecords               ServiceRecord[]
+  attachments                  Attachment[]
+
+  @@map("companies")
+}
+
+model User {
+  id           String     @id @default(uuid())
+  companyId    String?    @map("company_id")
+  name         String
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  phone        String?
+  jobTitle     String?    @map("job_title")
+  role         UserRole   @default(TECHNICIAN)
+  status       UserStatus @default(ACTIVE)
+  lastLoginAt  DateTime?  @map("last_login_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  deletedAt    DateTime?  @map("deleted_at")
+
+  company                     Company?                      @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  assignedTasks               Task[]                        @relation("AssignedTasks")
+  createdTasks                Task[]                        @relation("CreatedTasks")
+  serviceRecords              ServiceRecord[]               @relation("TechnicianServiceRecords")
+  uploadedAttachments         Attachment[]                  @relation("UploadedAttachments")
+  equipmentTemperatureRecords EquipmentTemperatureReading[] @relation("EquipmentTemperatureCreatedBy")
+
+  @@map("users")
+}
+
+model Room {
+  id                 String        @id @default(uuid())
+  companyId          String        @map("company_id")
+  name               String
+  type               String?
+  minTemperature     Float?        @map("min_temperature")
+  maxTemperature     Float?        @map("max_temperature")
+  currentTemperature Float?        @map("current_temperature")
+  thermalStatus      ThermalStatus @default(OFFLINE) @map("thermal_status")
+  mapX               Float?        @map("map_x")
+  mapY               Float?        @map("map_y")
+  notes              String?
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  deletedAt          DateTime?     @map("deleted_at")
+
+  company                      Company                       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  equipments                   Equipment[]
+  sensors                      Sensor[]
+  roomTemperatureReadings      RoomTemperatureReading[]
+  equipmentTemperatureReadings EquipmentTemperatureReading[]
+  tasks                        Task[]
+  serviceRecords               ServiceRecord[]
+
+  @@index([companyId])
+  @@map("rooms")
+}
+
+model Equipment {
+  id                 String          @id @default(uuid())
+  companyId          String          @map("company_id")
+  roomId             String?         @map("room_id")
+  name               String
+  code               String
+  model              String?
+  manufacturer       String?
+  serialNumber       String?         @map("serial_number")
+  setpoint           Float?
+  delta              Float?
+  currentTemperature Float?          @map("current_temperature")
+  status             EquipmentStatus @default(ACTIVE)
+  notes              String?
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+  deletedAt          DateTime?       @map("deleted_at")
+
+  company                      Company                       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  room                         Room?                         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  tasks                        Task[]
+  serviceRecords               ServiceRecord[]
+  equipmentTemperatureReadings EquipmentTemperatureReading[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([roomId])
+  @@map("equipments")
+}
+
+model Sensor {
+  id              String       @id @default(uuid())
+  companyId       String       @map("company_id")
+  roomId          String       @map("room_id")
+  code            String       @unique
+  type            SensorType   @default(TEMPERATURE_HUMIDITY)
+  location        String?
+  status          SensorStatus @default(ACTIVE)
+  lastSeenAt      DateTime?    @map("last_seen_at")
+  lastTemperature Float?       @map("last_temperature")
+  lastHumidity    Float?       @map("last_humidity")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+  deletedAt       DateTime?    @map("deleted_at")
+
+  company                 Company                  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  room                    Room                     @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  roomTemperatureReadings RoomTemperatureReading[]
+
+  @@index([companyId])
+  @@index([roomId])
+  @@map("sensors")
+}
+
+model RoomTemperatureReading {
+  id          String        @id @default(uuid())
+  companyId   String        @map("company_id")
+  roomId      String        @map("room_id")
+  sensorId    String?       @map("sensor_id")
+  temperature Float
+  humidity    Float?
+  source      ReadingSource @default(MANUAL)
+  readAt      DateTime      @default(now()) @map("read_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  room    Room    @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  sensor  Sensor? @relation(fields: [sensorId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, readAt])
+  @@index([roomId, readAt])
+  @@index([sensorId, readAt])
+  @@map("room_temperature_readings")
+}
+
+model EquipmentTemperatureReading {
+  id              String                     @id @default(uuid())
+  companyId       String                     @map("company_id")
+  roomId          String?                    @map("room_id")
+  equipmentId     String                     @map("equipment_id")
+  createdByUserId String?                    @map("created_by_user_id")
+  temperature     Float
+  source          EquipmentTemperatureSource @default(MANUAL)
+  notes           String?
+  measuredAt      DateTime                   @default(now()) @map("measured_at")
+  createdAt       DateTime                   @default(now()) @map("created_at")
+
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  room          Room?     @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  equipment     Equipment @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  createdByUser User?     @relation("EquipmentTemperatureCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, measuredAt])
+  @@index([equipmentId, measuredAt])
+  @@index([createdByUserId])
+  @@map("equipment_temperature_readings")
+}
+
+model Task {
+  id               String       @id @default(uuid())
+  companyId        String       @map("company_id")
+  roomId           String?      @map("room_id")
+  equipmentId      String?      @map("equipment_id")
+  assignedToUserId String?      @map("assigned_to_user_id")
+  createdByUserId  String?      @map("created_by_user_id")
+  title            String
+  description      String?
+  priority         TaskPriority @default(MEDIUM)
+  status           TaskStatus   @default(OPEN)
+  scheduledDate    DateTime?    @map("scheduled_date")
+  startedAt        DateTime?    @map("started_at")
+  finishedAt       DateTime?    @map("finished_at")
+  canceledAt       DateTime?    @map("canceled_at")
+  cancelReason     String?      @map("cancel_reason")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+  deletedAt        DateTime?    @map("deleted_at")
+
+  company        Company        @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  room           Room?          @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  equipment      Equipment?     @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  assignedToUser User?          @relation("AssignedTasks", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  createdByUser  User?          @relation("CreatedTasks", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  serviceRecord  ServiceRecord?
+  attachments    Attachment[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([scheduledDate])
+  @@index([assignedToUserId])
+  @@index([equipmentId])
+  @@map("tasks")
+}
+
+model ServiceRecord {
+  id               String    @id @default(uuid())
+  taskId           String    @unique @map("task_id")
+  companyId        String    @map("company_id")
+  roomId           String?   @map("room_id")
+  equipmentId      String?   @map("equipment_id")
+  technicianId     String?   @map("technician_id")
+  startedAt        DateTime  @map("started_at")
+  finishedAt       DateTime? @map("finished_at")
+  downtimeMinutes  Int?      @map("downtime_minutes")
+  problemFound     String?   @map("problem_found")
+  servicePerformed String?   @map("service_performed")
+  notes            String?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  task        Task         @relation(fields: [taskId], references: [id], onDelete: Restrict)
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  room        Room?        @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  equipment   Equipment?   @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  technician  User?        @relation("TechnicianServiceRecords", fields: [technicianId], references: [id], onDelete: SetNull)
+  attachments Attachment[]
+
+  @@index([companyId])
+  @@index([technicianId])
+  @@index([equipmentId])
+  @@index([startedAt])
+  @@map("service_records")
+}
+
+model Attachment {
+  id               String         @id @default(uuid())
+  companyId        String?        @map("company_id")
+  taskId           String?        @map("task_id")
+  serviceRecordId  String?        @map("service_record_id")
+  uploadedByUserId String?        @map("uploaded_by_user_id")
+  fileName         String         @map("file_name")
+  originalName     String         @map("original_name")
+  mimeType         String         @map("mime_type")
+  size             Int?
+  path             String
+  type             AttachmentType @default(OTHER)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  deletedAt        DateTime?      @map("deleted_at")
+
+  company        Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  task           Task?          @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  serviceRecord  ServiceRecord? @relation(fields: [serviceRecordId], references: [id], onDelete: SetNull)
+  uploadedByUser User?          @relation("UploadedAttachments", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([taskId])
+  @@index([serviceRecordId])
+  @@index([uploadedByUserId])
+  @@map("attachments")
 }
