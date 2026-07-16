@@ -141,3 +141,33 @@ Decisões importantes:
 - Temperatura de equipamento será registrada manualmente em `equipment_temperature_readings`.
 - Empresas, usuários, salas, equipamentos, sensores, tarefas e atendimentos terão exclusão lógica usando `deleted_at`.
 - O sistema já fica preparado para MQTT no futuro através do enum `ReadingSource`, que inclui `MQTT`.
+
+## 12. Seed inicial
+
+Foi criado um seed inicial para gerar o primeiro usuário Master Admin do CryoMap.
+
+O seed fica em:
+
+- `backend/prisma/seed.ts`
+
+O seed cria ou atualiza um usuário com:
+
+- `role`: `MASTER_ADMIN`
+- `status`: `ACTIVE`
+
+Os dados do usuário inicial são lidos do arquivo `backend/.env`:
+
+- `SEED_MASTER_ADMIN_NAME`
+- `SEED_MASTER_ADMIN_EMAIL`
+- `SEED_MASTER_ADMIN_PASSWORD`
+
+A senha é salva no banco como hash usando bcrypt, nunca como texto puro.
+
+No Prisma 7, o comando de seed foi configurado em:
+
+- `backend/prisma.config.ts`
+
+A configuração usada foi:
+
+- `migrations.seed = "tsx prisma/seed.ts"`
+
