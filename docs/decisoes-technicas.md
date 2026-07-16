@@ -171,3 +171,38 @@ A configuração usada foi:
 
 - `migrations.seed = "tsx prisma/seed.ts"`
 
+## 13. Autenticação inicial
+
+Foi criado o módulo inicial de autenticação do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/auth/auth.module.ts`
+- `backend/src/auth/auth.controller.ts`
+- `backend/src/auth/auth.service.ts`
+- `backend/src/auth/dto/login.dto.ts`
+- `backend/src/auth/guards/jwt-auth.guard.ts`
+- `backend/src/auth/types/auth-user.type.ts`
+- `backend/src/auth/types/jwt-payload.type.ts`
+- `backend/src/auth/types/authenticated-request.type.ts`
+
+Rotas criadas:
+
+- `POST /auth/login`
+- `GET /auth/me`
+
+A rota `POST /auth/login` recebe e-mail e senha, valida a senha com bcrypt e retorna um JWT.
+
+A rota `GET /auth/me` é protegida pelo `JwtAuthGuard` e exige o header:
+
+`Authorization: Bearer TOKEN`
+
+Variáveis adicionadas ao ambiente:
+
+- `JWT_SECRET`
+- `JWT_EXPIRES_IN_SECONDS`
+
+A expiração do token foi configurada em segundos para evitar conflito de tipagem com o `@nestjs/jwt`.
+
+Também foi ativado o `ValidationPipe` global no `main.ts` para validar DTOs.
+
