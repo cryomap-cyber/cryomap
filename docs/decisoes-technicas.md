@@ -463,3 +463,48 @@ Status térmico atual:
 
 - `NORMAL`: temperatura dentro dos limites da sala.
 - `CRITICAL`: temperatura abaixo do mínimo ou acima do máximo.
+
+## 20. Temperaturas manuais de equipamentos
+
+Foi criado o módulo inicial de temperaturas manuais de equipamentos do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/equipment-temperature-readings/equipment-temperature-readings.module.ts`
+- `backend/src/equipment-temperature-readings/equipment-temperature-readings.controller.ts`
+- `backend/src/equipment-temperature-readings/equipment-temperature-readings.service.ts`
+- `backend/src/equipment-temperature-readings/dto/create-equipment-temperature-reading.dto.ts`
+- `backend/src/equipment-temperature-readings/dto/find-equipment-temperature-readings.dto.ts`
+
+Rotas criadas:
+
+- `POST /equipment-temperature-readings`
+- `GET /equipment-temperature-readings`
+- `GET /equipment-temperature-readings?companyId=...`
+- `GET /equipment-temperature-readings?roomId=...`
+- `GET /equipment-temperature-readings?equipmentId=...`
+- `GET /equipment-temperature-readings?createdByUserId=...`
+- `GET /equipment-temperature-readings?startDate=...&endDate=...`
+- `GET /equipment-temperature-readings/:id`
+
+Todas as rotas de temperaturas manuais de equipamentos são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Registrar temperatura manual de equipamento.
+- Validar se o equipamento existe.
+- Validar se o equipamento pertence à empresa informada.
+- Criar histórico em `equipment_temperature_readings`.
+- Atualizar `equipments.current_temperature` após nova medição.
+- Registrar o usuário autenticado que lançou a medição em `created_by_user_id`.
+- Pegar automaticamente a sala atual do equipamento, quando existir.
+- Listar medições com filtros por empresa, sala, equipamento, usuário e período.
+- Limitar listagem a 200 medições mais recentes.
+- Bloquear criação de medição sem autenticação.
+- Bloquear medição para equipamento inexistente.
+
+Decisão importante mantida:
+
+- Equipamentos não possuem sensores.
+- Sensores pertencem somente às salas.
+- Temperatura de equipamento é lançada manualmente.

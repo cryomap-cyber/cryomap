@@ -4,6 +4,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CompaniesModule } from './companies/companies.module.js';
+import { EquipmentTemperatureReadingsModule } from './equipment-temperature-readings/equipment-temperature-readings.module.js';
 import { EquipmentsModule } from './equipments/equipments.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { RoomsModule } from './rooms/rooms.module.js';
@@ -24,6 +25,7 @@ import { UsersModule } from './users/users.module.js';
     EquipmentsModule,
     SensorsModule,
     TemperatureReadingsModule,
+    EquipmentTemperatureReadingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
