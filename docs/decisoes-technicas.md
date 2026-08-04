@@ -416,3 +416,50 @@ Decisão importante mantida:
 - Sensores pertencem somente às salas.
 - Sensores não pertencem a equipamentos.
 - Equipamentos não possuem sensores.
+
+## 19. Leituras de temperatura das salas
+
+Foi criado o módulo inicial de leituras de temperatura das salas do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/temperature-readings/temperature-readings.module.ts`
+- `backend/src/temperature-readings/temperature-readings.controller.ts`
+- `backend/src/temperature-readings/temperature-readings.service.ts`
+- `backend/src/temperature-readings/dto/create-room-temperature-reading.dto.ts`
+- `backend/src/temperature-readings/dto/find-room-temperature-readings.dto.ts`
+
+Rotas criadas:
+
+- `POST /temperature-readings`
+- `GET /temperature-readings`
+- `GET /temperature-readings?companyId=...`
+- `GET /temperature-readings?roomId=...`
+- `GET /temperature-readings?sensorId=...`
+- `GET /temperature-readings?startDate=...&endDate=...`
+- `GET /temperature-readings/:id`
+
+Todas as rotas de leituras são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Registrar leitura de temperatura da sala.
+- Registrar umidade opcional.
+- Permitir leitura vinculada a sensor.
+- Permitir leitura manual sem sensor.
+- Validar se a sala existe e pertence à empresa informada.
+- Validar se o sensor existe, pertence à empresa e está vinculado à sala informada.
+- Criar histórico em `room_temperature_readings`.
+- Atualizar `rooms.current_temperature` após nova leitura.
+- Atualizar `rooms.thermal_status` automaticamente após nova leitura.
+- Atualizar `sensors.last_temperature` quando a leitura tiver sensor.
+- Atualizar `sensors.last_humidity` quando a leitura tiver sensor.
+- Atualizar `sensors.last_seen_at` quando a leitura tiver sensor.
+- Listar leituras com filtros por empresa, sala, sensor e período.
+- Limitar listagem a 200 leituras mais recentes.
+- Impedir leitura com sensor que não pertence à sala informada.
+
+Status térmico atual:
+
+- `NORMAL`: temperatura dentro dos limites da sala.
+- `CRITICAL`: temperatura abaixo do mínimo ou acima do máximo.
