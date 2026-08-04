@@ -368,3 +368,51 @@ Decisão importante mantida:
 - Equipamentos não possuem sensores.
 - Sensores pertencem somente às salas.
 - Temperatura de equipamento será registrada manualmente em uma etapa futura.
+
+## 18. CRUD de sensores
+
+Foi criado o CRUD inicial de sensores do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/sensors/sensors.module.ts`
+- `backend/src/sensors/sensors.controller.ts`
+- `backend/src/sensors/sensors.service.ts`
+- `backend/src/sensors/dto/create-sensor.dto.ts`
+- `backend/src/sensors/dto/update-sensor.dto.ts`
+
+Rotas criadas:
+
+- `POST /sensors`
+- `GET /sensors`
+- `GET /sensors?companyId=...`
+- `GET /sensors?roomId=...`
+- `GET /sensors/:id`
+- `PATCH /sensors/:id`
+- `DELETE /sensors/:id`
+
+Todas as rotas de sensores são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Criar sensor vinculado a uma empresa.
+- Criar sensor vinculado obrigatoriamente a uma sala.
+- Listar todos os sensores não excluídos.
+- Listar sensores por empresa.
+- Listar sensores por sala.
+- Buscar sensor por ID.
+- Editar sensor.
+- Atualizar últimas leituras conhecidas de temperatura e umidade.
+- Atualizar `last_seen_at` quando temperatura ou umidade forem informadas.
+- Alterar status do sensor.
+- Inativar sensor com exclusão lógica usando `deleted_at`.
+- Impedir código duplicado de sensor.
+- Normalizar código do sensor para maiúsculas.
+- Validar se a empresa existe antes de criar ou alterar sensor.
+- Validar se a sala existe e pertence à empresa correta antes de vincular sensor.
+
+Decisão importante mantida:
+
+- Sensores pertencem somente às salas.
+- Sensores não pertencem a equipamentos.
+- Equipamentos não possuem sensores.
