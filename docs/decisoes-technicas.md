@@ -322,3 +322,49 @@ Regras implementadas:
 - Retornar `CRITICAL` quando a temperatura estiver fora da faixa.
 - Retornar `OFFLINE` quando não houver temperatura atual.
 - Preparar campos `map_x` e `map_y` para futuro heatmap/planta da empresa.
+
+## 17. CRUD de equipamentos
+
+Foi criado o CRUD inicial de equipamentos do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/equipments/equipments.module.ts`
+- `backend/src/equipments/equipments.controller.ts`
+- `backend/src/equipments/equipments.service.ts`
+- `backend/src/equipments/dto/create-equipment.dto.ts`
+- `backend/src/equipments/dto/update-equipment.dto.ts`
+
+Rotas criadas:
+
+- `POST /equipments`
+- `GET /equipments`
+- `GET /equipments?companyId=...`
+- `GET /equipments?roomId=...`
+- `GET /equipments/:id`
+- `PATCH /equipments/:id`
+- `DELETE /equipments/:id`
+
+Todas as rotas de equipamentos são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Criar equipamento vinculado a uma empresa.
+- Permitir equipamento vinculado a uma sala.
+- Permitir equipamento sem sala.
+- Listar todos os equipamentos não excluídos.
+- Listar equipamentos por empresa.
+- Listar equipamentos por sala.
+- Buscar equipamento por ID.
+- Editar equipamento.
+- Inativar equipamento com exclusão lógica usando `deleted_at`.
+- Impedir código duplicado dentro da mesma empresa.
+- Normalizar código do equipamento para maiúsculas.
+- Validar se a empresa existe antes de criar ou alterar equipamento.
+- Validar se a sala existe e pertence à empresa correta antes de vincular equipamento.
+
+Decisão importante mantida:
+
+- Equipamentos não possuem sensores.
+- Sensores pertencem somente às salas.
+- Temperatura de equipamento será registrada manualmente em uma etapa futura.
