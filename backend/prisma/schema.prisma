@@ -293,6 +293,8 @@ model Task {
   description      String?
   priority         TaskPriority @default(MEDIUM)
   status           TaskStatus   @default(OPEN)
+  dueDate          DateTime?    @map("due_date")
+  completedAt      DateTime?    @map("completed_at")
   scheduledDate    DateTime?    @map("scheduled_date")
   startedAt        DateTime?    @map("started_at")
   finishedAt       DateTime?    @map("finished_at")

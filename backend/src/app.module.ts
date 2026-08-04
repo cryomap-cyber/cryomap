@@ -9,6 +9,7 @@ import { EquipmentsModule } from './equipments/equipments.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { RoomsModule } from './rooms/rooms.module.js';
 import { SensorsModule } from './sensors/sensors.module.js';
+import { TasksModule } from './tasks/tasks.module.js';
 import { TemperatureReadingsModule } from './temperature-readings/temperature-readings.module.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module.js';
     SensorsModule,
     TemperatureReadingsModule,
     EquipmentTemperatureReadingsModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
