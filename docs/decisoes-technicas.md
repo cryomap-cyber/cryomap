@@ -282,3 +282,43 @@ Regras implementadas:
 - Impedir login de usuário inativo ou bloqueado.
 
 Foi criado um usuário técnico operacional ativo para uso nas próximas etapas do projeto.
+
+## 16. CRUD de salas/ambientes
+
+Foi criado o CRUD inicial de salas/ambientes do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/rooms/rooms.module.ts`
+- `backend/src/rooms/rooms.controller.ts`
+- `backend/src/rooms/rooms.service.ts`
+- `backend/src/rooms/dto/create-room.dto.ts`
+- `backend/src/rooms/dto/update-room.dto.ts`
+
+Rotas criadas:
+
+- `POST /rooms`
+- `GET /rooms`
+- `GET /rooms?companyId=...`
+- `GET /rooms/:id`
+- `PATCH /rooms/:id`
+- `DELETE /rooms/:id`
+
+Todas as rotas de salas são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Criar sala vinculada a uma empresa.
+- Listar todas as salas não excluídas.
+- Listar salas por empresa.
+- Buscar sala por ID.
+- Editar sala.
+- Excluir/inativar sala com exclusão lógica usando `deleted_at`.
+- Definir temperatura mínima.
+- Definir temperatura máxima.
+- Definir temperatura atual.
+- Calcular `thermalStatus` automaticamente.
+- Retornar `NORMAL` quando a temperatura estiver dentro da faixa.
+- Retornar `CRITICAL` quando a temperatura estiver fora da faixa.
+- Retornar `OFFLINE` quando não houver temperatura atual.
+- Preparar campos `map_x` e `map_y` para futuro heatmap/planta da empresa.
