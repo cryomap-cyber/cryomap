@@ -242,3 +242,43 @@ Regras implementadas:
 
 Foi necessário ajustar o `AuthModule` para ser global e exportar `JwtModule`, pois o `JwtAuthGuard` é usado em outros módulos, como `CompaniesModule`.
 
+## 15. CRUD de usuários
+
+Foi criado o CRUD inicial de usuários do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/users/users.module.ts`
+- `backend/src/users/users.controller.ts`
+- `backend/src/users/users.service.ts`
+- `backend/src/users/dto/create-user.dto.ts`
+- `backend/src/users/dto/update-user.dto.ts`
+
+Rotas criadas:
+
+- `POST /users`
+- `GET /users`
+- `GET /users/:id`
+- `PATCH /users/:id`
+- `DELETE /users/:id`
+
+Todas as rotas de usuários são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Criar usuário.
+- Listar usuários não excluídos.
+- Buscar usuário por ID.
+- Editar usuário.
+- Inativar usuário com exclusão lógica usando `deleted_at`.
+- Impedir e-mail duplicado.
+- Normalizar e-mail para minúsculas.
+- Criptografar senha com bcrypt.
+- Nunca retornar `password_hash` nas respostas da API.
+- Vincular usuário a uma empresa, quando necessário.
+- Permitir usuário sem empresa, como Master Admin.
+- Controlar hierarquia inicial com `role`.
+- Controlar acesso com `status`.
+- Impedir login de usuário inativo ou bloqueado.
+
+Foi criado um usuário técnico operacional ativo para uso nas próximas etapas do projeto.
