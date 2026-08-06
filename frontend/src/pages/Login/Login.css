@@ -1,0 +1,138 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  background: #f4f8fb;
+}
+
+.login-hero {
+  display: flex;
+  align-items: center;
+  padding: 64px;
+  background:
+    radial-gradient(circle at top left, rgba(48, 170, 225, 0.28), transparent 34%),
+    linear-gradient(135deg, #0f5f8f 0%, #073a5a 100%);
+  color: #ffffff;
+}
+
+.login-hero-card {
+  max-width: 620px;
+}
+
+.login-hero h1 {
+  font-size: clamp(38px, 5vw, 66px);
+  line-height: 1;
+  margin: 16px 0;
+}
+
+.login-hero p {
+  font-size: 18px;
+  line-height: 1.6;
+  opacity: 0.88;
+}
+
+.login-kicker {
+  color: #4dbce9;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.login-panel {
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+.login-form {
+  width: min(100%, 420px);
+  background: #ffffff;
+  border: 1px solid #d9e8f2;
+  box-shadow: 0 24px 80px rgba(15, 95, 143, 0.12);
+  border-radius: 28px;
+  padding: 36px;
+  display: grid;
+  gap: 20px;
+}
+
+.login-form h2 {
+  margin: 8px 0 4px;
+  color: #163345;
+  font-size: 28px;
+}
+
+.login-form p {
+  margin: 0;
+  color: #6b7c88;
+}
+
+.login-form label {
+  display: grid;
+  gap: 8px;
+  color: #284558;
+  font-weight: 700;
+}
+
+.login-form input {
+  border: 1px solid #c8dce8;
+  border-radius: 14px;
+  padding: 13px 14px;
+  font-size: 15px;
+  outline: none;
+}
+
+.login-form input:focus {
+  border-color: #1999d6;
+  box-shadow: 0 0 0 4px rgba(25, 153, 214, 0.12);
+}
+
+.login-form button {
+  border: 0;
+  border-radius: 14px;
+  background: #0f8ec4;
+  color: #ffffff;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.login-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-error {
+  background: #fff1f1;
+  color: #c62828;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-hero {
+    padding: 40px 24px;
+  }
+}
+.login-logo {
+  width: 116px;
+  height: 116px;
+  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid #d9e8f2;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 18px 44px rgba(15, 95, 143, 0.12);
+}
+
+.login-logo img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}

@@ -1169,3 +1169,98 @@ Correções e decisões técnicas:
 - A etapa priorizou confiabilidade da exportação antes de layout avançado.
 
 Essa etapa prepara o CryoMap para emissão de relatórios operacionais em formato fechado, adequado para envio, arquivamento e compartilhamento com clientes.
+
+## 31. Frontend inicial com React + Vite
+
+Foi criado o frontend inicial do CryoMap usando React, TypeScript e Vite.
+
+Arquivos e pastas principais:
+
+- `frontend/`
+- `frontend/src/services/api.ts`
+- `frontend/src/types/auth.ts`
+- `frontend/src/contexts/auth-context.ts`
+- `frontend/src/contexts/AuthContext.tsx`
+- `frontend/src/contexts/useAuth.ts`
+- `frontend/src/routes/ProtectedRoute.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+- `frontend/src/components/AppLayout/AppLayout.css`
+- `frontend/src/pages/Login/Login.tsx`
+- `frontend/src/pages/Login/Login.css`
+- `frontend/src/pages/Dashboard/Dashboard.tsx`
+- `frontend/src/pages/Dashboard/Dashboard.css`
+- `frontend/src/assets/cryomap-logo.png`
+- `frontend/src/App.tsx`
+- `frontend/src/main.tsx`
+- `frontend/src/index.css`
+
+Bibliotecas adicionadas no frontend:
+
+- `axios`
+- `react-router-dom`
+
+Configurações implementadas:
+
+- Frontend criado com React + TypeScript + Vite.
+- ESLint selecionado como linter.
+- Variável `VITE_API_URL` criada no `.env` do frontend apontando para `http://localhost:3000`.
+- Serviço Axios configurado em `src/services/api.ts`.
+- Interceptor Axios configurado para enviar o token JWT no header `Authorization`.
+- Backend configurado com CORS para aceitar requisições de `http://localhost:5173`.
+
+Autenticação implementada:
+
+- Tela de login.
+- Login usando `POST /auth/login`.
+- Busca do usuário autenticado usando `GET /auth/me`.
+- Token JWT salvo no `localStorage`.
+- Logout removendo token do `localStorage`.
+- Contexto de autenticação criado.
+- Hook `useAuth` separado para evitar aviso do Fast Refresh.
+- Rota protegida criada com `ProtectedRoute`.
+- Redirecionamento automático para `/login` quando usuário não está autenticado.
+- Redirecionamento para `/dashboard` após login.
+
+Interface inicial implementada:
+
+- Layout principal com menu lateral.
+- Página de dashboard operacional.
+- Cards de métricas principais.
+- Exibição de empresas, salas, sensores, equipamentos, tarefas e alertas.
+- Listagem de salas com alerta ativo.
+- Listagem de últimos alertas térmicos.
+- Botão de atualização do dashboard.
+- Botão de sair.
+- CSS global inicial.
+
+Design:
+
+- A identidade visual foi baseada na logo do CryoMap.
+- Foram usadas cores frias com azul escuro, azul vibrante, azul claro e branco.
+- A logo foi adicionada na tela de login.
+- A logo foi adicionada no menu lateral.
+- O layout inicial foi mantido limpo, claro e responsivo.
+
+Correções realizadas durante a etapa:
+
+- Corrigida criação inicial incompleta da pasta `frontend`.
+- Corrigido fluxo do Vite quando o diretório estava vazio/incompleto.
+- Corrigido aviso do Fast Refresh separando o hook `useAuth` em arquivo próprio.
+- Corrigido aviso de `useEffect` no contexto de autenticação.
+- Corrigido aviso de `useEffect` no dashboard.
+- Mantido `.env` do frontend fora do Git.
+
+Testes realizados:
+
+- Frontend iniciado em `http://localhost:5173`.
+- Backend iniciado em `http://localhost:3000`.
+- Login com usuário Master Admin funcionando.
+- Redirecionamento para dashboard funcionando.
+- Dashboard carregando dados reais de `/dashboard/overview`.
+- Botão atualizar funcionando.
+- Botão sair funcionando.
+- Proteção de rota funcionando.
+- Acesso direto a `/dashboard` sem login redirecionando para `/login`.
+- Logo aparecendo corretamente no login e no menu lateral.
+
+Essa etapa cria a base visual e estrutural do frontend do CryoMap, preparando o sistema para as próximas telas administrativas e operacionais.

@@ -1,0 +1,158 @@
+.dashboard-page {
+  display: grid;
+  gap: 24px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashboard-header span {
+  color: #0f8ec4;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+}
+
+.dashboard-header h1 {
+  margin: 6px 0;
+  color: #163345;
+  font-size: 34px;
+}
+
+.dashboard-header p {
+  margin: 0;
+  color: #6b7c88;
+}
+
+.dashboard-header button,
+.dashboard-error button {
+  border: 0;
+  border-radius: 12px;
+  background: #0f8ec4;
+  color: #ffffff;
+  padding: 12px 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.metric-card {
+  background: #ffffff;
+  border: 1px solid #d9e8f2;
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 14px 40px rgba(15, 95, 143, 0.08);
+}
+
+.metric-card span {
+  color: #6b7c88;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.metric-card strong {
+  display: block;
+  color: #163345;
+  font-size: 34px;
+  margin: 10px 0 4px;
+}
+
+.metric-card small {
+  color: #6b7c88;
+}
+
+.metric-card.danger {
+  border-color: #ffc9c9;
+  background: #fff7f7;
+}
+
+.metric-card.danger strong {
+  color: #c62828;
+}
+
+.dashboard-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.dashboard-panel {
+  background: #ffffff;
+  border: 1px solid #d9e8f2;
+  border-radius: 24px;
+  padding: 22px;
+}
+
+.dashboard-panel h2 {
+  margin: 0 0 16px;
+  color: #163345;
+}
+
+.alert-list {
+  display: grid;
+  gap: 12px;
+}
+
+.alert-item {
+  border: 1px solid #e4eef5;
+  border-radius: 16px;
+  padding: 14px;
+  display: grid;
+  gap: 6px;
+}
+
+.alert-item strong {
+  color: #163345;
+}
+
+.alert-item span {
+  color: #526977;
+}
+
+.alert-item small {
+  color: #8495a1;
+}
+
+.empty-state {
+  color: #8495a1;
+}
+
+.dashboard-error {
+  background: #fff1f1;
+  color: #c62828;
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (max-width: 1200px) {
+  .metric-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dashboard-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+  }
+}
