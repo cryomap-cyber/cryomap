@@ -810,3 +810,59 @@ Integração com leituras de temperatura:
 - Leituras críticas criam ou atualizam alerta térmico.
 - Leituras normais resolvem alertas térmicos ativos da sala.
 - A integração acontece dentro da mesma transação da criação da leitura, garantindo consistência entre leitura, sala, sensor e alerta.
+
+## 26. Dashboard com alertas térmicos
+
+Foi ampliado o módulo de dashboard operacional do CryoMap para incluir informações de alertas térmicos.
+
+Arquivo principal alterado:
+
+- `backend/src/dashboard/dashboard.service.ts`
+
+Rota impactada:
+
+- `GET /dashboard/overview`
+- `GET /dashboard/overview?companyId=...`
+
+Todas as rotas do dashboard continuam protegidas com JWT usando `JwtAuthGuard`.
+
+Novos dados retornados no dashboard:
+
+- Resumo de alertas térmicos.
+- Quantidade total de alertas.
+- Quantidade de alertas ativos.
+- Quantidade de alertas abertos.
+- Quantidade de alertas reconhecidos.
+- Quantidade de alertas resolvidos.
+- Quantidade de alertas dispensados.
+- Quantidade de alertas críticos.
+- Quantidade de alertas de aviso.
+- Salas com alerta térmico ativo.
+- Últimos alertas térmicos.
+
+Blocos adicionados à resposta:
+
+- `thermalAlerts`
+- `activeThermalAlertRooms`
+- `recentThermalAlerts`
+
+Regras implementadas:
+
+- Considerar alertas ativos com status `OPEN` ou `ACKNOWLEDGED`.
+- Contar alertas por status.
+- Contar alertas por severidade.
+- Listar até 10 salas com alerta térmico ativo.
+- Evitar duplicidade de salas no bloco de salas com alerta ativo.
+- Listar os 5 alertas térmicos mais recentes.
+- Respeitar filtro por empresa.
+- Validar empresa inexistente no dashboard filtrado.
+- Manter compatibilidade com os dados anteriores do dashboard.
+
+Essa etapa prepara o frontend para cards e indicadores como:
+
+- Alertas ativos.
+- Salas críticas.
+- Últimos alertas.
+- Alertas reconhecidos.
+- Situações térmicas pendentes de ação.
+

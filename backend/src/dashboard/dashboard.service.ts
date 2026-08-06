@@ -4,6 +4,8 @@ import {
   SensorStatus,
   TaskPriority,
   TaskStatus,
+  ThermalAlertSeverity,
+  ThermalAlertStatus,
   ThermalStatus,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -39,6 +41,9 @@ export class DashboardService {
       sensors,
       equipments,
       tasks,
+      thermalAlerts,
+      activeThermalAlertRooms,
+      recentThermalAlerts,
       recentServiceRecords,
       latestRoomTemperatureReadings,
     ] = await Promise.all([
@@ -47,6 +52,9 @@ export class DashboardService {
       this.getSensorsSummary(companyFilter),
       this.getEquipmentsSummary(companyFilter),
       this.getTasksSummary(companyFilter),
+      this.getThermalAlertsSummary(companyFilter),
+      this.getActiveThermalAlertRooms(companyFilter),
+      this.getRecentThermalAlerts(companyFilter),
       this.getRecentServiceRecords(companyFilter),
       this.getLatestRoomTemperatureReadings(companyFilter),
     ]);
@@ -61,6 +69,9 @@ export class DashboardService {
       sensors,
       equipments,
       tasks,
+      thermalAlerts,
+      activeThermalAlertRooms,
+      recentThermalAlerts,
       recentServiceRecords,
       latestRoomTemperatureReadings,
     };
@@ -303,6 +314,181 @@ export class DashboardService {
       overdue,
       criticalPriority,
     };
+  }
+
+  private async getThermalAlertsSummary(companyFilter: { companyId?: string }) {
+    const baseWhere = {
+      ...companyFilter,
+      deletedAt: null,
+    };
+
+    const [
+      total,
+      open,
+      acknowledged,
+      resolved,
+      dismissed,
+      critical,
+      warning,
+      active,
+    ] = await Promise.all([
+      this.prisma.thermalAlert.count({
+        where: baseWhere,
+      }),
+      this.prisma.thermalAlert.count({
+        where: {
+          ...baseWhere,
+          status: ThermalAlertStatus.OPEN,
+        },
+      }),
+      this.prisma.thermalAlert.count({
+        where: {
+          ...baseWhere,
+          status: ThermalAlertStatus.ACKNOWLEDGED,
+        },
+      }),
+      this.prisma.thermalAlert.count({
+        where: {
+          ...baseWhere,
+          status: ThermalAlertStatus.RESOLVED,
+        },
+      }),
+      this.prisma.thermalAlert.count({
+        where: {
+          ...baseWhere,
+          status: ThermalAlertStatus.DISMISSED,
+        },
+      }),
+      this.prisma.thermalAlert.count({
+        where: {
+          ...baseWhere,
+          severity: ThermalAlertSeverity.CRITICAL,
+        },
+      }),
+      this.prisma.thermalAlert.count({
+        where: {
+          ...baseWhere,
+          severity: ThermalAlertSeverity.WARNING,
+        },
+      }),
+      this.prisma.thermalAlert.count({
+        where: {
+          ...baseWhere,
+          status: {
+            in: [ThermalAlertStatus.OPEN,
+              ThermalAlertStatus.ACKNOWLEDGED,
+            ],
+          },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      active,
+      open,
+      acknowledged,
+      resolved,
+      dismissed,
+      critical,
+      warning,
+    };
+  }
+
+  private async getActiveThermalAlertRooms(companyFilter: {
+    companyId?: string;
+  }) {
+    const alerts = await this.prisma.thermalAlert.findMany({
+      where: {
+        ...companyFilter,
+        deletedAt: null,
+        status: {
+          in: [ThermalAlertStatus.OPEN,
+            ThermalAlertStatus.ACKNOWLEDGED,
+          ],
+        },
+      },
+      select: {
+        id: true,
+        roomId: true,
+        severity: true,
+        status: true,
+        temperature: true,
+        message: true,
+        triggeredAt: true,
+        room: {
+          select: {
+            id: true,
+            name: true,
+            currentTemperature: true,
+            thermalStatus: true,
+            minTemperature: true,
+            maxTemperature: true,
+          },
+        },
+      },
+      orderBy: {
+        triggeredAt: 'desc',
+      },
+    });
+
+    const uniqueRooms = new Map<string, (typeof alerts)[number]>();
+
+    for (const alert of alerts) {
+      if (!uniqueRooms.has(alert.roomId)) {
+        uniqueRooms.set(alert.roomId, alert);
+      }
+    }
+
+    return {
+      total: uniqueRooms.size,
+      rooms: Array.from(uniqueRooms.values()).slice(0, 10),
+    };
+  }
+
+  private async getRecentThermalAlerts(companyFilter: { companyId?: string }) {
+    return this.prisma.thermalAlert.findMany({
+      where: {
+        ...companyFilter,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        companyId: true,
+        roomId: true,
+        sensorId: true,
+        readingId: true,
+        type: true,
+        severity: true,
+        status: true,
+        temperature: true,
+        minTemperature: true,
+        maxTemperature: true,
+        message: true,
+        triggeredAt: true,
+        acknowledgedAt: true,
+        resolvedAt: true,
+        room: {
+          select: {
+            id: true,
+            name: true,
+            thermalStatus: true,
+            currentTemperature: true,
+          },
+        },
+        sensor: {
+          select: {
+            id: true,
+            code: true,
+            status: true,
+          },
+        },
+      },
+      orderBy: {
+        triggeredAt: 'desc',
+      },
+      take: 5,
+    });
   }
 
   private async getRecentServiceRecords(companyFilter: { companyId?: string }) {
