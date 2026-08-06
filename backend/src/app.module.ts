@@ -12,6 +12,7 @@ import { SensorsModule } from './sensors/sensors.module.js';
 import { TasksModule } from './tasks/tasks.module.js';
 import { TemperatureReadingsModule } from './temperature-readings/temperature-readings.module.js';
 import { UsersModule } from './users/users.module.js';
+import { ServiceRecordsModule } from './service-records/service-records.module.js';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { UsersModule } from './users/users.module.js';
     TemperatureReadingsModule,
     EquipmentTemperatureReadingsModule,
     TasksModule,
+    ServiceRecordsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

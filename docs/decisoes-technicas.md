@@ -569,3 +569,63 @@ Campos de prazo adicionados ao model `Task`:
 - `due_date`
 - `completed_at`
 
+## 22. Registros de atendimento técnico
+
+Foi criado o módulo inicial de registros de atendimento técnico do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/service-records/service-records.module.ts`
+- `backend/src/service-records/service-records.controller.ts`
+- `backend/src/service-records/service-records.service.ts`
+- `backend/src/service-records/dto/create-service-record.dto.ts`
+- `backend/src/service-records/dto/update-service-record.dto.ts`
+- `backend/src/service-records/dto/find-service-records.dto.ts`
+
+Rotas criadas:
+
+- `POST /service-records`
+- `GET /service-records`
+- `GET /service-records?taskId=...`
+- `GET /service-records?companyId=...`
+- `GET /service-records?roomId=...`
+- `GET /service-records?equipmentId=...`
+- `GET /service-records?technicianId=...`
+- `GET /service-records?startDate=...&endDate=...`
+- `GET /service-records/:id`
+- `PATCH /service-records/:id`
+- `DELETE /service-records/:id`
+
+Todas as rotas de registros de atendimento são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Criar registro de atendimento vinculado a uma tarefa.
+- Impedir atendimento em tarefa cancelada.
+- Impedir mais de um registro de atendimento para a mesma tarefa.
+- Buscar automaticamente empresa, sala e equipamento a partir da tarefa.
+- Definir técnico responsável pelo atendimento.
+- Usar técnico informado, responsável da tarefa ou usuário autenticado.
+- Validar se o técnico está ativo e pertence à empresa.
+- Registrar início do atendimento.
+- Registrar fim do atendimento.
+- Calcular automaticamente `downtime_minutes`.
+- Registrar problema encontrado.
+- Registrar serviço realizado.
+- Registrar observações.
+- Listar atendimentos com filtros por tarefa, empresa, sala, equipamento, técnico e período.
+- Buscar atendimento por ID.
+- Reabrir atendimento removendo `finished_at`.
+- Excluir atendimento logicamente usando `deleted_at`.
+
+Integração com tarefas:
+
+- Ao iniciar atendimento, a tarefa muda para `IN_PROGRESS`.
+- Ao finalizar atendimento, a tarefa muda para `DONE`.
+- Ao finalizar atendimento, a tarefa recebe `finished_at` e `completed_at`.
+- Ao reabrir atendimento, a tarefa volta para `IN_PROGRESS`.
+- Ao excluir atendimento, a tarefa volta para `OPEN`.
+- Ao excluir atendimento, os campos `started_at`, `finished_at` e `completed_at` da tarefa são limpos.
+
+Essa etapa prepara o CryoMap para relatórios técnicos, cálculo de tempo parado e histórico operacional por cliente, sala, equipamento e técnico.
+
