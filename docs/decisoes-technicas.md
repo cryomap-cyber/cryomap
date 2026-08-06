@@ -928,3 +928,70 @@ Essa etapa prepara o frontend para gráficos como:
 - Cards de mínima, máxima e média.
 - Tabelas de leituras recentes.
 - Evolução térmica por período.
+
+## 28. Relatórios operacionais iniciais
+
+Foi criado o módulo inicial de relatórios operacionais do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/reports/reports.module.ts`
+- `backend/src/reports/reports.controller.ts`
+- `backend/src/reports/reports.service.ts`
+- `backend/src/reports/dto/reports-query.dto.ts`
+- `backend/src/app.module.ts`
+
+Rotas criadas:
+
+- `GET /reports/operational-summary`
+- `GET /reports/tasks-summary`
+- `GET /reports/service-records-summary`
+- `GET /reports/downtime-summary`
+- `GET /reports/thermal-readings-summary`
+
+Todas as rotas de relatórios são protegidas com JWT usando `JwtAuthGuard`.
+
+Filtros disponíveis:
+
+- `companyId`
+- `roomId`
+- `equipmentId`
+- `technicianId`
+- `startDate`
+- `endDate`
+
+Regras implementadas:
+
+- Gerar resumo operacional geral em JSON.
+- Gerar resumo de tarefas por período.
+- Gerar resumo de atendimentos técnicos por período.
+- Gerar resumo de tempo parado por período.
+- Gerar resumo de leituras térmicas por período.
+- Aplicar período padrão de últimos 30 dias quando nenhuma data for enviada.
+- Validar data inicial e data final.
+- Impedir período com data inicial maior que data final.
+- Validar empresa existente quando `companyId` for informado.
+- Validar sala existente quando `roomId` for informado.
+- Validar equipamento existente quando `equipmentId` for informado.
+- Validar técnico existente quando `technicianId` for informado.
+- Filtrar tarefas por empresa, sala, equipamento, técnico e período.
+- Filtrar atendimentos por empresa, sala, equipamento, técnico e período.
+- Filtrar tempo parado por empresa, sala, equipamento, técnico e período.
+- Filtrar leituras térmicas por empresa, sala e período.
+- Retornar totais por status e prioridade de tarefas.
+- Retornar totais de atendimentos finalizados e em andamento.
+- Retornar soma, média e máximo de tempo parado.
+- Retornar ranking de equipamentos com mais tempo parado.
+- Retornar ranking de salas com mais tempo parado.
+- Retornar média, mínima e máxima de temperatura e umidade.
+- Retornar salas críticas no relatório térmico.
+- Bloquear acesso sem autenticação.
+
+Correções realizadas durante a etapa:
+
+- Ajustada chamada interna de relatórios para não enviar parâmetro `period` em métodos que já calculam o período internamente.
+- Corrigido filtro genérico para evitar envio de `roomId` em consultas do model `Room`.
+- Em consultas de salas, o filtro de sala passou a usar `id` corretamente.
+- O relatório de alertas térmicos passou a montar filtros próprios para `ThermalAlert`.
+
+Essa etapa prepara o CryoMap para futuras exportações em PDF e Excel, usando os relatórios JSON como base confiável.

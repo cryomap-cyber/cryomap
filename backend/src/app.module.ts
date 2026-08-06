@@ -16,6 +16,7 @@ import { ServiceRecordsModule } from './service-records/service-records.module.j
 import { AttachmentsModule } from './attachments/attachments.module.js';
 import { DashboardModule } from './dashboard/dashboard.module.js';
 import { ThermalAlertsModule } from './thermal-alerts/thermal-alerts.module.js';
+import { ReportsModule } from './reports/reports.module.js';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ThermalAlertsModule } from './thermal-alerts/thermal-alerts.module.js';
     AttachmentsModule,
     DashboardModule,
     ThermalAlertsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
