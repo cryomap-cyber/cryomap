@@ -33,6 +33,7 @@
     "class-validator": "^0.15.1",
     "dotenv": "^17.4.2",
     "exceljs": "^4.4.0",
+    "pdfkit": "^0.19.1",
     "pg": "^8.22.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
@@ -48,6 +49,7 @@
     "@types/jest": "^30.0.0",
     "@types/multer": "^2.2.0",
     "@types/node": "^24.0.0",
+    "@types/pdfkit": "^0.17.6",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^7.0.0",
     "eslint": "^9.18.0",

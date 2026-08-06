@@ -1088,3 +1088,84 @@ Correções realizadas durante a etapa:
 - Validada integridade dos arquivos usando `unzip -t`.
 
 Essa etapa prepara o CryoMap para entrega de relatórios operacionais em formato editável, permitindo análise em Excel, LibreOffice e ferramentas compatíveis.
+
+## 30. Exportação de relatórios em PDF
+
+Foi criado o módulo de exportação de relatórios operacionais em PDF do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/reports/reports-pdf-export.controller.ts`
+- `backend/src/reports/reports-pdf-export.service.ts`
+- `backend/src/reports/reports.module.ts`
+- `backend/package.json`
+- `backend/package-lock.json`
+
+Bibliotecas adicionadas:
+
+- `pdfkit`
+- `@types/pdfkit`
+
+Rotas criadas:
+
+- `GET /reports/export/tasks.pdf`
+- `GET /reports/export/service-records.pdf`
+- `GET /reports/export/downtime.pdf`
+- `GET /reports/export/thermal-readings.pdf`
+
+Todas as rotas de exportação PDF são protegidas com JWT usando `JwtAuthGuard`.
+
+Filtros disponíveis:
+
+- `companyId`
+- `roomId`
+- `equipmentId`
+- `technicianId`
+- `startDate`
+- `endDate`
+
+Exportações implementadas:
+
+- Exportação de tarefas em PDF.
+- Exportação de atendimentos técnicos em PDF.
+- Exportação de tempo parado em PDF.
+- Exportação de leituras térmicas em PDF.
+- Exportação de tempo parado filtrado por equipamento.
+
+Estrutura dos PDFs:
+
+- Cabeçalho com `CryoMap`.
+- Título do relatório.
+- Seção de metadados.
+- Período inicial e final.
+- IDs dos filtros aplicados.
+- Total de registros.
+- Seção de resumo.
+- Lista dos registros retornados.
+
+Regras implementadas:
+
+- Gerar arquivos `.pdf` válidos.
+- Retornar arquivos com `Content-Type: application/pdf`.
+- Retornar arquivos com `Content-Disposition` para download.
+- Aplicar os mesmos filtros dos relatórios JSON e Excel.
+- Aplicar período padrão de últimos 30 dias quando nenhuma data for enviada.
+- Validar empresa existente.
+- Validar sala existente.
+- Validar equipamento existente.
+- Validar técnico existente.
+- Validar período com data inicial e final.
+- Impedir período com data inicial maior que data final.
+- Bloquear exportação sem autenticação.
+- Quebrar página automaticamente quando faltar espaço.
+- Limitar textos longos para evitar PDFs excessivamente quebrados.
+- Validar arquivos gerados verificando o cabeçalho `%PDF`.
+
+Correções e decisões técnicas:
+
+- A importação do `pdfkit` foi feita usando `createRequire` para compatibilidade com o projeto em ESM.
+- Foi criado um tipo local simples para o documento PDF usado no service.
+- Os PDFs foram mantidos simples e estáveis nesta primeira versão.
+- A etapa priorizou confiabilidade da exportação antes de layout avançado.
+
+Essa etapa prepara o CryoMap para emissão de relatórios operacionais em formato fechado, adequado para envio, arquivamento e compartilhamento com clientes.
