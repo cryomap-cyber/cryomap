@@ -995,3 +995,96 @@ Correções realizadas durante a etapa:
 - O relatório de alertas térmicos passou a montar filtros próprios para `ThermalAlert`.
 
 Essa etapa prepara o CryoMap para futuras exportações em PDF e Excel, usando os relatórios JSON como base confiável.
+
+## 29. Exportação de relatórios em Excel
+
+Foi criado o módulo de exportação de relatórios operacionais em Excel do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/reports/reports-export.controller.ts`
+- `backend/src/reports/reports-export.service.ts`
+- `backend/src/reports/reports.module.ts`
+- `backend/package.json`
+- `backend/package-lock.json`
+
+Biblioteca adicionada:
+
+- `exceljs`
+
+Rotas criadas:
+
+- `GET /reports/export/tasks.xlsx`
+- `GET /reports/export/service-records.xlsx`
+- `GET /reports/export/downtime.xlsx`
+- `GET /reports/export/thermal-readings.xlsx`
+
+Todas as rotas de exportação são protegidas com JWT usando `JwtAuthGuard`.
+
+Filtros disponíveis:
+
+- `companyId`
+- `roomId`
+- `equipmentId`
+- `technicianId`
+- `startDate`
+- `endDate`
+
+Exportações implementadas:
+
+- Exportação de tarefas em Excel.
+- Exportação de atendimentos técnicos em Excel.
+- Exportação de tempo parado em Excel.
+- Exportação de leituras térmicas em Excel.
+- Exportação de tempo parado filtrado por equipamento.
+
+Estrutura dos arquivos:
+
+- Relatório de tarefas:
+  - Aba `Tarefas`
+  - Aba `Metadados`
+
+- Relatório de atendimentos:
+  - Aba `Atendimentos`
+  - Aba `Metadados`
+
+- Relatório de tempo parado:
+  - Aba `Tempo Parado`
+  - Aba `Resumo`
+  - Aba `Metadados`
+
+- Relatório de leituras térmicas:
+  - Aba `Leituras Térmicas`
+  - Aba `Metadados`
+
+Regras implementadas:
+
+- Gerar arquivos `.xlsx` válidos.
+- Retornar arquivos com `Content-Type` correto para Excel.
+- Retornar arquivos com `Content-Disposition` para download.
+- Aplicar os mesmos filtros dos relatórios JSON.
+- Aplicar período padrão de últimos 30 dias quando nenhuma data for enviada.
+- Validar empresa existente.
+- Validar sala existente.
+- Validar equipamento existente.
+- Validar técnico existente.
+- Validar período com data inicial e final.
+- Impedir período com data inicial maior que data final.
+- Bloquear exportação sem autenticação.
+- Adicionar metadados em cada arquivo exportado.
+- Congelar linha de cabeçalho.
+- Aplicar autofiltro nas planilhas.
+- Ajustar largura das colunas.
+- Formatar cabeçalho em negrito.
+
+Correções realizadas durante a etapa:
+
+- Removido uso de propriedades incompatíveis em `workbook.properties`.
+- Corrigida importação do `exceljs` em projeto ESM.
+- Adicionado fallback para compatibilidade com export default/CommonJS do `exceljs`.
+- Corrigido uso de `Workbook` e `Worksheet` apenas como tipos.
+- A criação real do workbook passou a usar `new ExcelJS.Workbook()`.
+- Corrigido erro em que JSON de erro era salvo com extensão `.xlsx` quando o backend retornava erro 500.
+- Validada integridade dos arquivos usando `unzip -t`.
+
+Essa etapa prepara o CryoMap para entrega de relatórios operacionais em formato editável, permitindo análise em Excel, LibreOffice e ferramentas compatíveis.
