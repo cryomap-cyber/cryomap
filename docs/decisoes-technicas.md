@@ -508,3 +508,64 @@ Decisão importante mantida:
 - Equipamentos não possuem sensores.
 - Sensores pertencem somente às salas.
 - Temperatura de equipamento é lançada manualmente.
+
+## 21. CRUD de tarefas técnicas
+
+Foi criado o CRUD inicial de tarefas técnicas do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/tasks/tasks.module.ts`
+- `backend/src/tasks/tasks.controller.ts`
+- `backend/src/tasks/tasks.service.ts`
+- `backend/src/tasks/dto/create-task.dto.ts`
+- `backend/src/tasks/dto/update-task.dto.ts`
+- `backend/src/tasks/dto/find-tasks.dto.ts`
+
+Rotas criadas:
+
+- `POST /tasks`
+- `GET /tasks`
+- `GET /tasks?companyId=...`
+- `GET /tasks?roomId=...`
+- `GET /tasks?equipmentId=...`
+- `GET /tasks?assignedToUserId=...`
+- `GET /tasks?status=...`
+- `GET /tasks?priority=...`
+- `GET /tasks/:id`
+- `PATCH /tasks/:id`
+- `DELETE /tasks/:id`
+
+Todas as rotas de tarefas são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Criar tarefa vinculada a uma empresa.
+- Permitir vínculo opcional com sala.
+- Permitir vínculo opcional com equipamento.
+- Permitir vínculo opcional com usuário responsável.
+- Validar se a sala pertence à empresa informada.
+- Validar se o equipamento pertence à empresa e ao local informado.
+- Validar se o usuário responsável está ativo e pertence à empresa.
+- Listar tarefas com filtros por empresa, sala, equipamento, responsável, status e prioridade.
+- Buscar tarefa por ID.
+- Editar título, descrição, prioridade, status e prazo.
+- Registrar `completed_at` automaticamente quando a tarefa muda para `DONE`.
+- Limpar `completed_at` quando uma tarefa concluída é reaberta.
+- Excluir tarefa logicamente usando `deleted_at`.
+- Limitar a listagem a 200 tarefas.
+- Bloquear acesso sem autenticação.
+
+Status utilizados:
+
+- `OPEN`
+- `IN_PROGRESS`
+- `DONE`
+- `CANCELED`
+- `OVERDUE`
+
+Campos de prazo adicionados ao model `Task`:
+
+- `due_date`
+- `completed_at`
+
