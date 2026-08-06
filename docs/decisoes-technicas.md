@@ -689,3 +689,49 @@ Decisão técnica:
 - O banco guarda apenas metadados e caminho do arquivo.
 - A pasta `uploads` deve permanecer fora do Git.
 - O limite inicial por arquivo é de 10 MB.
+
+## 24. Dashboard operacional inicial
+
+Foi criado o módulo inicial de dashboard operacional do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/dashboard/dashboard.module.ts`
+- `backend/src/dashboard/dashboard.controller.ts`
+- `backend/src/dashboard/dashboard.service.ts`
+- `backend/src/dashboard/dto/dashboard-query.dto.ts`
+
+Rotas criadas:
+
+- `GET /dashboard/overview`
+- `GET /dashboard/overview?companyId=...`
+
+Todas as rotas do dashboard são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Retornar resumo geral do sistema.
+- Permitir filtro por empresa.
+- Validar se a empresa existe antes de gerar dashboard filtrado.
+- Retornar contadores de empresas.
+- Retornar contadores de salas por status térmico.
+- Retornar contadores de sensores por status.
+- Retornar contadores de equipamentos por status.
+- Retornar contadores de tarefas por status.
+- Retornar quantidade de tarefas críticas abertas, em andamento ou atrasadas.
+- Retornar últimos registros de atendimento.
+- Retornar últimas leituras de temperatura das salas.
+- Bloquear acesso sem autenticação.
+
+Resumo retornado:
+
+- Empresas totais, ativas e inativas.
+- Salas totais, normais, em alerta, críticas e offline.
+- Sensores totais, ativos, offline, em manutenção e inativos.
+- Equipamentos totais, ativos, rodando, parados, em manutenção, offline e inativos.
+- Tarefas totais, abertas, em andamento, concluídas, canceladas e atrasadas.
+- Tarefas críticas pendentes.
+- Últimos atendimentos técnicos.
+- Últimas leituras de temperatura de salas.
+
+Essa etapa prepara o backend para os cards, gráficos e indicadores principais do futuro frontend.

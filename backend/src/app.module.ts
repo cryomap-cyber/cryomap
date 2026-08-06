@@ -14,6 +14,7 @@ import { TemperatureReadingsModule } from './temperature-readings/temperature-re
 import { UsersModule } from './users/users.module.js';
 import { ServiceRecordsModule } from './service-records/service-records.module.js';
 import { AttachmentsModule } from './attachments/attachments.module.js';
+import { DashboardModule } from './dashboard/dashboard.module.js';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AttachmentsModule } from './attachments/attachments.module.js';
     TasksModule,
     ServiceRecordsModule,
     AttachmentsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
