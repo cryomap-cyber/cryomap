@@ -866,3 +866,65 @@ Essa etapa prepara o frontend para cards e indicadores como:
 - Alertas reconhecidos.
 - Situações térmicas pendentes de ação.
 
+## 27. Dashboard de séries temporais
+
+Foi criado o módulo de séries temporais dentro do dashboard operacional do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/dashboard/dashboard-timeseries.controller.ts`
+- `backend/src/dashboard/dashboard-timeseries.service.ts`
+- `backend/src/dashboard/dto/room-series-query.dto.ts`
+- `backend/src/dashboard/dto/recent-room-readings-query.dto.ts`
+- `backend/src/dashboard/dashboard.module.ts`
+
+Rotas criadas:
+
+- `GET /dashboard/room-temperature-series`
+- `GET /dashboard/room-humidity-series`
+- `GET /dashboard/room-readings-summary`
+- `GET /dashboard/recent-room-readings`
+
+Todas as rotas são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Retornar série temporal de temperatura por sala.
+- Retornar série temporal de umidade por sala.
+- Retornar resumo estatístico das leituras de uma sala.
+- Retornar leituras recentes gerais ou filtradas.
+- Filtrar séries por empresa e sala.
+- Filtrar séries por período usando `startDate` e `endDate`.
+- Aplicar período padrão de últimas 24 horas quando nenhuma data for enviada.
+- Aplicar limite padrão de 500 pontos nas séries.
+- Aplicar limite padrão de 50 leituras recentes.
+- Validar limite entre 1 e 1000.
+- Validar empresa existente quando informada.
+- Validar sala existente dentro da empresa.
+- Bloquear acesso sem autenticação.
+
+Dados retornados nas séries:
+
+- Temperatura.
+- Umidade.
+- Fonte da leitura.
+- Data/hora da leitura.
+- Sensor vinculado, quando houver.
+- Informações básicas da sala.
+
+Resumo estatístico retornado:
+
+- Total de leituras.
+- Temperatura média, mínima e máxima.
+- Umidade média, mínima e máxima.
+- Primeira leitura do período.
+- Última leitura do período.
+- Início e fim real do período com dados.
+
+Essa etapa prepara o frontend para gráficos como:
+
+- Histórico de temperatura por sala.
+- Histórico de umidade por sala.
+- Cards de mínima, máxima e média.
+- Tabelas de leituras recentes.
+- Evolução térmica por período.
