@@ -629,3 +629,63 @@ Integração com tarefas:
 
 Essa etapa prepara o CryoMap para relatórios técnicos, cálculo de tempo parado e histórico operacional por cliente, sala, equipamento e técnico.
 
+## 23. Uploads e anexos
+
+Foi criado o módulo inicial de uploads e anexos do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/attachments/attachments.module.ts`
+- `backend/src/attachments/attachments.controller.ts`
+- `backend/src/attachments/attachments.service.ts`
+- `backend/src/attachments/dto/create-attachment.dto.ts`
+- `backend/src/attachments/dto/find-attachments.dto.ts`
+
+Rotas criadas:
+
+- `POST /attachments`
+- `GET /attachments`
+- `GET /attachments?companyId=...`
+- `GET /attachments?taskId=...`
+- `GET /attachments?serviceRecordId=...`
+- `GET /attachments?type=...`
+- `GET /attachments/:id`
+- `GET /attachments/:id/download`
+- `DELETE /attachments/:id`
+
+Todas as rotas de anexos são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Enviar arquivo usando `multipart/form-data`.
+- Salvar arquivo fisicamente em `uploads/attachments`.
+- Registrar metadados do arquivo no model `Attachment`.
+- Vincular anexo diretamente a uma empresa.
+- Vincular anexo a uma tarefa.
+- Vincular anexo a um registro de atendimento.
+- Descobrir automaticamente a empresa quando o anexo for vinculado a uma tarefa.
+- Descobrir automaticamente empresa e tarefa quando o anexo for vinculado a um atendimento.
+- Validar se a empresa existe antes de criar o anexo.
+- Validar se a tarefa existe antes de vincular o anexo.
+- Validar se o registro de atendimento existe antes de vincular o anexo.
+- Impedir upload sem vínculo com empresa, tarefa ou atendimento.
+- Registrar usuário autenticado que enviou o arquivo em `uploaded_by_user_id`.
+- Listar anexos com filtros por empresa, tarefa, atendimento, usuário e tipo.
+- Buscar anexo por ID.
+- Baixar arquivo usando rota de download.
+- Excluir anexo logicamente usando `deleted_at`.
+
+Tipos de anexo disponíveis:
+
+- `SERVICE_PHOTO`
+- `AUVO_REPORT`
+- `COMPANY_LOGO`
+- `FLOOR_PLAN`
+- `OTHER`
+
+Decisão técnica:
+
+- Os arquivos reais ficam fora do banco, dentro da pasta `uploads/attachments`.
+- O banco guarda apenas metadados e caminho do arquivo.
+- A pasta `uploads` deve permanecer fora do Git.
+- O limite inicial por arquivo é de 10 MB.

@@ -13,6 +13,7 @@ import { TasksModule } from './tasks/tasks.module.js';
 import { TemperatureReadingsModule } from './temperature-readings/temperature-readings.module.js';
 import { UsersModule } from './users/users.module.js';
 import { ServiceRecordsModule } from './service-records/service-records.module.js';
+import { AttachmentsModule } from './attachments/attachments.module.js';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ServiceRecordsModule } from './service-records/service-records.module.j
     EquipmentTemperatureReadingsModule,
     TasksModule,
     ServiceRecordsModule,
+    AttachmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
