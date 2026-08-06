@@ -735,3 +735,78 @@ Resumo retornado:
 - Últimas leituras de temperatura de salas.
 
 Essa etapa prepara o backend para os cards, gráficos e indicadores principais do futuro frontend.
+
+## 25. Alertas térmicos iniciais
+
+Foi criado o módulo inicial de alertas térmicos do CryoMap.
+
+Arquivos principais:
+
+- `backend/src/thermal-alerts/thermal-alerts.module.ts`
+- `backend/src/thermal-alerts/thermal-alerts.controller.ts`
+- `backend/src/thermal-alerts/thermal-alerts.service.ts`
+- `backend/src/thermal-alerts/dto/find-thermal-alerts.dto.ts`
+- `backend/src/temperature-readings/temperature-readings.service.ts`
+
+Alterações no Prisma:
+
+- Criado enum `ThermalAlertType`.
+- Criado enum `ThermalAlertSeverity`.
+- Criado enum `ThermalAlertStatus`.
+- Criado model `ThermalAlert`.
+- Criadas relações com empresa, sala, sensor, leitura de temperatura e usuário que reconheceu o alerta.
+
+Rotas criadas:
+
+- `GET /thermal-alerts`
+- `GET /thermal-alerts?companyId=...`
+- `GET /thermal-alerts?roomId=...`
+- `GET /thermal-alerts?sensorId=...`
+- `GET /thermal-alerts?status=...`
+- `GET /thermal-alerts?severity=...`
+- `GET /thermal-alerts/:id`
+- `PATCH /thermal-alerts/:id/acknowledge`
+- `PATCH /thermal-alerts/:id/resolve`
+- `PATCH /thermal-alerts/:id/dismiss`
+- `DELETE /thermal-alerts/:id`
+
+Todas as rotas de alertas térmicos são protegidas com JWT usando `JwtAuthGuard`.
+
+Regras implementadas:
+
+- Criar alerta térmico automaticamente quando uma leitura deixa a sala em estado `CRITICAL`.
+- Reutilizar/reabrir alerta aberto ou reconhecido da mesma sala, em vez de criar vários alertas duplicados.
+- Resolver automaticamente alertas abertos ou reconhecidos quando uma nova leitura volta ao estado `NORMAL`.
+- Vincular alerta à empresa.
+- Vincular alerta à sala.
+- Vincular alerta ao sensor, quando houver.
+- Vincular alerta à leitura de temperatura que disparou o alerta.
+- Registrar temperatura, mínimo, máximo e mensagem do alerta.
+- Reconhecer alerta com usuário autenticado.
+- Resolver alerta manualmente.
+- Dispensar alerta manualmente.
+- Excluir alerta logicamente usando `deleted_at`.
+- Listar alertas com filtros por empresa, sala, sensor, tipo, severidade, status e período.
+- Bloquear acesso sem autenticação.
+
+Status disponíveis:
+
+- `OPEN`
+- `ACKNOWLEDGED`
+- `RESOLVED`
+- `DISMISSED`
+
+Severidades disponíveis:
+
+- `WARNING`
+- `CRITICAL`
+
+Tipo inicial:
+
+- `ROOM_TEMPERATURE`
+
+Integração com leituras de temperatura:
+
+- Leituras críticas criam ou atualizam alerta térmico.
+- Leituras normais resolvem alertas térmicos ativos da sala.
+- A integração acontece dentro da mesma transação da criação da leitura, garantindo consistência entre leitura, sala, sensor e alerta.

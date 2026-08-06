@@ -6,6 +6,8 @@ import {
 import {
   Prisma,
   ReadingSource,
+  ThermalAlertSeverity,
+  ThermalAlertStatus,
   ThermalStatus,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -116,6 +118,75 @@ export class TemperatureReadingsService {
             lastTemperature: createDto.temperature,
             lastHumidity: createDto.humidity,
             lastSeenAt: readAt,
+          },
+        });
+      }
+
+      if (thermalStatus === ThermalStatus.CRITICAL) {
+        const existingOpenAlert = await tx.thermalAlert.findFirst({
+          where: {
+            roomId: createDto.roomId,
+            deletedAt: null,
+            status: {
+              in: [ThermalAlertStatus.OPEN,
+                ThermalAlertStatus.ACKNOWLEDGED,
+              ],
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        const alertData = {
+          sensorId: createDto.sensorId,
+          readingId: reading.id,
+          severity: ThermalAlertSeverity.CRITICAL,
+          status: ThermalAlertStatus.OPEN,
+          temperature: createDto.temperature,
+          minTemperature: room.minTemperature,
+          maxTemperature: room.maxTemperature,
+          message: this.buildThermalAlertMessage(
+            createDto.temperature,
+            room.minTemperature,
+            room.maxTemperature,
+          ),
+          triggeredAt: readAt,
+          acknowledgedAt: null,
+          acknowledgedByUserId: null,
+          resolvedAt: null,
+        };
+
+        if (existingOpenAlert) {
+          await tx.thermalAlert.update({
+            where: {
+              id: existingOpenAlert.id,
+            },
+            data: alertData,
+          });
+        } else {
+          await tx.thermalAlert.create({
+            data: {
+              companyId: createDto.companyId,
+              roomId: createDto.roomId,
+              ...alertData,
+            },
+          });
+        }
+      } else {
+        await tx.thermalAlert.updateMany({
+          where: {
+            roomId: createDto.roomId,
+            deletedAt: null,
+            status: {
+              in: [ThermalAlertStatus.OPEN,
+                ThermalAlertStatus.ACKNOWLEDGED,
+              ],
+            },
+          },
+          data: {
+            status: ThermalAlertStatus.RESOLVED,
+            resolvedAt: readAt,
           },
         });
       }
@@ -251,5 +322,29 @@ export class TemperatureReadingsService {
     }
 
     return ThermalStatus.NORMAL;
+  }
+
+  private buildThermalAlertMessage(
+    currentTemperature: number,
+    minTemperature?: number | null,
+    maxTemperature?: number | null,
+  ) {
+    if (
+      maxTemperature !== undefined &&
+      maxTemperature !== null &&
+      currentTemperature > maxTemperature
+    ) {
+      return `Temperatura acima do limite máximo: ${currentTemperature}°C. Limite máximo: ${maxTemperature}°C.`;
+    }
+
+    if (
+      minTemperature !== undefined &&
+      minTemperature !== null &&
+      currentTemperature < minTemperature
+    ) {
+      return `Temperatura abaixo do limite mínimo: ${currentTemperature}°C. Limite mínimo: ${minTemperature}°C.`;
+    }
+
+    return `Temperatura fora da faixa configurada: ${currentTemperature}°C.`;
   }
 }

@@ -89,6 +89,22 @@ enum AttachmentType {
   OTHER
 }
 
+enum ThermalAlertType {
+  ROOM_TEMPERATURE
+}
+
+enum ThermalAlertSeverity {
+  WARNING
+  CRITICAL
+}
+
+enum ThermalAlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
 model AppSetting {
   id            String   @id @default(uuid())
   systemName    String   @default("CryoMap") @map("system_name")
@@ -127,6 +143,7 @@ model Company {
   tasks                        Task[]
   serviceRecords               ServiceRecord[]
   attachments                  Attachment[]
+  thermalAlerts                ThermalAlert[]
 
   @@map("companies")
 }
@@ -152,6 +169,7 @@ model User {
   serviceRecords              ServiceRecord[]               @relation("TechnicianServiceRecords")
   uploadedAttachments         Attachment[]                  @relation("UploadedAttachments")
   equipmentTemperatureRecords EquipmentTemperatureReading[] @relation("EquipmentTemperatureCreatedBy")
+  acknowledgedThermalAlerts   ThermalAlert[]                @relation("ThermalAlertAcknowledgedBy")
 
   @@map("users")
 }
@@ -179,6 +197,7 @@ model Room {
   equipmentTemperatureReadings EquipmentTemperatureReading[]
   tasks                        Task[]
   serviceRecords               ServiceRecord[]
+  thermalAlerts                ThermalAlert[]
 
   @@index([companyId])
   @@map("rooms")
@@ -232,6 +251,7 @@ model Sensor {
   company                 Company                  @relation(fields: [companyId], references: [id], onDelete: Restrict)
   room                    Room                     @relation(fields: [roomId], references: [id], onDelete: Restrict)
   roomTemperatureReadings RoomTemperatureReading[]
+  thermalAlerts           ThermalAlert[]
 
   @@index([companyId])
   @@index([roomId])
@@ -252,6 +272,8 @@ model RoomTemperatureReading {
   company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
   room    Room    @relation(fields: [roomId], references: [id], onDelete: Restrict)
   sensor  Sensor? @relation(fields: [sensorId], references: [id], onDelete: SetNull)
+
+  thermalAlerts ThermalAlert[]
 
   @@index([companyId, readAt])
   @@index([roomId, readAt])
@@ -318,6 +340,43 @@ model Task {
   @@index([assignedToUserId])
   @@index([equipmentId])
   @@map("tasks")
+}
+
+model ThermalAlert {
+  id                   String               @id @default(uuid())
+  companyId            String               @map("company_id")
+  roomId               String               @map("room_id")
+  sensorId             String?              @map("sensor_id")
+  readingId            String?              @map("reading_id")
+  acknowledgedByUserId String?              @map("acknowledged_by_user_id")
+  type                 ThermalAlertType     @default(ROOM_TEMPERATURE)
+  severity             ThermalAlertSeverity
+  status               ThermalAlertStatus   @default(OPEN)
+  temperature          Float?
+  minTemperature       Float?               @map("min_temperature")
+  maxTemperature       Float?               @map("max_temperature")
+  message              String
+  triggeredAt          DateTime             @default(now()) @map("triggered_at")
+  acknowledgedAt       DateTime?            @map("acknowledged_at")
+  resolvedAt           DateTime?            @map("resolved_at")
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
+  deletedAt            DateTime?            @map("deleted_at")
+
+  company            Company                 @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  room               Room                    @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  sensor             Sensor?                 @relation(fields: [sensorId], references: [id], onDelete: SetNull)
+  reading            RoomTemperatureReading? @relation(fields: [readingId], references: [id], onDelete: SetNull)
+  acknowledgedByUser User?                   @relation("ThermalAlertAcknowledgedBy", fields: [acknowledgedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([roomId])
+  @@index([sensorId])
+  @@index([readingId])
+  @@index([status])
+  @@index([severity])
+  @@index([triggeredAt])
+  @@map("thermal_alerts")
 }
 
 model ServiceRecord {
