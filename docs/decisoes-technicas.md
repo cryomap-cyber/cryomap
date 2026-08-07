@@ -1264,3 +1264,69 @@ Testes realizados:
 - Logo aparecendo corretamente no login e no menu lateral.
 
 Essa etapa cria a base visual e estrutural do frontend do CryoMap, preparando o sistema para as próximas telas administrativas e operacionais.
+
+## 32. Tela de empresas no frontend
+
+Foi criada a tela de empresas no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/types/company.ts`
+- `frontend/src/services/companies.ts`
+- `frontend/src/pages/Companies/Companies.tsx`
+- `frontend/src/pages/Companies/Companies.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+
+Funcionalidades implementadas:
+
+- Listagem de empresas consumindo `GET /companies`.
+- Cards de resumo com total de empresas, empresas ativas e empresas inativas.
+- Busca local por nome, CNPJ, email, telefone, cidade, estado e status.
+- Botão para atualizar a listagem.
+- Cadastro de nova empresa usando `POST /companies`.
+- Edição de empresa usando `PATCH /companies/:id`.
+- Inativação de empresa usando `DELETE /companies/:id`.
+- Botão de inativar desabilitado para empresas já inativas.
+- Tratamento de erro para CNPJ duplicado.
+- Tratamento de erro ao carregar, salvar ou inativar empresa.
+- Formatação visual de CNPJ.
+- Badge visual para status ativo/inativo.
+- Item `Empresas` habilitado no menu lateral.
+- Rota protegida `/companies`.
+
+Campos do formulário:
+
+- Nome
+- CNPJ
+- Email
+- Telefone
+- Endereço
+- Cidade
+- Estado
+
+Decisões técnicas:
+
+- O formulário de criação e edição foi mantido na mesma tela da listagem.
+- O estado do formulário é controlado com `useState`.
+- A busca é feita localmente usando `useMemo`.
+- A listagem é recarregada após cadastro, edição ou inativação.
+- O frontend envia apenas os dígitos do CNPJ para o backend.
+- Campos opcionais vazios são enviados como `undefined`.
+- A tela segue a identidade visual inicial do CryoMap, baseada em tons frios de azul, branco e cinza claro.
+
+Testes realizados:
+
+- A tela `/companies` abriu corretamente.
+- A empresa `Cliente Demo CryoMap` apareceu na listagem.
+- A busca funcionou.
+- O botão atualizar funcionou.
+- O cadastro de nova empresa funcionou.
+- A tentativa de cadastrar CNPJ duplicado retornou erro corretamente.
+- A edição de empresa funcionou.
+- A inativação de empresa funcionou.
+- Os cards de resumo foram atualizados após alterações.
+- O menu lateral marcou `Empresas` como item ativo.
+- A rota permaneceu protegida por autenticação.
+
+Essa etapa inicia a transformação dos CRUDs do backend em telas administrativas reais do CryoMap.
