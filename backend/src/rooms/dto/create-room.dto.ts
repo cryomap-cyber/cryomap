@@ -43,5 +43,6 @@ export class CreateRoomDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   notes?: string;
 }

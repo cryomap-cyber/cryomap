@@ -1330,3 +1330,89 @@ Testes realizados:
 - A rota permaneceu protegida por autenticação.
 
 Essa etapa inicia a transformação dos CRUDs do backend em telas administrativas reais do CryoMap.
+
+## 33. Tela de salas no frontend
+
+Foi criada a tela de salas no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/types/room.ts`
+- `frontend/src/services/rooms.ts`
+- `frontend/src/pages/Rooms/Rooms.tsx`
+- `frontend/src/pages/Rooms/Rooms.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+- `backend/src/rooms/dto/create-room.dto.ts`
+- `backend/src/rooms/dto/update-room.dto.ts`
+
+Funcionalidades implementadas:
+
+- Listagem de salas consumindo `GET /rooms`.
+- Filtro de salas por empresa consumindo `GET /rooms?companyId=...`.
+- Cards de resumo com total de salas, salas normais, em atenção, críticas e offline.
+- Busca local por nome da sala, observações, empresa, status térmico, status de cadastro e temperaturas.
+- Botão para atualizar a listagem.
+- Cadastro de nova sala usando `POST /rooms`.
+- Edição de sala usando `PATCH /rooms/:id`.
+- Inativação de sala usando `DELETE /rooms/:id`.
+- Botão de inativar desabilitado para salas já inativas.
+- Badge visual para status térmico.
+- Badge visual para status de cadastro.
+- Exibição de temperatura atual em °C.
+- Exibição de temperatura mínima e máxima.
+- Exibição de posição X/Y para uso futuro no mapa/heatmap.
+- Item `Salas` habilitado no menu lateral.
+- Rota protegida `/rooms`.
+
+Campos do formulário:
+
+- Empresa
+- Nome
+- Descrição/observações
+- Temperatura mínima
+- Temperatura máxima
+- Temperatura atual
+- Posição X no mapa
+- Posição Y no mapa
+
+Decisões técnicas:
+
+- O campo visual `Descrição` no frontend foi mapeado para `notes`, pois o backend e o Prisma já utilizam `notes` para observações da sala.
+- Foi evitada a criação de um novo campo `description` para não duplicar conceitos com `notes`.
+- O frontend passou a enviar `notes` em vez de `description`.
+- Os DTOs de sala foram mantidos alinhados com o backend existente.
+- O formulário de criação e edição foi mantido na mesma tela da listagem.
+- A busca é feita localmente usando `useMemo`.
+- A listagem é recarregada após cadastro, edição ou inativação.
+- Os campos numéricos são convertidos no frontend antes de enviar para o backend.
+- A tela segue a identidade visual inicial do CryoMap, baseada na logo e em tons frios de azul, branco e cinza claro.
+
+Correções realizadas durante a etapa:
+
+- Corrigido aviso do ESLint em `useEffect` evitando `setState` síncrono direto dentro do effect.
+- Corrigido erro de validação `property description should not exist`.
+- Padronizado o uso de `notes` como campo de descrição/observações da sala.
+- Adicionada validação visual para impedir temperatura mínima maior que temperatura máxima.
+- Removidos logs temporários usados para depuração de erro Axios.
+
+Testes realizados:
+
+- A tela `/rooms` abriu corretamente.
+- As salas apareceram na listagem.
+- O filtro por empresa funcionou.
+- A busca local funcionou.
+- O botão atualizar funcionou.
+- O cadastro de nova sala funcionou.
+- O cadastro com descrição/observações funcionou usando `notes`.
+- A edição de sala funcionou.
+- A inativação de sala funcionou.
+- O botão de inativar ficou desabilitado para sala inativa.
+- Os cards de resumo foram atualizados após alterações.
+- O status térmico apareceu corretamente com badge.
+- A temperatura atual apareceu em °C.
+- O menu lateral marcou `Salas` como item ativo.
+- A rota permaneceu protegida por autenticação.
+
+Essa etapa conclui o CRUD inicial de salas no frontend, uma das bases principais do CryoMap, já que sensores e equipamentos dependem das salas cadastradas.
+

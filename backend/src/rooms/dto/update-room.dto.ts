@@ -51,5 +51,6 @@ export class UpdateRoomDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   notes?: string | null;
 }

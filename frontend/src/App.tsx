@@ -3,6 +3,7 @@ import { AppLayout } from './components/AppLayout/AppLayout';
 import { Login } from './pages/Login/Login';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { Companies } from './pages/Companies/Companies';
+import { Rooms } from './pages/Rooms/Rooms';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 export function App() {
@@ -14,6 +15,7 @@ export function App() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/companies" element={<Companies />} />
+          <Route path="/rooms" element={<Rooms />} />
         </Route>
       </Route>
 
