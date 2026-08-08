@@ -4,6 +4,7 @@ import { Login } from './pages/Login/Login';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { Companies } from './pages/Companies/Companies';
 import { Rooms } from './pages/Rooms/Rooms';
+import { Equipments } from './pages/Equipments/Equipments';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 export function App() {
@@ -16,6 +17,7 @@ export function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/companies" element={<Companies />} />
           <Route path="/rooms" element={<Rooms />} />
+          <Route path="/equipments" element={<Equipments />} />
         </Route>
       </Route>
 

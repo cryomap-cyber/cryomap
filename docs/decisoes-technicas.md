@@ -1416,3 +1416,90 @@ Testes realizados:
 
 Essa etapa conclui o CRUD inicial de salas no frontend, uma das bases principais do CryoMap, já que sensores e equipamentos dependem das salas cadastradas.
 
+## 34. Tela de equipamentos no frontend
+
+Foi criada a tela de equipamentos no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/types/equipment.ts`
+- `frontend/src/services/equipments.ts`
+- `frontend/src/pages/Equipments/Equipments.tsx`
+- `frontend/src/pages/Equipments/Equipments.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+
+Funcionalidades implementadas:
+
+- Listagem de equipamentos consumindo `GET /equipments`.
+- Filtro de equipamentos por empresa consumindo `GET /equipments?companyId=...`.
+- Filtro de equipamentos por sala consumindo `GET /equipments?roomId=...`.
+- Busca local por nome, código, fabricante, modelo, número de série, empresa, sala, status, observações, setpoint, delta e temperatura atual.
+- Cards de resumo com total de equipamentos, ativos, rodando, parados, em manutenção, offline e inativos.
+- Cadastro de novo equipamento usando `POST /equipments`.
+- Edição de equipamento usando `PATCH /equipments/:id`.
+- Inativação de equipamento usando `DELETE /equipments/:id`.
+- Botão de inativar desabilitado para equipamentos já inativos.
+- Badge visual para status do equipamento.
+- Exibição de temperatura atual do equipamento em °C.
+- Exibição de setpoint e delta.
+- Exibição de fabricante, modelo e número de série.
+- Item `Equipamentos` habilitado no menu lateral.
+- Rota protegida `/equipments`.
+
+Campos do formulário:
+
+- Empresa
+- Sala opcional
+- Nome
+- Código
+- Fabricante
+- Modelo
+- Número de série
+- Setpoint
+- Delta
+- Status, apenas na edição
+- Observações
+
+Decisões técnicas:
+
+- Equipamentos não possuem sensores.
+- Sensores continuam pertencendo somente às salas.
+- A temperatura atual do equipamento é exibida na tela, mas não é editada diretamente no formulário de equipamentos.
+- A temperatura atual do equipamento deve ser atualizada pela rotina de temperatura manual de equipamento, via módulo próprio de leituras manuais.
+- O formulário foi alinhado ao backend existente, usando `manufacturer`, `model`, `serialNumber`, `setpoint`, `delta` e `notes`.
+- Foram removidos do payload do frontend os campos não aceitos pelo backend: `type`, `brand` e `currentTemperature`.
+- A busca é feita localmente usando `useMemo`.
+- A listagem é recarregada após cadastro, edição ou inativação.
+- Equipamentos podem ser cadastrados com sala vinculada ou sem sala vinculada.
+- Ao trocar a empresa no formulário, a sala selecionada é limpa para evitar vínculo inválido.
+
+Correções realizadas durante a etapa:
+
+- Corrigido erro de validação `property type should not exist`.
+- Corrigido erro de validação `property brand should not exist`.
+- Corrigido erro de validação `property currentTemperature should not exist`.
+- Ajustado o frontend para seguir exatamente os campos aceitos pelo backend de equipamentos.
+- Mantida a regra de domínio de que sensores não pertencem aos equipamentos.
+
+Testes realizados:
+
+- A tela `/equipments` abriu corretamente.
+- Os equipamentos apareceram na listagem.
+- O filtro por empresa funcionou.
+- O filtro por sala funcionou.
+- A busca local funcionou.
+- O botão atualizar funcionou.
+- O cadastro de equipamento com sala vinculada funcionou.
+- O cadastro de equipamento sem sala vinculada funcionou.
+- A edição de equipamento funcionou.
+- A alteração de fabricante, modelo, número de série, setpoint, delta, status e observações funcionou.
+- A inativação de equipamento funcionou.
+- O botão de inativar ficou desabilitado para equipamento inativo.
+- Os cards de resumo foram atualizados após alterações.
+- O status apareceu corretamente com badge.
+- A temperatura manual apareceu em °C quando existente.
+- O menu lateral marcou `Equipamentos` como item ativo.
+- A rota permaneceu protegida por autenticação.
+
+Essa etapa conclui o CRUD inicial de equipamentos no frontend, mantendo a separação correta entre equipamentos, salas e sensores.

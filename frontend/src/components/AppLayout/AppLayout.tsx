@@ -24,7 +24,7 @@ export function AppLayout() {
           <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/companies">Empresas</NavLink>
           <NavLink to="/rooms">Salas</NavLink>
-          <span className="sidebar-disabled">Equipamentos</span>
+          <NavLink to="/equipments">Equipamentos</NavLink>
           <span className="sidebar-disabled">Sensores</span>
           <span className="sidebar-disabled">Tarefas</span>
           <span className="sidebar-disabled">Relatórios</span>

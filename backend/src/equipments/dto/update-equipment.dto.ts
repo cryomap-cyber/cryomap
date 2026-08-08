@@ -60,4 +60,18 @@ export class UpdateEquipmentDto {
   @IsOptional()
   @IsString()
   notes?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  type?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  brand?: string | null;
+
+  @IsOptional()
+  @IsNumber()
+  currentTemperature?: number | null;
 }
