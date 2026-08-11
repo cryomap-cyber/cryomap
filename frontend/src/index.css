@@ -1,15 +1,58 @@
+:root {
+  --color-primary: #0b4f71;
+  --color-primary-dark: #06364f;
+  --color-primary-light: #14a8d8;
+  --color-accent: #35c7f3;
+
+  --color-background: #f3f9fc;
+  --color-surface: #ffffff;
+  --color-surface-soft: #edf6fb;
+
+  --color-text: #143244;
+  --color-text-soft: #284558;
+  --color-muted: #6b7c88;
+
+  --color-border: #d9e8f2;
+  --color-border-soft: #e4eef5;
+
+  --color-success-bg: #e9f9f0;
+  --color-success-text: #167a3f;
+
+  --color-warning-bg: #fff8e5;
+  --color-warning-text: #9a6400;
+
+  --color-danger-bg: #fff1f1;
+  --color-danger-text: #c62828;
+
+  --shadow-card: 0 14px 40px rgba(15, 95, 143, 0.08);
+  --shadow-panel: 0 14px 40px rgba(15, 95, 143, 0.06);
+
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 30px;
+}
+
 * {
   box-sizing: border-box;
 }
 
 html {
-  background: #f4f8fb;
+  background: var(--color-background);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(53, 199, 243, 0.16),
+      transparent 32rem
+    ),
+    var(--color-background);
+  color: var(--color-text);
   font-family:
     Inter,
     ui-sans-serif,
@@ -18,11 +61,13 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  color: #163345;
+  overflow-x: hidden;
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -33,14 +78,376 @@ button {
     opacity 0.15s ease;
 }
 
-button:hover:not(:disabled) {
+button:not(:disabled):hover {
   transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: inherit;
 }
 
 .page-center {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: #f4f8fb;
-  color: #163345;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(53, 199, 243, 0.16),
+      transparent 32rem
+    ),
+    var(--color-background);
+  color: var(--color-text);
+  padding: 24px;
+}
+
+/* Ajuste compacto para telas de cadastro */
+@media (max-width: 1000px) {
+  .companies-page,
+  .rooms-page,
+  .equipments-page,
+  .sensors-page {
+    display: grid;
+    gap: 16px;
+  }
+
+  .companies-header,
+  .rooms-header,
+  .equipments-header,
+  .sensors-header {
+    gap: 14px !important;
+    align-items: flex-start !important;
+  }
+
+  .companies-header h1,
+  .rooms-header h1,
+  .equipments-header h1,
+  .sensors-header h1 {
+    font-size: 28px !important;
+    line-height: 1.1;
+  }
+
+  .companies-header p,
+  .rooms-header p,
+  .equipments-header p,
+  .sensors-header p {
+    font-size: 14px !important;
+    line-height: 1.5;
+    max-width: 100%;
+  }
+
+  .companies-header button,
+  .rooms-header button,
+  .equipments-header button,
+  .sensors-header button {
+    width: auto !important;
+    min-height: 40px !important;
+    padding: 10px 14px !important;
+    border-radius: 14px !important;
+    font-size: 14px !important;
+    align-self: flex-start;
+  }
+
+  .companies-summary,
+  .rooms-summary,
+  .equipments-summary,
+  .sensors-summary {
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .companies-summary-card,
+  .rooms-summary-card,
+  .equipments-summary-card,
+  .sensors-summary-card {
+    min-height: auto !important;
+    padding: 12px 14px !important;
+    border-radius: 16px !important;
+  }
+
+  .companies-summary-card span,
+  .rooms-summary-card span,
+  .equipments-summary-card span,
+  .sensors-summary-card span {
+    font-size: 12px !important;
+  }
+
+  .companies-summary-card strong,
+  .rooms-summary-card strong,
+  .equipments-summary-card strong,
+  .sensors-summary-card strong {
+    font-size: 24px !important;
+    line-height: 1 !important;
+  }
+
+  .companies-panel,
+  .rooms-panel,
+  .equipments-panel,
+  .sensors-panel {
+    padding: 14px !important;
+    border-radius: 20px !important;
+    overflow: hidden;
+  }
+
+  .companies-panel-header,
+  .rooms-panel-header,
+  .equipments-panel-header,
+  .sensors-panel-header {
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+
+  .companies-panel-header h2,
+  .rooms-panel-header h2,
+  .equipments-panel-header h2,
+  .sensors-panel-header h2 {
+    font-size: 20px !important;
+  }
+
+  .companies-panel-header p,
+  .rooms-panel-header p,
+  .equipments-panel-header p,
+  .sensors-panel-header p {
+    font-size: 13px !important;
+  }
+
+  .companies-actions,
+  .rooms-actions,
+  .equipments-actions,
+  .sensors-actions {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .companies-actions input,
+  .companies-actions select,
+  .rooms-actions input,
+  .rooms-actions select,
+  .equipments-actions input,
+  .equipments-actions select,
+  .sensors-actions input,
+  .sensors-actions select {
+    width: 100% !important;
+    min-height: 38px !important;
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
+  }
+
+  .companies-actions button,
+  .rooms-actions button,
+  .equipments-actions button,
+  .sensors-actions button {
+    width: auto !important;
+    min-height: 38px !important;
+    padding: 8px 12px !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
+  }
+
+  .companies-table-wrapper,
+  .rooms-table-wrapper,
+  .equipments-table-wrapper,
+  .sensors-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 16px;
+  }
+
+  .companies-table,
+  .rooms-table,
+  .equipments-table,
+  .sensors-table {
+    min-width: 860px;
+    font-size: 13px !important;
+  }
+
+  .companies-table th,
+  .companies-table td,
+  .rooms-table th,
+  .rooms-table td,
+  .equipments-table th,
+  .equipments-table td,
+  .sensors-table th,
+  .sensors-table td {
+    padding: 10px 12px !important;
+    vertical-align: top;
+  }
+
+  .company-row-actions,
+  .companies-row-actions,
+  .room-row-actions,
+  .equipment-row-actions,
+  .sensor-row-actions {
+    gap: 6px !important;
+  }
+
+  .company-row-actions button,
+  .companies-row-actions button,
+  .room-row-actions button,
+  .equipment-row-actions button,
+  .sensor-row-actions button {
+    min-height: 34px !important;
+    padding: 7px 10px !important;
+    border-radius: 10px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .companies-page,
+  .rooms-page,
+  .equipments-page,
+  .sensors-page {
+    gap: 14px;
+  }
+
+  .companies-header h1,
+  .rooms-header h1,
+  .equipments-header h1,
+  .sensors-header h1 {
+    font-size: 24px !important;
+  }
+
+  .companies-header button,
+  .rooms-header button,
+  .equipments-header button,
+  .sensors-header button {
+    min-height: 38px !important;
+    padding: 9px 12px !important;
+    font-size: 13px !important;
+  }
+
+  .companies-summary,
+  .rooms-summary,
+  .equipments-summary,
+  .sensors-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .companies-summary-card,
+  .rooms-summary-card,
+  .equipments-summary-card,
+  .sensors-summary-card {
+    padding: 10px !important;
+    border-radius: 14px !important;
+  }
+
+  .companies-summary-card span,
+  .rooms-summary-card span,
+  .equipments-summary-card span,
+  .sensors-summary-card span {
+    font-size: 11px !important;
+  }
+
+  .companies-summary-card strong,
+  .rooms-summary-card strong,
+  .equipments-summary-card strong,
+  .sensors-summary-card strong {
+    font-size: 21px !important;
+  }
+
+  .companies-panel,
+  .rooms-panel,
+  .equipments-panel,
+  .sensors-panel {
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .companies-actions,
+  .rooms-actions,
+  .equipments-actions,
+  .sensors-actions {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .companies-actions input,
+  .rooms-actions input,
+  .equipments-actions input,
+  .sensors-actions input {
+    grid-column: 1 / -1;
+  }
+
+  .companies-actions button,
+  .rooms-actions button,
+  .equipments-actions button,
+  .sensors-actions button {
+    width: 100% !important;
+  }
+
+  .companies-table,
+  .rooms-table,
+  .equipments-table,
+  .sensors-table {
+    min-width: 760px;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .companies-summary,
+  .rooms-summary,
+  .equipments-summary,
+  .sensors-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .companies-actions,
+  .rooms-actions,
+  .equipments-actions,
+  .sensors-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Formulários em formato de painel flutuante */
+.company-form-panel,
+.companies-form-panel,
+.room-form-panel,
+.equipment-form-panel,
+.sensor-form-panel {
+  position: fixed !important;
+  inset: 24px !important;
+  z-index: 70 !important;
+  max-width: 980px !important;
+  width: calc(100vw - 48px) !important;
+  max-height: calc(100vh - 48px) !important;
+  margin: auto !important;
+  overflow-y: auto !important;
+  border-radius: 28px !important;
+  box-shadow: 0 30px 90px rgba(7, 31, 48, 0.22) !important;
+  animation: formPanelEnter 0.18s ease-out;
+}
+
+@media (max-width: 700px) {
+  .company-form-panel,
+  .companies-form-panel,
+  .room-form-panel,
+  .equipment-form-panel,
+  .sensor-form-panel {
+    inset: 10px !important;
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    border-radius: 22px !important;
+  }
+}
+
+@keyframes formPanelEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

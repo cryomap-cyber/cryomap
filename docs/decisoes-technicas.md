@@ -1592,3 +1592,68 @@ Testes realizados:
 - A rota permaneceu protegida por autenticação.
 
 Essa etapa conclui o CRUD inicial de sensores no frontend, mantendo a separação correta entre salas, sensores e equipamentos.
+
+## 36. Padronização visual e responsividade inicial
+
+Foi criada uma primeira camada de padronização visual e responsividade para o frontend do CryoMap.
+
+Arquivos principais alterados:
+
+- `frontend/src/index.css`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+- `frontend/src/components/AppLayout/AppLayout.css`
+
+Funcionalidades e melhorias implementadas:
+
+- Criação de variáveis globais de tema em `:root`.
+- Cores principais alinhadas à identidade visual do CryoMap.
+- Ajustes globais de fonte, background, botões, inputs e links.
+- Responsividade inicial para telas menores.
+- Sidebar lateral mantida em telas grandes.
+- Menu mobile com botão de três tracinhos em telas menores.
+- Menu mobile com navegação para Dashboard, Empresas, Salas, Equipamentos e Sensores.
+- Opção de logout dentro do menu mobile.
+- Animação suave de abertura do menu mobile.
+- Formulários de cadastro/edição convertidos para painéis flutuantes.
+- Formulários aparecem no topo/centro da tela, evitando rolagem desnecessária.
+- Cards de resumo compactados em telas menores.
+- Botões de ação compactados em telas menores.
+- Filtros compactados em telas menores.
+- Tabelas mantidas com rolagem horizontal para evitar quebra visual.
+- Dashboard preservado sem mudanças estruturais relevantes.
+
+Decisões técnicas:
+
+- Em desktop, o CryoMap mantém navegação lateral fixa.
+- Em tablet/mobile, a navegação passa a usar menu superior com botão hambúrguer.
+- A interface deve seguir uma linha visual limpa, leve e moderna, inspirada em ecossistemas como o da Apple, mas sem deixar o sistema pesado.
+- A responsividade foi aplicada inicialmente de forma global para telas de cadastro.
+- As telas de empresas, salas, equipamentos e sensores receberam ajustes compactos.
+- Os formulários flutuantes foram aplicados globalmente às telas já existentes.
+- As tabelas continuam exibindo muitas informações, mas agora ficam contidas em rolagem horizontal.
+- A padronização visual será refinada futuramente por página, conforme novas telas forem criadas.
+
+Correções realizadas durante a etapa:
+
+- Corrigido `index.css` que havia ficado duplicado e com seletores inválidos.
+- Corrigido `AppLayout.css` para usar a classe real `.app-shell`.
+- Corrigido `AppLayout.tsx` que havia ficado com imports duplicados.
+- Corrigido comportamento mobile da sidebar.
+- Corrigido excesso de tamanho em cards, botões e filtros nas telas de cadastro.
+- Mantido o Dashboard visualmente estável.
+
+Testes realizados:
+
+- Login funcionando.
+- Dashboard funcionando.
+- Tela de empresas funcionando.
+- Tela de salas funcionando.
+- Tela de equipamentos funcionando.
+- Tela de sensores funcionando.
+- Menu mobile funcionando.
+- Formulários flutuantes funcionando.
+- Cards compactos funcionando.
+- Filtros compactos funcionando.
+- Tabelas com rolagem horizontal funcionando.
+- Sidebar desktop funcionando.
+- Build do frontend validado.
