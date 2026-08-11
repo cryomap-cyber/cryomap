@@ -1816,3 +1816,82 @@ Testes realizados:
 - Formulário flutuante funcionando.
 - Menu mobile funcionando.
 - Build e lint validados.
+
+## 39. Tela de relatórios no frontend
+
+Foi criada a tela de relatórios no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/services/reports.ts`
+- `frontend/src/pages/Reports/Reports.tsx`
+- `frontend/src/pages/Reports/Reports.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+
+Funcionalidades implementadas:
+
+- Tela protegida `/reports`.
+- Item `Relatórios` habilitado no menu desktop e mobile.
+- Filtros por empresa, sala, equipamento, técnico e período.
+- Consulta de relatórios JSON:
+  - `GET /reports/operational-summary`
+  - `GET /reports/tasks-summary`
+  - `GET /reports/service-records-summary`
+  - `GET /reports/downtime-summary`
+  - `GET /reports/thermal-readings-summary`
+- Exportação de relatórios em Excel:
+  - `GET /reports/export/tasks.xlsx`
+  - `GET /reports/export/service-records.xlsx`
+  - `GET /reports/export/downtime.xlsx`
+  - `GET /reports/export/thermal-readings.xlsx`
+- Exportação de relatórios em PDF:
+  - `GET /reports/export/tasks.pdf`
+  - `GET /reports/export/service-records.pdf`
+  - `GET /reports/export/downtime.pdf`
+  - `GET /reports/export/thermal-readings.pdf`
+- Download automático dos arquivos pelo navegador.
+- Painéis visuais para resumo operacional, tarefas, atendimentos, tempo parado e leituras térmicas.
+- Visualização amigável dos dados retornados pelo backend.
+- Datas formatadas em `pt-BR`.
+- UUIDs encurtados na exibição.
+- Objetos aninhados exibidos como blocos organizados.
+- Arrays exibidos com quantidade e prévia dos primeiros itens.
+- Ocultação de campos técnicos como `generatedAt`, `filters` e `period` na visualização principal.
+
+Decisões técnicas:
+
+- A tela de relatórios consome os endpoints já existentes no backend.
+- Os filtros são convertidos para datas ISO antes do envio ao backend.
+- O período padrão da tela é de 30 dias.
+- A exportação usa `responseType: 'blob'` para baixar Excel e PDF.
+- A visualização JSON foi tratada no frontend para evitar exibição bruta de objetos grandes.
+- Os relatórios exportados continuam sendo gerados pelo backend.
+- A tela mantém compatibilidade com o menu mobile e com o layout responsivo criado anteriormente.
+
+Correções realizadas:
+
+- Corrigido warning do React Hook `useEffect` relacionado a `reportParams`.
+- Corrigida exibição de JSON bruto nos painéis de relatórios.
+- Criado renderizador visual para valores simples, objetos, arrays, datas, enums e UUIDs.
+- Melhorado CSS dos blocos internos dos relatórios.
+
+Testes realizados:
+
+- Tela `/reports` abriu corretamente.
+- Filtros carregaram empresas, salas, equipamentos e técnicos.
+- Aplicação de filtros funcionou.
+- Atualização dos relatórios funcionou.
+- Exportação Excel de tarefas funcionou.
+- Exportação PDF de tarefas funcionou.
+- Exportação Excel de atendimentos funcionou.
+- Exportação PDF de atendimentos funcionou.
+- Exportação Excel de tempo parado funcionou.
+- Exportação PDF de tempo parado funcionou.
+- Exportação Excel de leituras térmicas funcionou.
+- Exportação PDF de leituras térmicas funcionou.
+- Visualização dos relatórios ficou organizada.
+- Menu mobile continuou funcionando.
+- Build e lint validados.
+
+Essa etapa conclui a tela inicial de relatórios no frontend.

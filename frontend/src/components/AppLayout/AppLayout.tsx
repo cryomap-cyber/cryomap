@@ -33,9 +33,13 @@ const navigationItems = [
   label: 'Atendimentos',
   to: '/service-records',
   },
+  {
+  label: 'Relatórios',
+  to: '/reports',
+  },
 ];
 
-const disabledItems = ['Relatórios'];
+const disabledItems: string[] = [];
 
 export function AppLayout() {
   const { user, logout } = useAuth();

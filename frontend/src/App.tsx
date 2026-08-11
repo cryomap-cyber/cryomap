@@ -9,6 +9,7 @@ import { Sensors } from './pages/Sensors/Sensors';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { Tasks } from './pages/Tasks/Tasks';
 import { ServiceRecords } from './pages/ServiceRecords/ServiceRecords';
+import { Reports } from './pages/Reports/Reports';
 
 export function App() {
   return (
@@ -24,6 +25,7 @@ export function App() {
           <Route path="/sensors" element={<Sensors />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/service-records" element={<ServiceRecords />} />
+          <Route path="/reports" element={<Reports />} />
         </Route>
       </Route>
 
