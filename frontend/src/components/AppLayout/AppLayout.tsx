@@ -37,6 +37,10 @@ const navigationItems = [
   label: 'Relatórios',
   to: '/reports',
   },
+  {
+  label: 'Leituras',
+  to: '/temperature-readings',
+  },
 ];
 
 const disabledItems: string[] = [];

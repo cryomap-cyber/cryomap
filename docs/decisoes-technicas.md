@@ -1895,3 +1895,98 @@ Testes realizados:
 - Build e lint validados.
 
 Essa etapa conclui a tela inicial de relatórios no frontend.
+
+## 40. Tela de leituras de temperatura no frontend
+
+Foi criada a tela de leituras de temperatura das salas no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/types/temperature-reading.ts`
+- `frontend/src/services/temperature-readings.ts`
+- `frontend/src/pages/TemperatureReadings/TemperatureReadings.tsx`
+- `frontend/src/pages/TemperatureReadings/TemperatureReadings.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+
+Funcionalidades implementadas:
+
+- Tela protegida `/temperature-readings`.
+- Item `Leituras` habilitado no menu desktop e mobile.
+- Listagem de leituras consumindo `GET /temperature-readings`.
+- Filtro por empresa.
+- Filtro por sala.
+- Filtro por sensor.
+- Filtro por período.
+- Busca local por empresa, sala, sensor, origem, temperatura e umidade.
+- Cards de resumo:
+  - total de leituras;
+  - temperatura média;
+  - temperatura mínima;
+  - temperatura máxima;
+  - umidade média.
+- Tabela com:
+  - data da leitura;
+  - empresa;
+  - sala;
+  - sensor;
+  - temperatura;
+  - umidade;
+  - status térmico;
+  - origem.
+- Cadastro manual de leitura usando `POST /temperature-readings`.
+- Formulário flutuante para nova leitura manual.
+- Seleção de empresa, sala e sensor opcional.
+- Envio de temperatura em Celsius.
+- Envio opcional de umidade.
+- Envio opcional de data/hora da leitura.
+- Campo de origem, usando `MANUAL` como padrão.
+- Atualização da listagem após cadastro.
+
+Decisões técnicas:
+
+- A tela de leituras representa o histórico de temperatura das salas.
+- Leituras pertencem a uma empresa e uma sala obrigatoriamente.
+- Sensor é opcional para permitir leitura manual sem equipamento integrado.
+- Apenas salas recebem sensores e leituras automáticas.
+- Equipamentos não recebem sensores; continuam com leituras manuais próprias em outro fluxo.
+- A criação de leitura atualiza a temperatura atual da sala no backend.
+- A criação de leitura atualiza o status térmico da sala no backend.
+- Se um sensor for selecionado, o backend atualiza os últimos valores do sensor.
+- O frontend não calcula nem grava status térmico diretamente.
+- Temperaturas são exibidas em Celsius.
+- Datas `datetime-local` são convertidas para ISO antes do envio.
+- A tela prepara o caminho para futura integração com sensores reais, API ou MQTT.
+
+Correções realizadas:
+
+- Corrigido tipo térmico de sala conforme o padrão existente do projeto.
+- Removido o campo `notes` do payload de criação, pois o backend `CreateTemperatureReadingDto` não aceita esse campo.
+- Mantida a exibição de `notes` na tabela apenas se o backend retornar esse campo futuramente, sem enviá-lo no cadastro.
+- Ajustado formulário para enviar somente campos aceitos pelo backend:
+  - `companyId`;
+  - `roomId`;
+  - `sensorId`;
+  - `temperature`;
+  - `humidity`;
+  - `readAt`;
+  - `source`.
+
+Testes realizados:
+
+- Tela `/temperature-readings` abriu corretamente.
+- Filtros por empresa, sala, sensor e período funcionaram.
+- Busca local funcionou.
+- Cadastro manual de leitura funcionou.
+- Leitura manual sem sensor funcionou.
+- Leitura manual com sensor funcionou.
+- Sala atualizou temperatura atual após nova leitura.
+- Sensor atualizou última temperatura/umidade quando selecionado.
+- Leitura acima do limite máximo alterou status térmico para `CRITICAL`.
+- Leitura dentro do limite voltou status térmico para `NORMAL`.
+- Cards de resumo atualizaram corretamente.
+- Tabela atualizou após cadastro.
+- Menu mobile continuou funcionando.
+- Build e lint validados.
+
+Essa etapa conclui a tela inicial de leituras de temperatura das salas no frontend.

@@ -10,6 +10,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute';
 import { Tasks } from './pages/Tasks/Tasks';
 import { ServiceRecords } from './pages/ServiceRecords/ServiceRecords';
 import { Reports } from './pages/Reports/Reports';
+import { TemperatureReadings } from './pages/TemperatureReadings/TemperatureReadings';
 
 export function App() {
   return (
@@ -26,6 +27,7 @@ export function App() {
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/service-records" element={<ServiceRecords />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/temperature-readings" element={<TemperatureReadings />} />
         </Route>
       </Route>
 
