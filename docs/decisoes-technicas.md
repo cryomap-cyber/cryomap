@@ -2064,3 +2064,85 @@ Testes realizados:
 - Build e lint validados.
 
 Essa etapa conclui a tela inicial de leituras manuais de equipamentos no frontend.
+
+## 42. Tela de alertas térmicos no frontend
+
+Foi criada a tela de alertas térmicos no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/types/thermal-alert.ts`
+- `frontend/src/services/thermal-alerts.ts`
+- `frontend/src/pages/ThermalAlerts/ThermalAlerts.tsx`
+- `frontend/src/pages/ThermalAlerts/ThermalAlerts.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+
+Funcionalidades implementadas:
+
+- Tela protegida `/thermal-alerts`.
+- Item `Alertas` habilitado no menu desktop e mobile.
+- Listagem de alertas consumindo `GET /thermal-alerts`.
+- Filtro por empresa.
+- Filtro por sala.
+- Filtro por sensor.
+- Filtro por tipo de alerta.
+- Filtro por severidade.
+- Filtro por status.
+- Filtro por período.
+- Busca local por empresa, sala, sensor, tipo, severidade, status, mensagem, usuário que reconheceu e temperatura.
+- Cards de resumo:
+  - total de alertas;
+  - alertas ativos;
+  - alertas abertos;
+  - alertas reconhecidos;
+  - alertas críticos;
+  - alertas resolvidos.
+- Tabela com:
+  - data do disparo;
+  - empresa;
+  - sala;
+  - sensor;
+  - tipo;
+  - severidade;
+  - status;
+  - temperatura;
+  - limites da sala;
+  - mensagem;
+  - usuário que reconheceu;
+  - ações.
+- Ação de reconhecer alerta usando `PATCH /thermal-alerts/:id/acknowledge`.
+- Ação de resolver alerta usando `PATCH /thermal-alerts/:id/resolve`.
+- Ação de dispensar alerta usando `PATCH /thermal-alerts/:id/dismiss`.
+- Ação de remover alerta usando `DELETE /thermal-alerts/:id`.
+- Atualização da listagem após cada ação.
+
+Decisões técnicas:
+
+- Alertas térmicos são gerados automaticamente pelo backend a partir de leituras críticas de salas.
+- O frontend não cria alertas manualmente.
+- O frontend apenas consulta e altera o estado operacional dos alertas.
+- Alertas com status `OPEN` podem ser reconhecidos.
+- Alertas com status `OPEN` ou `ACKNOWLEDGED` podem ser resolvidos ou dispensados.
+- Alertas removidos saem da listagem por exclusão lógica no backend.
+- O usuário autenticado é registrado no backend ao reconhecer um alerta.
+- Leituras normais podem resolver automaticamente alertas ativos conforme regra do backend.
+- Datas dos filtros são convertidas para ISO antes do envio.
+- Temperaturas são exibidas em Celsius.
+
+Testes realizados:
+
+- Tela `/thermal-alerts` abriu corretamente.
+- Filtros por empresa, sala, sensor, tipo, severidade, status e período funcionaram.
+- Busca local funcionou.
+- Leitura crítica criada na tela de Leituras gerou alerta térmico.
+- Alerta apareceu com status `OPEN`.
+- Ação de reconhecer alterou status para `ACKNOWLEDGED`.
+- Ação de resolver alterou status para `RESOLVED`.
+- Ação de dispensar alterou status para `DISMISSED`.
+- Ação de remover retirou alerta da listagem.
+- Cards de resumo atualizaram corretamente.
+- Menu mobile continuou funcionando.
+- Build e lint validados.
+
+Essa etapa conclui a tela inicial de alertas térmicos no frontend.

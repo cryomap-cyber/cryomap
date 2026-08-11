@@ -45,6 +45,10 @@ const navigationItems = [
   label: 'Temp. Equipamentos',
   to: '/equipment-temperature-readings',
   },
+  {
+  label: 'Alertas',
+  to: '/thermal-alerts',
+  },
 ];
 
 const disabledItems: string[] = [];
