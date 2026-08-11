@@ -1990,3 +1990,77 @@ Testes realizados:
 - Build e lint validados.
 
 Essa etapa conclui a tela inicial de leituras de temperatura das salas no frontend.
+
+## 41. Tela de leituras manuais de equipamentos no frontend
+
+Foi criada a tela de leituras manuais de temperatura dos equipamentos no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/types/equipment-temperature-reading.ts`
+- `frontend/src/services/equipment-temperature-readings.ts`
+- `frontend/src/pages/EquipmentTemperatureReadings/EquipmentTemperatureReadings.tsx`
+- `frontend/src/pages/EquipmentTemperatureReadings/EquipmentTemperatureReadings.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+
+Funcionalidades implementadas:
+
+- Tela protegida `/equipment-temperature-readings`.
+- Item `Temp. Equipamentos` habilitado no menu desktop e mobile.
+- Listagem de leituras consumindo `GET /equipment-temperature-readings`.
+- Filtro por empresa.
+- Filtro por sala.
+- Filtro por equipamento.
+- Filtro por usuário que registrou.
+- Filtro por período.
+- Busca local por empresa, sala, equipamento, código, usuário, origem, observações e temperatura.
+- Cards de resumo:
+  - total de leituras;
+  - leituras manuais;
+  - temperatura média;
+  - temperatura mínima;
+  - temperatura máxima.
+- Tabela com:
+  - data da medição;
+  - empresa;
+  - sala;
+  - equipamento;
+  - temperatura;
+  - origem;
+  - usuário que registrou;
+  - observações.
+- Cadastro manual usando `POST /equipment-temperature-readings`.
+- Formulário flutuante para nova leitura manual.
+- Seleção de empresa e equipamento.
+- Envio da temperatura em Celsius.
+- Envio de origem `MANUAL`.
+- Envio opcional de observações.
+- Envio opcional da data/hora da medição.
+- Atualização da listagem após cadastro.
+
+Decisões técnicas:
+
+- Equipamentos não possuem sensores no CryoMap.
+- A temperatura de equipamentos é registrada manualmente.
+- A leitura pertence obrigatoriamente a uma empresa e a um equipamento.
+- A sala é herdada do equipamento no backend.
+- O usuário autenticado é registrado no backend como `createdByUserId`.
+- A criação da leitura atualiza `currentTemperature` do equipamento no backend.
+- O frontend não altera diretamente o equipamento; apenas cria a leitura.
+- Datas `datetime-local` são convertidas para ISO antes do envio.
+- O campo `notes` é permitido neste fluxo porque existe no backend para leituras de equipamentos.
+
+Testes realizados:
+
+- Tela `/equipment-temperature-readings` abriu corretamente.
+- Filtros por empresa, sala, equipamento, usuário e período funcionaram.
+- Busca local funcionou.
+- Cadastro manual de temperatura de equipamento funcionou.
+- Campo de observações funcionou.
+- Temperatura atual do equipamento foi atualizada após cadastro.
+- Tela de Equipamentos refletiu a nova temperatura atual.
+- Menu mobile continuou funcionando.
+- Build e lint validados.
+
+Essa etapa conclui a tela inicial de leituras manuais de equipamentos no frontend.

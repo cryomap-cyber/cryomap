@@ -11,6 +11,7 @@ import { Tasks } from './pages/Tasks/Tasks';
 import { ServiceRecords } from './pages/ServiceRecords/ServiceRecords';
 import { Reports } from './pages/Reports/Reports';
 import { TemperatureReadings } from './pages/TemperatureReadings/TemperatureReadings';
+import { EquipmentTemperatureReadings } from './pages/EquipmentTemperatureReadings/EquipmentTemperatureReadings';
 
 export function App() {
   return (
@@ -28,6 +29,8 @@ export function App() {
           <Route path="/service-records" element={<ServiceRecords />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/temperature-readings" element={<TemperatureReadings />} />
+          <Route path="/equipment-temperature-readings"
+          element={<EquipmentTemperatureReadings />}/>
         </Route>
       </Route>
 
