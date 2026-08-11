@@ -25,9 +25,13 @@ const navigationItems = [
     label: 'Sensores',
     to: '/sensors',
   },
+  {
+  label: 'Tarefas',
+  to: '/tasks',
+  },
 ];
 
-const disabledItems = ['Tarefas', 'Relatórios'];
+const disabledItems = ['Relatórios'];
 
 export function AppLayout() {
   const { user, logout } = useAuth();

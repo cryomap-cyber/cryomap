@@ -7,6 +7,7 @@ import { Rooms } from './pages/Rooms/Rooms';
 import { Equipments } from './pages/Equipments/Equipments';
 import { Sensors } from './pages/Sensors/Sensors';
 import { ProtectedRoute } from './routes/ProtectedRoute';
+import { Tasks } from './pages/Tasks/Tasks';
 
 export function App() {
   return (
@@ -20,6 +21,7 @@ export function App() {
           <Route path="/rooms" element={<Rooms />} />
           <Route path="/equipments" element={<Equipments />} />
           <Route path="/sensors" element={<Sensors />} />
+          <Route path="/tasks" element={<Tasks />} />
         </Route>
       </Route>
 

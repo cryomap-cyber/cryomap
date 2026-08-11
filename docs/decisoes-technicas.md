@@ -1657,3 +1657,104 @@ Testes realizados:
 - Tabelas com rolagem horizontal funcionando.
 - Sidebar desktop funcionando.
 - Build do frontend validado.
+
+## 37. Tela de tarefas no frontend
+
+Foi criada a tela de tarefas no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/types/task.ts`
+- `frontend/src/types/user.ts`
+- `frontend/src/services/tasks.ts`
+- `frontend/src/services/users.ts`
+- `frontend/src/pages/Tasks/Tasks.tsx`
+- `frontend/src/pages/Tasks/Tasks.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+- `frontend/src/index.css`
+
+Funcionalidades implementadas:
+
+- Listagem de tarefas consumindo `GET /tasks`.
+- Filtro por empresa.
+- Filtro por sala.
+- Filtro por equipamento.
+- Filtro por status.
+- Filtro por prioridade.
+- Busca local por título, descrição, empresa, sala, equipamento, responsável, status e prioridade.
+- Cards de resumo com total, abertas, em andamento, concluídas e atrasadas.
+- Cadastro de tarefa usando `POST /tasks`.
+- Edição de tarefa usando `PATCH /tasks/:id`.
+- Remoção lógica de tarefa usando `DELETE /tasks/:id`.
+- Formulário flutuante para criação e edição.
+- Seleção de empresa, sala, equipamento e responsável.
+- Controle de título, descrição, prioridade, status e vencimento.
+- Badges visuais para status.
+- Badges visuais para prioridade.
+- Exibição de vencimento, data de conclusão e data de criação.
+- Rota protegida `/tasks`.
+- Item `Tarefas` habilitado no menu lateral e no menu mobile.
+
+Campos do formulário:
+
+- Empresa
+- Sala
+- Equipamento
+- Responsável
+- Título
+- Prioridade
+- Status
+- Vencimento
+- Descrição
+
+Decisões técnicas:
+
+- A tarefa pertence obrigatoriamente a uma empresa.
+- A tarefa pode ser vinculada opcionalmente a uma sala.
+- A tarefa pode ser vinculada opcionalmente a um equipamento.
+- A tarefa pode ser atribuída opcionalmente a um usuário responsável.
+- Ao trocar a empresa no formulário, sala, equipamento e responsável são limpos para evitar vínculos inválidos.
+- Ao trocar a sala no formulário, o equipamento é limpo para evitar vínculo inválido.
+- Datas de vencimento são preenchidas no frontend como `datetime-local` e enviadas ao backend em formato ISO.
+- A data de conclusão é controlada pelo backend conforme status da tarefa.
+- A listagem é recarregada após cadastro, edição ou remoção.
+- O formulário segue o padrão flutuante definido na etapa de responsividade.
+- A tela mantém compatibilidade com o menu mobile e com a navegação desktop.
+
+Correções e cuidados realizados:
+
+- DTOs do backend foram conferidos antes da implementação do CRUD.
+- O frontend foi alinhado aos campos aceitos pelo backend:
+  - `companyId`
+  - `roomId`
+  - `equipmentId`
+  - `assignedToUserId`
+  - `title`
+  - `description`
+  - `priority`
+  - `status`
+  - `dueDate`
+- Criado service de usuários para carregar responsáveis.
+- Criados tipos específicos para tarefas, prioridade, status, usuários, papéis e status de usuários.
+
+Testes realizados:
+
+- A tela `/tasks` abriu corretamente.
+- A listagem de tarefas funcionou.
+- Os filtros por empresa, sala, equipamento, status e prioridade funcionaram.
+- A busca local funcionou.
+- O botão atualizar funcionou.
+- O cadastro de tarefa funcionou.
+- A edição de título, descrição, prioridade, status e vencimento funcionou.
+- A vinculação com empresa funcionou.
+- A vinculação com sala funcionou.
+- A vinculação com equipamento funcionou.
+- A seleção de responsável funcionou.
+- A remoção de tarefa funcionou.
+- Os cards de resumo atualizaram após alterações.
+- O formulário flutuante funcionou.
+- O menu mobile continuou funcionando.
+- A rota permaneceu protegida por autenticação.
+
+Essa etapa conclui o CRUD inicial de tarefas no frontend.
