@@ -13,6 +13,7 @@ import { Reports } from './pages/Reports/Reports';
 import { TemperatureReadings } from './pages/TemperatureReadings/TemperatureReadings';
 import { EquipmentTemperatureReadings } from './pages/EquipmentTemperatureReadings/EquipmentTemperatureReadings';
 import { ThermalAlerts } from './pages/ThermalAlerts/ThermalAlerts';
+import { Attachments } from './pages/Attachments/Attachments';
 
 export function App() {
   return (
@@ -33,6 +34,7 @@ export function App() {
           <Route path="/equipment-temperature-readings"
           element={<EquipmentTemperatureReadings />}/>
           <Route path="/thermal-alerts" element={<ThermalAlerts />} />
+          <Route path="/attachments" element={<Attachments />} />
         </Route>
       </Route>
 

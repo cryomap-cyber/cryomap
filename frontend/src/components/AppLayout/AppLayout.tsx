@@ -49,6 +49,10 @@ const navigationItems = [
   label: 'Alertas',
   to: '/thermal-alerts',
   },
+  {
+  label: 'Anexos',
+  to: '/attachments',
+},
 ];
 
 const disabledItems: string[] = [];

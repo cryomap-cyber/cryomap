@@ -2146,3 +2146,90 @@ Testes realizados:
 - Build e lint validados.
 
 Essa etapa conclui a tela inicial de alertas térmicos no frontend.
+
+## 43. Tela de anexos no frontend
+
+Foi criada a tela de anexos no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/types/attachment.ts`
+- `frontend/src/services/attachments.ts`
+- `frontend/src/pages/Attachments/Attachments.tsx`
+- `frontend/src/pages/Attachments/Attachments.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+
+Funcionalidades implementadas:
+
+- Tela protegida `/attachments`.
+- Item `Anexos` habilitado no menu desktop e mobile.
+- Listagem de anexos consumindo `GET /attachments`.
+- Upload de arquivo usando `POST /attachments`.
+- Download de arquivo usando `GET /attachments/:id/download`.
+- Remoção lógica usando `DELETE /attachments/:id`.
+- Upload via `multipart/form-data`.
+- Campo de arquivo enviado como `file`, conforme exigido pelo backend.
+- Filtro por empresa.
+- Filtro por tarefa.
+- Filtro por atendimento técnico.
+- Filtro por usuário que enviou.
+- Filtro por tipo de anexo.
+- Busca local por nome do arquivo, tipo, empresa, tarefa, usuário e atendimento.
+- Cards de resumo:
+  - total de anexos;
+  - fotos de serviço;
+  - plantas baixas;
+  - anexos vinculados a tarefas;
+  - anexos vinculados a atendimentos;
+  - tamanho total dos arquivos.
+- Formulário flutuante para novo anexo.
+- Exibição do arquivo selecionado antes do envio.
+- Validação frontend para limite de 10 MB.
+- Download automático pelo navegador.
+- Atualização da listagem após upload e remoção.
+
+Tipos de anexo suportados:
+
+- `SERVICE_PHOTO`: foto de serviço.
+- `AUVO_REPORT`: relatório Auvo.
+- `COMPANY_LOGO`: logo da empresa.
+- `FLOOR_PLAN`: planta baixa.
+- `OTHER`: outro.
+
+Decisões técnicas:
+
+- O backend exige que o anexo esteja vinculado a pelo menos uma empresa, tarefa ou atendimento técnico.
+- Quando o anexo é vinculado a uma tarefa, o backend resolve a empresa da tarefa.
+- Quando o anexo é vinculado a um atendimento, o backend resolve a empresa e a tarefa do atendimento.
+- O frontend envia somente os campos aceitos pelo `CreateAttachmentDto`:
+  - `companyId`;
+  - `taskId`;
+  - `serviceRecordId`;
+  - `type`;
+  - `file`.
+- O campo `file` é obrigatório no upload.
+- O limite de arquivo é de 10 MB, alinhado ao backend.
+- A remoção é lógica no backend e o anexo removido sai da listagem.
+- Os arquivos são armazenados no backend em `uploads/attachments`.
+
+Testes realizados:
+
+- Tela `/attachments` abriu corretamente.
+- Filtros por empresa, tarefa, atendimento, usuário e tipo funcionaram.
+- Busca local funcionou.
+- Upload vinculado somente à empresa funcionou.
+- Upload vinculado à tarefa funcionou.
+- Upload vinculado ao atendimento técnico funcionou.
+- Upload com tipo `SERVICE_PHOTO` funcionou.
+- Upload com tipo `AUVO_REPORT` funcionou.
+- Upload com tipo `COMPANY_LOGO` funcionou.
+- Upload com tipo `FLOOR_PLAN` funcionou.
+- Upload com tipo `OTHER` funcionou.
+- Download de anexo funcionou.
+- Remoção de anexo funcionou.
+- Cards de resumo atualizaram corretamente.
+- Menu mobile continuou funcionando.
+- Build e lint validados.
+
+Essa etapa conclui a tela inicial de uploads e anexos no frontend.

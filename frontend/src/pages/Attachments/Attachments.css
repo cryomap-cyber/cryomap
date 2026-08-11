@@ -1,0 +1,580 @@
+.attachments-page {
+  display: grid;
+  gap: 24px;
+}
+
+.attachments-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.attachments-header span {
+  color: var(--color-primary);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+}
+
+.attachments-header h1 {
+  margin: 6px 0 8px;
+  font-size: 38px;
+  color: var(--color-text);
+}
+
+.attachments-header p {
+  margin: 0;
+  color: var(--color-muted);
+  max-width: 760px;
+}
+
+.attachments-header button {
+  border: 0;
+  border-radius: 16px;
+  padding: 12px 18px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(15, 95, 143, 0.16);
+}
+
+.attachments-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.attachments-summary-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: var(--shadow-panel);
+}
+
+.attachments-summary-card span {
+  display: block;
+  color: var(--color-muted);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.attachments-summary-card strong {
+  font-size: 26px;
+  color: var(--color-text);
+}
+
+.attachments-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 26px;
+  padding: 22px;
+  box-shadow: var(--shadow-panel);
+}
+
+.attachments-panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.attachments-panel-header h2 {
+  margin: 0 0 4px;
+  color: var(--color-text);
+}
+
+.attachments-panel-header p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.attachments-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.attachments-actions input,
+.attachments-actions select {
+  min-height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0 12px;
+  color: var(--color-text);
+  background: #ffffff;
+}
+
+.attachments-actions input[type='search'] {
+  min-width: 280px;
+}
+
+.attachments-actions button,
+.attachments-error button {
+  border: 0;
+  border-radius: 14px;
+  padding: 0 14px;
+  min-height: 42px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.attachments-error {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  background: var(--color-danger-bg);
+  border: 1px solid #ffd6d6;
+  color: var(--color-danger-text);
+  padding: 14px;
+  border-radius: 16px;
+}
+
+.attachments-empty {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.attachments-table-wrapper {
+  overflow-x: auto;
+}
+
+.attachments-table {
+  width: 100%;
+  min-width: 1180px;
+  border-collapse: collapse;
+}
+
+.attachments-table th {
+  text-align: left;
+  color: var(--color-muted);
+  font-size: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.attachments-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--color-border-soft);
+  color: var(--color-text);
+  vertical-align: top;
+}
+
+.attachments-table td strong,
+.attachments-table td span {
+  display: block;
+}
+
+.attachments-table td small {
+  display: block;
+  color: var(--color-muted);
+  margin-top: 4px;
+  max-width: 280px;
+}
+
+.attachment-type-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.attachment-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attachment-row-actions button {
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.attachment-row-actions button:last-child {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.attachment-row-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.attachment-form-panel {
+  position: fixed;
+  inset: 24px;
+  z-index: 70;
+  max-width: 920px;
+  width: calc(100vw - 48px);
+  max-height: calc(100vh - 48px);
+  margin: auto;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(217, 232, 242, 0.96);
+  border-radius: 28px;
+  padding: 22px;
+  box-shadow: 0 30px 90px rgba(7, 31, 48, 0.22);
+  animation: attachmentFormEnter 0.18s ease-out;
+}
+
+.attachment-form-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.attachment-form-header span {
+  color: var(--color-primary);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+}
+
+.attachment-form-header h2 {
+  margin: 4px 0 0;
+  color: var(--color-text);
+}
+
+.attachment-form-header button {
+  border: 0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.attachment-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.attachment-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--color-text-soft);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.attachment-form input,
+.attachment-form select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 11px 12px;
+  color: var(--color-text);
+  background: #ffffff;
+}
+
+.attachment-form input[type='file'] {
+  padding: 10px;
+}
+
+.attachment-form label small {
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.attachment-form-wide,
+.attachment-selected-file,
+.attachment-form-error,
+.attachment-form-actions {
+  grid-column: 1 / -1;
+}
+
+.attachment-selected-file {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.attachment-selected-file strong {
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.attachment-selected-file span {
+  color: var(--color-muted);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.attachment-form-error {
+  color: var(--color-danger-text);
+  background: var(--color-danger-bg);
+  border: 1px solid #ffd6d6;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.attachment-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.attachment-form-actions button {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.attachment-form-actions button:first-child {
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+}
+
+.attachment-form-actions button:last-child {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+@media (max-width: 1200px) {
+  .attachments-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1000px) {
+  .attachments-page {
+    gap: 16px;
+  }
+
+  .attachments-header {
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .attachments-header h1 {
+    font-size: 28px;
+    line-height: 1.1;
+  }
+
+  .attachments-header p {
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 100%;
+  }
+
+  .attachments-header button {
+    min-height: 40px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    align-self: flex-start;
+  }
+
+  .attachments-summary {
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 10px;
+  }
+
+  .attachments-summary-card {
+    min-height: auto;
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+
+  .attachments-summary-card span {
+    font-size: 12px;
+  }
+
+  .attachments-summary-card strong {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .attachments-panel {
+    padding: 14px;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .attachments-panel-header {
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .attachments-panel-header h2 {
+    font-size: 20px;
+  }
+
+  .attachments-panel-header p {
+    font-size: 13px;
+  }
+
+  .attachments-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    align-items: center;
+  }
+
+  .attachments-actions input,
+  .attachments-actions select {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .attachments-actions button {
+    min-height: 38px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .attachments-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 16px;
+  }
+
+  .attachments-table {
+    min-width: 980px;
+    font-size: 13px;
+  }
+
+  .attachments-table th,
+  .attachments-table td {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 700px) {
+  .attachments-page {
+    gap: 14px;
+  }
+
+  .attachments-header h1 {
+    font-size: 24px;
+  }
+
+  .attachments-header button {
+    width: 100%;
+    min-height: 38px;
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  .attachments-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .attachments-summary-card {
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .attachments-summary-card span {
+    font-size: 11px;
+  }
+
+  .attachments-summary-card strong {
+    font-size: 19px;
+  }
+
+  .attachments-panel {
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .attachments-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .attachments-actions input[type='search'] {
+    grid-column: 1 / -1;
+  }
+
+  .attachments-actions button {
+    width: 100%;
+  }
+
+  .attachments-table {
+    min-width: 900px;
+    font-size: 12px;
+  }
+
+  .attachment-form-panel {
+    inset: 10px;
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+    border-radius: 22px;
+    padding: 16px;
+  }
+
+  .attachment-form {
+    grid-template-columns: 1fr;
+  }
+
+  .attachment-form-actions {
+    flex-direction: column;
+  }
+
+  .attachment-form-actions button {
+    width: 100%;
+  }
+
+  .attachment-selected-file {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 430px) {
+  .attachments-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .attachments-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes attachmentFormEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
