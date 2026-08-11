@@ -8,6 +8,7 @@ import { Equipments } from './pages/Equipments/Equipments';
 import { Sensors } from './pages/Sensors/Sensors';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { Tasks } from './pages/Tasks/Tasks';
+import { ServiceRecords } from './pages/ServiceRecords/ServiceRecords';
 
 export function App() {
   return (
@@ -22,6 +23,7 @@ export function App() {
           <Route path="/equipments" element={<Equipments />} />
           <Route path="/sensors" element={<Sensors />} />
           <Route path="/tasks" element={<Tasks />} />
+          <Route path="/service-records" element={<ServiceRecords />} />
         </Route>
       </Route>
 

@@ -1758,3 +1758,61 @@ Testes realizados:
 - A rota permaneceu protegida por autenticação.
 
 Essa etapa conclui o CRUD inicial de tarefas no frontend.
+
+## 38. Tela de atendimentos técnicos no frontend
+
+Foi criada a tela de atendimentos técnicos no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/types/service-record.ts`
+- `frontend/src/services/service-records.ts`
+- `frontend/src/pages/ServiceRecords/ServiceRecords.tsx`
+- `frontend/src/pages/ServiceRecords/ServiceRecords.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+
+Funcionalidades implementadas:
+
+- Listagem de atendimentos consumindo `GET /service-records`.
+- Filtros por empresa, sala, equipamento, tarefa, técnico e período.
+- Busca local.
+- Cards de resumo.
+- Cadastro de atendimento usando `POST /service-records`.
+- Edição usando `PATCH /service-records/:id`.
+- Finalização de atendimento preenchendo `finishedAt`.
+- Reabertura de atendimento limpando `finishedAt`.
+- Remoção usando `DELETE /service-records/:id`.
+- Formulário flutuante.
+- Exibição do tempo parado calculado pelo backend.
+- Exibição de problema encontrado, serviço realizado e observações.
+- Rota protegida `/service-records`.
+- Item `Atendimentos` habilitado na navegação.
+
+Regras integradas com o backend:
+
+- O atendimento nasce vinculado a uma tarefa.
+- Empresa, sala e equipamento são herdados da tarefa.
+- Uma tarefa não pode possuir dois registros de atendimento ativos.
+- Ao criar um atendimento sem data final, a tarefa muda para `IN_PROGRESS`.
+- Ao finalizar, a tarefa muda para `DONE`.
+- Ao reabrir, a tarefa volta para `IN_PROGRESS`.
+- Ao remover o atendimento, a tarefa volta para `OPEN`.
+- `downtimeMinutes` é calculado automaticamente pelo backend.
+- A data final não pode ser anterior à data inicial.
+
+Testes realizados:
+
+- Listagem funcionando.
+- Filtros funcionando.
+- Busca funcionando.
+- Cadastro funcionando.
+- Edição funcionando.
+- Finalização funcionando.
+- Reabertura funcionando.
+- Remoção funcionando.
+- Atualização automática do status da tarefa funcionando.
+- Cálculo de tempo parado funcionando.
+- Formulário flutuante funcionando.
+- Menu mobile funcionando.
+- Build e lint validados.

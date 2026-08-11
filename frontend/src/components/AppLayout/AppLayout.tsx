@@ -29,6 +29,10 @@ const navigationItems = [
   label: 'Tarefas',
   to: '/tasks',
   },
+  {
+  label: 'Atendimentos',
+  to: '/service-records',
+  },
 ];
 
 const disabledItems = ['Relatórios'];
