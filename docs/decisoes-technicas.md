@@ -1503,3 +1503,92 @@ Testes realizados:
 - A rota permaneceu protegida por autenticação.
 
 Essa etapa conclui o CRUD inicial de equipamentos no frontend, mantendo a separação correta entre equipamentos, salas e sensores.
+
+## 35. Tela de sensores no frontend
+
+Foi criada a tela de sensores no frontend do CryoMap.
+
+Arquivos principais:
+
+- `frontend/src/types/sensor.ts`
+- `frontend/src/services/sensors.ts`
+- `frontend/src/pages/Sensors/Sensors.tsx`
+- `frontend/src/pages/Sensors/Sensors.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+
+Funcionalidades implementadas:
+
+- Listagem de sensores consumindo `GET /sensors`.
+- Filtro de sensores por empresa consumindo `GET /sensors?companyId=...`.
+- Filtro de sensores por sala consumindo `GET /sensors?roomId=...`.
+- Busca local por código, tipo, localização, empresa, sala, status, última temperatura e última umidade.
+- Cards de resumo com total de sensores, ativos, offline, em manutenção e inativos.
+- Cadastro de novo sensor usando `POST /sensors`.
+- Edição de sensor usando `PATCH /sensors/:id`.
+- Inativação de sensor usando `DELETE /sensors/:id`.
+- Botão de inativar desabilitado para sensores já inativos.
+- Badge visual para status do sensor.
+- Exibição da última temperatura em °C.
+- Exibição da última umidade em %.
+- Exibição da última comunicação.
+- Item `Sensores` habilitado no menu lateral.
+- Rota protegida `/sensors`.
+
+Campos do formulário:
+
+- Empresa
+- Sala
+- Código
+- Tipo
+- Localização
+- Status, apenas na edição
+
+Decisões técnicas:
+
+- Sensores pertencem somente às salas.
+- Sensores não pertencem aos equipamentos.
+- O vínculo do sensor com a sala é feito por `companyId` e `roomId`.
+- O campo `code` é usado como identificador interno do sensor no CryoMap.
+- O campo `location` é usado para descrever o posicionamento físico do sensor na sala.
+- A última temperatura, última umidade e última comunicação não são editadas pelo formulário de sensores.
+- Temperatura, umidade e última comunicação serão atualizadas por leituras de temperatura ou por futura integração com API/MQTT de sensores reais.
+- A tela foi alinhada ao backend atual, que usa `code`, `type`, `location`, `status`, `lastTemperature`, `lastHumidity` e `lastSeenAt`.
+- Foram removidos do frontend os campos não aceitos pelo backend atual: `name`, `manufacturer`, `model`, `externalId` e `notes`.
+- A busca é feita localmente usando `useMemo`.
+- A listagem é recarregada após cadastro, edição ou inativação.
+- Ao trocar a empresa no formulário, a sala selecionada é limpa para evitar vínculo inválido.
+
+Correções realizadas durante a etapa:
+
+- Corrigido erro de validação `property name should not exist`.
+- Corrigido erro de validação `property manufacturer should not exist`.
+- Corrigido erro de validação `property model should not exist`.
+- Corrigido erro de validação `property externalId should not exist`.
+- Corrigido erro de validação `property notes should not exist`.
+- Corrigido formulário para usar apenas campos aceitos pelo backend atual.
+- Removida duplicação do campo Status no formulário.
+- Corrigida exibição da tabela para usar `code` e `location`.
+- Corrigido aviso de input controlado/não controlado ao editar sensor.
+
+Testes realizados:
+
+- A tela `/sensors` abriu corretamente.
+- Os sensores apareceram na listagem.
+- O filtro por empresa funcionou.
+- O filtro por sala funcionou.
+- A busca local funcionou.
+- O botão atualizar funcionou.
+- O cadastro de sensor vinculado a uma sala funcionou.
+- A edição de código, tipo, localização e status funcionou.
+- A inativação de sensor funcionou.
+- O botão de inativar ficou desabilitado para sensor inativo.
+- Os cards de resumo foram atualizados após alterações.
+- O status apareceu corretamente com badge.
+- A última temperatura apareceu em °C quando existente.
+- A última umidade apareceu em % quando existente.
+- A última comunicação apareceu quando existente.
+- O menu lateral marcou `Sensores` como item ativo.
+- A rota permaneceu protegida por autenticação.
+
+Essa etapa conclui o CRUD inicial de sensores no frontend, mantendo a separação correta entre salas, sensores e equipamentos.

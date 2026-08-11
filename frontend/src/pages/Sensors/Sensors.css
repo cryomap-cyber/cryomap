@@ -1,0 +1,393 @@
+.sensors-page {
+  display: grid;
+  gap: 24px;
+}
+
+.sensors-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sensors-header span {
+  color: #0f8ec4;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+}
+
+.sensors-header h1 {
+  margin: 6px 0;
+  color: #163345;
+  font-size: 34px;
+}
+
+.sensors-header p {
+  margin: 0;
+  color: #6b7c88;
+  max-width: 680px;
+}
+
+.sensors-header button,
+.sensors-actions button,
+.sensors-error button {
+  border: 0;
+  border-radius: 12px;
+  background: #0f8ec4;
+  color: #ffffff;
+  padding: 12px 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sensors-header button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sensors-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.sensors-summary-card {
+  background: #ffffff;
+  border: 1px solid #d9e8f2;
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 14px 40px rgba(15, 95, 143, 0.08);
+}
+
+.sensors-summary-card span {
+  color: #6b7c88;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.sensors-summary-card strong {
+  display: block;
+  color: #163345;
+  font-size: 34px;
+  margin-top: 10px;
+}
+
+.sensors-summary-card.danger {
+  border-color: #ffc9c9;
+  background: #fff7f7;
+}
+
+.sensors-summary-card.danger strong {
+  color: #c62828;
+}
+
+.sensors-panel {
+  background: #ffffff;
+  border: 1px solid #d9e8f2;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 14px 40px rgba(15, 95, 143, 0.06);
+}
+
+.sensors-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sensors-panel-header h2 {
+  margin: 0 0 4px;
+  color: #163345;
+}
+
+.sensors-panel-header p {
+  margin: 0;
+  color: #6b7c88;
+}
+
+.sensors-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.sensors-actions input,
+.sensors-actions select {
+  border: 1px solid #c8dce8;
+  border-radius: 12px;
+  padding: 12px 14px;
+  outline: none;
+  background: #ffffff;
+  color: #163345;
+}
+
+.sensors-actions input {
+  width: 280px;
+}
+
+.sensors-actions select {
+  width: 220px;
+}
+
+.sensors-actions input:focus,
+.sensors-actions select:focus {
+  border-color: #1999d6;
+  box-shadow: 0 0 0 4px rgba(25, 153, 214, 0.12);
+}
+
+.sensors-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.sensors-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1250px;
+}
+
+.sensors-table th {
+  text-align: left;
+  color: #6b7c88;
+  font-size: 13px;
+  padding: 12px;
+  border-bottom: 1px solid #e4eef5;
+}
+
+.sensors-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #edf4f8;
+  color: #284558;
+  vertical-align: top;
+}
+
+.sensors-table td strong,
+.sensors-table td span,
+.sensors-table td small {
+  display: block;
+}
+
+.sensors-table td strong {
+  color: #163345;
+}
+
+.sensors-table td small {
+  color: #8495a1;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.sensor-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sensor-status.active {
+  background: #e9f9f0;
+  color: #167a3f;
+}
+
+.sensor-status.offline {
+  background: #fff1f1;
+  color: #c62828;
+}
+
+.sensor-status.maintenance {
+  background: #fff8e5;
+  color: #9a6400;
+}
+
+.sensor-status.inactive {
+  background: #f1f4f6;
+  color: #6b7c88;
+}
+
+.sensors-error {
+  background: #fff1f1;
+  color: #c62828;
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sensors-empty {
+  color: #8495a1;
+  margin: 0;
+}
+
+@media (max-width: 1200px) {
+  .sensors-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .sensors-panel-header,
+  .sensors-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sensors-actions input,
+  .sensors-actions select {
+    width: 100%;
+  }
+    .sensor-form {
+    grid-template-columns: 1fr;
+  }
+
+  .sensor-form-actions,
+  .sensor-row-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 700px) {
+  .sensors-header {
+    flex-direction: column;
+  }
+
+  .sensors-summary {
+    grid-template-columns: 1fr;
+  }
+}
+.sensor-form-panel {
+  background: #ffffff;
+  border: 1px solid #d9e8f2;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 14px 40px rgba(15, 95, 143, 0.08);
+}
+
+.sensor-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.sensor-form-header span {
+  color: #0f8ec4;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+}
+
+.sensor-form-header h2 {
+  margin: 6px 0 0;
+  color: #163345;
+}
+
+.sensor-form-header button {
+  border: 0;
+  border-radius: 12px;
+  background: #edf6fb;
+  color: #0f5f8f;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sensor-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.sensor-form label {
+  display: grid;
+  gap: 8px;
+  color: #284558;
+  font-weight: 700;
+}
+
+.sensor-form input,
+.sensor-form select {
+  border: 1px solid #c8dce8;
+  border-radius: 14px;
+  padding: 12px 14px;
+  outline: none;
+  background: #ffffff;
+  color: #163345;
+}
+
+.sensor-form input:focus,
+.sensor-form select:focus {
+  border-color: #1999d6;
+  box-shadow: 0 0 0 4px rgba(25, 153, 214, 0.12);
+}
+
+.sensor-form-wide,
+.sensor-form-error,
+.sensor-form-actions {
+  grid-column: 1 / -1;
+}
+
+.sensor-form-error {
+  background: #fff1f1;
+  color: #c62828;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.sensor-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.sensor-form-actions button,
+.sensor-row-actions button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sensor-form-actions button:first-child {
+  background: #edf6fb;
+  color: #0f5f8f;
+}
+
+.sensor-form-actions button:last-child {
+  background: #0f8ec4;
+  color: #ffffff;
+}
+
+.sensor-form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sensor-row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sensor-row-actions button:first-child {
+  background: #edf6fb;
+  color: #0f5f8f;
+}
+
+.sensor-row-actions button:last-child {
+  background: #fff1f1;
+  color: #c62828;
+}
+
+.sensor-row-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
