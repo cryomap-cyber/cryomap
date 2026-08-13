@@ -2233,3 +2233,179 @@ Testes realizados:
 - Build e lint validados.
 
 Essa etapa conclui a tela inicial de uploads e anexos no frontend.
+
+## 44. Tela de usuários e controle de acesso inicial no frontend
+
+Foi criada a tela de usuários no frontend do CryoMap e iniciado o controle de acesso por perfil no frontend.
+
+Arquivos principais:
+
+- `frontend/src/types/user.ts`
+- `frontend/src/types/auth.ts`
+- `frontend/src/services/users.ts`
+- `frontend/src/services/auth-storage.ts`
+- `frontend/src/services/api.ts`
+- `frontend/src/permissions/role-permissions.ts`
+- `frontend/src/routes/ProtectedRoute.tsx`
+- `frontend/src/pages/Users/Users.tsx`
+- `frontend/src/pages/Users/Users.css`
+- `frontend/src/pages/ServiceRecords/ServiceRecords.tsx`
+- `frontend/src/pages/ServiceRecords/ServiceRecords.css`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+
+Funcionalidades da tela de usuários:
+
+- Tela protegida `/users`.
+- Item `Usuários` habilitado no menu desktop e mobile apenas para perfis administrativos.
+- Listagem de usuários consumindo `GET /users`.
+- Criação de usuário consumindo `POST /users`.
+- Edição de usuário consumindo `PATCH /users/:id`.
+- Inativação de usuário consumindo `DELETE /users/:id`.
+- Filtro local por empresa.
+- Filtro local por perfil.
+- Filtro local por status.
+- Busca local por nome, e-mail, telefone, cargo, perfil, status e empresa.
+- Cards de resumo:
+  - total de usuários;
+  - usuários ativos;
+  - usuários bloqueados;
+  - técnicos;
+  - usuários clientes;
+  - usuários sem empresa.
+- Formulário flutuante para criação e edição.
+- Campo de senha obrigatório na criação.
+- Campo de senha opcional na edição.
+- Se o campo de senha ficar vazio na edição, a senha atual é mantida.
+- Vinculação opcional de usuário a empresa.
+- Suporte a usuário interno sem empresa vinculada.
+- Exibição de último login, data de criação, empresa, cargo, telefone, perfil e status.
+
+Perfis suportados pelo backend:
+
+- `MASTER_ADMIN`: administrador master.
+- `SUPERVISOR`: supervisor.
+- `CLIENT_USER`: usuário cliente.
+- `TECHNICIAN`: técnico.
+
+Status suportados pelo backend:
+
+- `ACTIVE`: ativo.
+- `INACTIVE`: inativo.
+- `BLOCKED`: bloqueado.
+
+Controle de acesso inicial no frontend:
+
+- Foi criado o arquivo central `frontend/src/permissions/role-permissions.ts`.
+- O menu desktop e mobile agora é filtrado conforme o perfil do usuário logado.
+- O `ProtectedRoute` agora aceita `allowedRoles`.
+- Acesso direto por URL a páginas não permitidas redireciona para `/dashboard`.
+- O usuário logado é armazenado em `localStorage` com a chave `@cryomap:user`.
+- O token continua armazenado em `localStorage` com a chave `@cryomap:token`.
+
+Permissões iniciais por tela:
+
+- `MASTER_ADMIN`: acesso total.
+- `SUPERVISOR`: acesso administrativo e operacional amplo.
+- `CLIENT_USER`:
+  - acessa Dashboard;
+  - acessa Salas;
+  - acessa Equipamentos;
+  - acessa Sensores;
+  - acessa Leituras;
+  - acessa Alertas;
+  - acessa Atendimentos somente leitura;
+  - acessa Anexos;
+  - acessa Relatórios;
+  - não acessa Empresas;
+  - não acessa Usuários;
+  - não acessa Chamados/Tarefas;
+  - não acessa Temperaturas de Equipamentos.
+- `TECHNICIAN`:
+  - acessa Dashboard;
+  - acessa Salas;
+  - acessa Equipamentos;
+  - acessa Leituras;
+  - acessa Alertas;
+  - acessa Temperaturas de Equipamentos;
+  - acessa Chamados/Tarefas;
+  - acessa Atendimentos;
+  - acessa Anexos;
+  - não acessa Empresas;
+  - não acessa Usuários;
+  - não acessa Sensores;
+  - não acessa Relatórios.
+
+Escopo por empresa no frontend:
+
+- `CLIENT_USER` vê somente dados da empresa vinculada ao próprio usuário.
+- `TECHNICIAN` vê somente dados da empresa vinculada ao próprio usuário.
+- `MASTER_ADMIN` e `SUPERVISOR` continuam podendo visualizar dados de todas as empresas.
+- O interceptor do Axios em `frontend/src/services/api.ts` injeta automaticamente `companyId` nas chamadas GET das principais rotas quando o usuário é `CLIENT_USER` ou `TECHNICIAN`.
+
+Rotas com escopo automático por empresa no frontend:
+
+- `/dashboard/overview`
+- `/dashboard/room-temperature-series`
+- `/dashboard/room-humidity-series`
+- `/dashboard/room-readings-summary`
+- `/dashboard/recent-room-readings`
+- `/rooms`
+- `/equipments`
+- `/sensors`
+- `/temperature-readings`
+- `/equipment-temperature-readings`
+- `/thermal-alerts`
+- `/tasks`
+- `/service-records`
+- `/attachments`
+- endpoints JSON de relatórios
+- endpoints de exportação Excel/PDF de relatórios
+
+Atendimentos para usuário cliente:
+
+- `CLIENT_USER` pode acessar a tela `/service-records`.
+- `CLIENT_USER` vê somente atendimentos da própria empresa.
+- `CLIENT_USER` não vê botão de novo atendimento.
+- `CLIENT_USER` não vê ações de editar, finalizar, reabrir ou remover.
+- Para `CLIENT_USER`, a coluna de ações exibe apenas `Somente consulta`.
+- `MASTER_ADMIN`, `SUPERVISOR` e `TECHNICIAN` continuam podendo operar atendimentos normalmente.
+
+Decisões técnicas:
+
+- O controle implementado nesta etapa é uma proteção inicial de frontend.
+- O frontend melhora a experiência e evita acesso visual indevido.
+- Segurança definitiva ainda precisa ser implementada no backend com guards, decorators e filtros por usuário/perfil.
+- O backend ainda deve bloquear chamadas diretas por API em uma etapa posterior.
+- Os enums foram alinhados ao Prisma:
+  - `CLIENT_USER`, não `EMPRESA_CLIENTE`;
+  - `TECHNICIAN`, não `TECNICO`.
+
+Testes realizados:
+
+- Tela `/users` abriu corretamente para perfis administrativos.
+- Listagem de usuários funcionou.
+- Filtro por empresa funcionou.
+- Filtro por perfil funcionou.
+- Filtro por status funcionou.
+- Busca local funcionou.
+- Criação de usuário técnico funcionou.
+- Criação de usuário cliente vinculado a empresa funcionou.
+- Edição de nome, e-mail, telefone e cargo funcionou.
+- Edição de perfil funcionou.
+- Edição de status funcionou.
+- Edição sem preencher nova senha manteve a senha atual.
+- Edição preenchendo nova senha alterou a senha.
+- Inativação de usuário funcionou.
+- `CLIENT_USER` deixou de visualizar telas administrativas no menu.
+- `TECHNICIAN` deixou de visualizar telas administrativas no menu.
+- `CLIENT_USER` foi redirecionado ao tentar acessar telas administrativas por URL direta.
+- `TECHNICIAN` foi redirecionado ao tentar acessar telas administrativas por URL direta.
+- `CLIENT_USER` passou a ver somente dados da própria empresa nas telas permitidas.
+- `TECHNICIAN` passou a ver somente dados da própria empresa nas telas permitidas.
+- `CLIENT_USER` passou a acessar Atendimentos em modo somente consulta.
+- `CLIENT_USER` não consegue criar, editar, finalizar, reabrir ou remover atendimentos pela interface.
+- Menu mobile continuou funcionando.
+- Build e lint validados.
+
+Essa etapa conclui a tela inicial de gestão de usuários e o controle de acesso inicial no frontend.

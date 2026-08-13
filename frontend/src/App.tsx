@@ -14,6 +14,8 @@ import { TemperatureReadings } from './pages/TemperatureReadings/TemperatureRead
 import { EquipmentTemperatureReadings } from './pages/EquipmentTemperatureReadings/EquipmentTemperatureReadings';
 import { ThermalAlerts } from './pages/ThermalAlerts/ThermalAlerts';
 import { Attachments } from './pages/Attachments/Attachments';
+import { Users } from './pages/Users/Users';
+import { allRoles, managementRoles } from './permissions/role-permissions';
 
 export function App() {
   return (
@@ -22,19 +24,54 @@ export function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/companies" element={<Companies />} />
-          <Route path="/rooms" element={<Rooms />} />
-          <Route path="/equipments" element={<Equipments />} />
-          <Route path="/sensors" element={<Sensors />} />
+          <Route element={<ProtectedRoute allowedRoles={allRoles} />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/rooms" element={<Rooms />} />
+            <Route path="/equipments" element={<Equipments />} />
+            <Route path="/temperature-readings" element={<TemperatureReadings />} />
+            <Route path="/thermal-alerts" element={<ThermalAlerts />} />
+            <Route path="/attachments" element={<Attachments />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={managementRoles} />}>
+            <Route path="/companies" element={<Companies />} />
+            <Route path="/users" element={<Users />} />
+          </Route>
+
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={['MASTER_ADMIN', 'SUPERVISOR', 'CLIENT_USER']}
+              />
+            }
+          >
+            <Route path="/sensors" element={<Sensors />} />
+            <Route path="/reports" element={<Reports />} />
+          </Route>
+
+          <Route
+            element={
+           <ProtectedRoute
+             allowedRoles={['MASTER_ADMIN', 'SUPERVISOR', 'TECHNICIAN']}
+               />
+              }
+            >
           <Route path="/tasks" element={<Tasks />} />
-          <Route path="/service-records" element={<ServiceRecords />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/temperature-readings" element={<TemperatureReadings />} />
-          <Route path="/equipment-temperature-readings"
-          element={<EquipmentTemperatureReadings />}/>
-          <Route path="/thermal-alerts" element={<ThermalAlerts />} />
-          <Route path="/attachments" element={<Attachments />} />
+          <Route
+                 path="/equipment-temperature-readings"
+                element={<EquipmentTemperatureReadings />}
+                />
+              </Route>
+
+              <Route
+              element={
+               <ProtectedRoute
+                 allowedRoles={['MASTER_ADMIN', 'SUPERVISOR', 'CLIENT_USER', 'TECHNICIAN']}
+                />
+             }
+              >
+            <Route path="/service-records" element={<ServiceRecords />} />
+        </Route>
         </Route>
       </Route>
 

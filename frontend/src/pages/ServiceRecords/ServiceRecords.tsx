@@ -19,6 +19,7 @@ import type { ServiceRecord } from '../../types/service-record';
 import type { Task } from '../../types/task';
 import type { User } from '../../types/user';
 import './ServiceRecords.css';
+import { useAuth } from '../../contexts/useAuth';
 
 type ServiceRecordFormData = {
   taskId: string;
@@ -41,6 +42,10 @@ const emptyFormData: ServiceRecordFormData = {
 };
 
 export function ServiceRecords() {
+  const { user } = useAuth();
+
+  const canManageServiceRecords = user?.role !== 'CLIENT_USER';
+
   const [serviceRecords, setServiceRecords] = useState<ServiceRecord[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -352,6 +357,9 @@ export function ServiceRecords() {
   }, 0);
 
   function openCreateForm() {
+    if (!canManageServiceRecords) {
+       return;
+      }
     setEditingRecord(null);
     setFormData({
       ...emptyFormData,
@@ -364,6 +372,9 @@ export function ServiceRecords() {
   }
 
   function openEditForm(serviceRecord: ServiceRecord) {
+    if (!canManageServiceRecords) {
+  return;
+    }
     setEditingRecord(serviceRecord);
     setFormData({
       taskId: serviceRecord.taskId,
@@ -453,6 +464,9 @@ export function ServiceRecords() {
   }
 
   async function handleFinish(serviceRecord: ServiceRecord) {
+    if (!canManageServiceRecords) {
+  return;
+  }
     const confirmed = window.confirm(
       `Deseja finalizar o atendimento da tarefa "${serviceRecord.task?.title ?? serviceRecord.taskId}"?`,
     );
@@ -473,6 +487,9 @@ export function ServiceRecords() {
   }
 
   async function handleReopen(serviceRecord: ServiceRecord) {
+    if (!canManageServiceRecords) {
+  return;
+  }
     const confirmed = window.confirm(
       `Deseja reabrir o atendimento da tarefa "${serviceRecord.task?.title ?? serviceRecord.taskId}"?`,
     );
@@ -493,6 +510,9 @@ export function ServiceRecords() {
   }
 
   async function handleRemove(serviceRecord: ServiceRecord) {
+    if (!canManageServiceRecords) {
+  return;
+  }
     const confirmed = window.confirm(
       `Deseja realmente remover o atendimento da tarefa "${serviceRecord.task?.title ?? serviceRecord.taskId}"?`,
     );
@@ -525,9 +545,11 @@ export function ServiceRecords() {
           </p>
         </div>
 
-        <button type="button" onClick={openCreateForm}>
-          Novo atendimento
-        </button>
+        {canManageServiceRecords ? (
+      <button type="button" onClick={openCreateForm}>
+         Novo atendimento
+       </button>
+        ) : null}
       </header>
 
       <section className="service-records-summary">
@@ -542,7 +564,7 @@ export function ServiceRecords() {
         />
       </section>
 
-      {isFormOpen ? (
+      {isFormOpen && canManageServiceRecords ? (
         <section className="service-record-form-panel">
           <div className="service-record-form-header">
             <div>
@@ -882,38 +904,41 @@ export function ServiceRecords() {
                     <td>{serviceRecord.servicePerformed || '-'}</td>
 
                     <td>
-                      <div className="service-record-row-actions">
-                        <button
-                          type="button"
-                          onClick={() => openEditForm(serviceRecord)}
-                        >
-                          Editar
-                        </button>
+  {canManageServiceRecords ? (
+    <div className="service-record-row-actions">
+      <button type="button" onClick={() => openEditForm(serviceRecord)}>
+        Editar
+      </button>
 
-                        {serviceRecord.finishedAt ? (
-                          <button
-                            type="button"
-                            onClick={() => handleReopen(serviceRecord)}
-                          >
-                            Reabrir
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleFinish(serviceRecord)}
-                          >
-                            Finalizar
-                          </button>
-                        )}
+      {!serviceRecord.finishedAt ? (
+        <button
+          type="button"
+          onClick={() => void handleFinish(serviceRecord)}
+        >
+          Finalizar
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => void handleReopen(serviceRecord)}
+        >
+          Reabrir
+        </button>
+      )}
 
-                        <button
-                          type="button"
-                          onClick={() => handleRemove(serviceRecord)}
-                        >
-                          Remover
-                        </button>
-                      </div>
-                    </td>
+      <button
+        type="button"
+        onClick={() => void handleRemove(serviceRecord)}
+      >
+        Remover
+      </button>
+    </div>
+  ) : (
+    <span className="service-record-readonly-badge">
+      Somente consulta
+    </span>
+  )}
+</td>
                   </tr>
                 ))}
               </tbody>

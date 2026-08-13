@@ -573,3 +573,15 @@
     transform: translateY(0) scale(1);
   }
 }
+.service-record-readonly-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: var(--color-surface-soft);
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}

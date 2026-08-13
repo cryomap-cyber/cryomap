@@ -1,65 +1,20 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import cryomapLogo from '../../assets/cryomap-logo.png';
 import { useAuth } from '../../contexts/useAuth';
+import { getAllowedNavigationItems } from '../../permissions/role-permissions';
 import './AppLayout.css';
-
-const navigationItems = [
-  {
-    label: 'Dashboard',
-    to: '/dashboard',
-  },
-  {
-    label: 'Empresas',
-    to: '/companies',
-  },
-  {
-    label: 'Salas',
-    to: '/rooms',
-  },
-  {
-    label: 'Equipamentos',
-    to: '/equipments',
-  },
-  {
-    label: 'Sensores',
-    to: '/sensors',
-  },
-  {
-  label: 'Tarefas',
-  to: '/tasks',
-  },
-  {
-  label: 'Atendimentos',
-  to: '/service-records',
-  },
-  {
-  label: 'Relatórios',
-  to: '/reports',
-  },
-  {
-  label: 'Leituras',
-  to: '/temperature-readings',
-  },
-  {
-  label: 'Temp. Equipamentos',
-  to: '/equipment-temperature-readings',
-  },
-  {
-  label: 'Alertas',
-  to: '/thermal-alerts',
-  },
-  {
-  label: 'Anexos',
-  to: '/attachments',
-},
-];
 
 const disabledItems: string[] = [];
 
 export function AppLayout() {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const allowedNavigationItems = useMemo(
+    () => getAllowedNavigationItems(user?.role),
+    [user?.role],
+  );
 
   function closeMobileMenu() {
     setIsMobileMenuOpen(false);
@@ -76,7 +31,7 @@ export function AppLayout() {
         <Brand />
 
         <nav className="sidebar-nav">
-          {navigationItems.map((item) => (
+          {allowedNavigationItems.map((item) => (
             <NavLink key={item.to} to={item.to}>
               {item.label}
             </NavLink>
@@ -92,6 +47,7 @@ export function AppLayout() {
         <div className="sidebar-user">
           <span>{user?.name ?? 'Usuário CryoMap'}</span>
           <small>{user?.email}</small>
+          <small>{formatRole(user?.role)}</small>
 
           <button type="button" onClick={logout}>
             Sair
@@ -133,7 +89,7 @@ export function AppLayout() {
               </button>
             </div>
 
-            {navigationItems.map((item) => (
+            {allowedNavigationItems.map((item) => (
               <NavLink key={item.to} to={item.to} onClick={closeMobileMenu}>
                 {item.label}
               </NavLink>
@@ -148,6 +104,7 @@ export function AppLayout() {
             <div className="mobile-menu-user">
               <span>{user?.name ?? 'Usuário CryoMap'}</span>
               <small>{user?.email}</small>
+              <small>{formatRole(user?.role)}</small>
 
               <button type="button" onClick={handleLogout}>
                 Sair
@@ -181,4 +138,19 @@ function Brand({ compact = false }: BrandProps) {
       </div>
     </div>
   );
+}
+
+function formatRole(role?: string) {
+  const labels: Record<string, string> = {
+    MASTER_ADMIN: 'Administrador master',
+    SUPERVISOR: 'Supervisor',
+    CLIENT_USER: 'Usuário cliente',
+    TECHNICIAN: 'Técnico',
+  };
+
+  if (!role) {
+    return 'Perfil não identificado';
+  }
+
+  return labels[role] ?? role;
 }
