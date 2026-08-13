@@ -2480,3 +2480,43 @@ Decisão técnica:
 - A hierarquia do administrador master agora está protegida no frontend e no backend.
 - Essa correção evita que a segurança dependa apenas da interface.
 - A próxima etapa será expandir o controle real do backend para escopo por perfil e empresa em todas as rotas operacionais.
+
+
+-----------TOKEN CLIENTE----------------------
+CLIENT_TOKEN=$(curl -s -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"francisco@artech.com","password":"12345678"}' \
+  | node -e 'let data=""; process.stdin.on("data", c => data += c); process.stdin.on("end", () => { const response = JSON.parse(data); if (!response.accessToken) { console.error(data); process.exit(1); } console.log(response.accessToken); });')
+
+## 45. Proteção real de empresas no backend
+
+Foi iniciada a proteção real do backend por perfil e escopo de empresa.
+
+Arquivos alterados:
+
+- `backend/src/companies/companies.controller.ts`
+- `backend/src/companies/companies.service.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem criar, listar, visualizar, editar e inativar empresas.
+- `CLIENT_USER` não pode criar, editar ou inativar empresas.
+- `TECHNICIAN` não pode criar, editar ou inativar empresas.
+- `CLIENT_USER` pode consultar `GET /companies`, mas recebe somente a empresa vinculada ao próprio usuário.
+- `TECHNICIAN` pode consultar `GET /companies`, mas recebe somente a empresa vinculada ao próprio usuário.
+- `CLIENT_USER` e `TECHNICIAN` não podem acessar empresa diferente da sua pelo `GET /companies/:id`.
+
+Decisão técnica:
+
+- O backend não confia no `companyId` enviado pelo frontend para usuários com escopo de empresa.
+- Usuários `CLIENT_USER` e `TECHNICIAN` são tratados como usuários com escopo restrito à própria empresa.
+- `MASTER_ADMIN` e `SUPERVISOR` continuam com visão global.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando empresas normalmente.
+- `CLIENT_USER` recebeu somente a própria empresa em `GET /companies`.
+- `TECHNICIAN` recebeu somente a própria empresa em `GET /companies`.
+- `CLIENT_USER` foi bloqueado ao tentar criar empresa via API.
+- `TECHNICIAN` foi bloqueado ao tentar criar empresa via API.
+- Build do backend validado.

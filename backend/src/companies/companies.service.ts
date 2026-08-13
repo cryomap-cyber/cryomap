@@ -1,9 +1,12 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CompanyStatus, Prisma } from '../generated/prisma/client.js';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
+import { CompanyStatus, Prisma, UserRole } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateCompanyDto } from './dto/create-company.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
@@ -34,7 +37,23 @@ export class CompaniesService {
     });
   }
 
-  async findAll() {
+  async findAll(actor: AuthUser) {
+    if (this.isCompanyScopedUser(actor)) {
+      if (!actor.companyId) {
+        return [];
+      }
+
+      return this.prisma.company.findMany({
+        where: {
+          id: actor.companyId,
+          deletedAt: null,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+    }
+
     return this.prisma.company.findMany({
       where: {
         deletedAt: null,
@@ -45,7 +64,11 @@ export class CompaniesService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor?: AuthUser) {
+    if (actor) {
+      this.ensureCanAccessCompany(id, actor);
+    }
+
     const company = await this.prisma.company.findFirst({
       where: {
         id,
@@ -133,6 +156,22 @@ export class CompaniesService {
         deletedAt: new Date(),
       },
     });
+  }
+
+  private isCompanyScopedUser(actor: AuthUser) {
+    return actor.role === UserRole.CLIENT_USER || actor.role === UserRole.TECHNICIAN;
+  }
+
+  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+    if (!this.isCompanyScopedUser(actor)) {
+      return;
+    }
+
+    if (!actor.companyId || actor.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta empresa',
+      );
+    }
   }
 
   private normalizeCnpj(cnpj: string) {
