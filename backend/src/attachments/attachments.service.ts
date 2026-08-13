@@ -1,9 +1,16 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AttachmentType, Prisma } from '../generated/prisma/client.js';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
+import {
+  AttachmentType,
+  Prisma,
+  UserRole,
+} from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateAttachmentDto } from './dto/create-attachment.dto.js';
 import { FindAttachmentsDto } from './dto/find-attachments.dto.js';
@@ -65,20 +72,24 @@ export class AttachmentsService {
   async create(
     createDto: CreateAttachmentDto,
     file: Express.Multer.File | undefined,
-    uploadedByUserId?: string,
+    actor: AuthUser,
   ) {
+    this.ensureCanWrite(actor);
+
     if (!file) {
       throw new BadRequestException('Arquivo não enviado');
     }
 
     const resolvedLinks = await this.resolveLinks(createDto);
 
+    this.ensureCanAccessCompany(resolvedLinks.companyId, actor);
+
     return this.prisma.attachment.create({
       data: {
         companyId: resolvedLinks.companyId,
         taskId: resolvedLinks.taskId,
         serviceRecordId: resolvedLinks.serviceRecordId,
-        uploadedByUserId,
+        uploadedByUserId: actor.id,
         fileName: file.filename,
         originalName: file.originalname,
         mimeType: file.mimetype,
@@ -90,13 +101,15 @@ export class AttachmentsService {
     });
   }
 
-  async findAll(filters: FindAttachmentsDto) {
+  async findAll(filters: FindAttachmentsDto, actor: AuthUser) {
     const where: Prisma.AttachmentWhereInput = {
       deletedAt: null,
     };
 
-    if (filters.companyId) {
-      where.companyId = filters.companyId;
+    const scopedCompanyId = this.resolveReadCompanyId(filters.companyId, actor);
+
+    if (scopedCompanyId) {
+      where.companyId = scopedCompanyId;
     }
 
     if (filters.taskId) {
@@ -125,7 +138,7 @@ export class AttachmentsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor: AuthUser) {
     const attachment = await this.prisma.attachment.findFirst({
       where: {
         id,
@@ -138,11 +151,15 @@ export class AttachmentsService {
       throw new NotFoundException('Anexo não encontrado');
     }
 
+    this.ensureCanAccessCompany(attachment.companyId, actor);
+
     return attachment;
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, actor: AuthUser) {
+    this.ensureCanWrite(actor);
+
+    await this.findOne(id, actor);
 
     return this.prisma.attachment.update({
       where: {
@@ -153,6 +170,54 @@ export class AttachmentsService {
       },
       select: attachmentSelect,
     });
+  }
+
+  private ensureCanWrite(actor: AuthUser) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException('Usuário cliente não pode alterar anexos');
+    }
+
+    if (actor.role === UserRole.TECHNICIAN && !actor.companyId) {
+      throw new ForbiddenException('Técnico não está vinculado a uma empresa');
+    }
+  }
+
+  private resolveReadCompanyId(
+    requestedCompanyId: string | undefined,
+    actor: AuthUser,
+  ) {
+    if (
+      actor.role === UserRole.CLIENT_USER ||
+      actor.role === UserRole.TECHNICIAN
+    ) {
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Usuário não está vinculado a uma empresa',
+        );
+      }
+
+      return actor.companyId;
+    }
+
+    return requestedCompanyId;
+  }
+
+  private ensureCanAccessCompany(
+    companyId: string | null | undefined,
+    actor: AuthUser,
+  ) {
+    if (
+      actor.role !== UserRole.CLIENT_USER &&
+      actor.role !== UserRole.TECHNICIAN
+    ) {
+      return;
+    }
+
+    if (!companyId || !actor.companyId || actor.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta empresa',
+      );
+    }
   }
 
   private async resolveLinks(createDto: CreateAttachmentDto) {
@@ -228,9 +293,13 @@ export class AttachmentsService {
       companyId = task.companyId;
     }
 
-    if (companyId) {
-      await this.ensureCompanyExists(companyId);
+    if (!companyId) {
+      throw new BadRequestException(
+        'Não foi possível identificar a empresa do anexo',
+      );
     }
+
+    await this.ensureCompanyExists(companyId);
 
     return {
       companyId,

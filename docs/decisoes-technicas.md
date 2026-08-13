@@ -2811,3 +2811,51 @@ Testes realizados:
 - Tela de Atendimentos voltou a funcionar para `CLIENT_USER`.
 - Build do backend validado.
 - Lint e build do frontend validados.
+
+## 53. Proteção real de anexos/uploads no backend
+
+Foi implementada a proteção real da rota de anexos/uploads no backend.
+
+Arquivos alterados:
+
+- `backend/src/attachments/attachments.controller.ts`
+- `backend/src/attachments/attachments.service.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem listar anexos de todas as empresas.
+- `MASTER_ADMIN` e `SUPERVISOR` podem fazer upload, baixar e remover anexos.
+- `CLIENT_USER` pode visualizar somente anexos da própria empresa.
+- `CLIENT_USER` pode baixar anexos da própria empresa.
+- `CLIENT_USER` não pode fazer upload de anexos.
+- `CLIENT_USER` não pode remover anexos.
+- `TECHNICIAN` pode visualizar somente anexos da própria empresa.
+- `TECHNICIAN` pode fazer upload vinculado à própria empresa, tarefa ou atendimento da própria empresa.
+- `TECHNICIAN` pode baixar anexos da própria empresa.
+- `TECHNICIAN` pode remover anexos da própria empresa.
+- Quando `CLIENT_USER` ou `TECHNICIAN` envia `companyId` de outra empresa na query, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- `GET /attachments/:id`, `GET /attachments/:id/download` e `DELETE /attachments/:id` bloqueiam acesso caso o anexo pertença a outra empresa.
+
+Regras de integridade mantidas:
+
+- O upload exige arquivo enviado no campo `file`.
+- O anexo precisa estar vinculado a `companyId`, `taskId` ou `serviceRecordId`.
+- Quando vinculado a atendimento, o backend resolve automaticamente a empresa e a tarefa do atendimento.
+- Quando vinculado a tarefa, o backend resolve automaticamente a empresa da tarefa.
+- O backend valida conflito entre empresa, tarefa e atendimento informados.
+- O usuário autenticado é salvo em `uploadedByUserId`.
+- A remoção continua sendo lógica, preenchendo `deletedAt`.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando anexos normalmente.
+- `SUPERVISOR` continuou acessando anexos normalmente.
+- `CLIENT_USER` recebeu somente anexos da própria empresa.
+- `CLIENT_USER` conseguiu baixar anexos da própria empresa.
+- `CLIENT_USER` foi bloqueado ao tentar fazer upload via API.
+- `CLIENT_USER` foi bloqueado ao tentar remover anexo via API.
+- `TECHNICIAN` recebeu somente anexos da própria empresa.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para usuários com escopo restrito.
+- `TECHNICIAN` conseguiu fazer upload para a própria empresa.
+- `TECHNICIAN` foi bloqueado ao tentar fazer upload para outra empresa.
+- Build do backend validado.
