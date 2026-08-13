@@ -2674,3 +2674,43 @@ Testes realizados:
 - `TECHNICIAN` foi bloqueado ao tentar criar leitura em outra empresa.
 - `TECHNICIAN` foi bloqueado ao tentar criar leitura vinculada a sensor.
 - Build do backend validado.
+
+## 50. Proteção real de leituras manuais de equipamentos no backend
+
+Foi implementada a proteção real da rota de leituras manuais de equipamentos no backend.
+
+Arquivos alterados:
+
+- `backend/src/equipment-temperature-readings/equipment-temperature-readings.controller.ts`
+- `backend/src/equipment-temperature-readings/equipment-temperature-readings.service.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem listar leituras manuais de equipamentos de todas as empresas.
+- `MASTER_ADMIN` e `SUPERVISOR` podem criar leitura manual para qualquer equipamento válido.
+- `CLIENT_USER` não pode acessar leituras manuais de equipamentos.
+- `CLIENT_USER` não pode criar leituras manuais de equipamentos.
+- `TECHNICIAN` pode listar somente leituras manuais de equipamentos da própria empresa.
+- `TECHNICIAN` pode criar leitura manual somente para equipamento da própria empresa.
+- `TECHNICIAN` não pode criar leitura para equipamento de outra empresa.
+- Quando `TECHNICIAN` envia `companyId` de outra empresa na query, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- `GET /equipment-temperature-readings/:id` bloqueia acesso caso a leitura pertença a outra empresa.
+
+Regras de integridade mantidas:
+
+- A leitura manual atualiza a temperatura atual do equipamento.
+- A leitura salva o usuário autenticado em `createdByUserId`.
+- O equipamento informado precisa pertencer à empresa da leitura.
+- A sala da leitura é herdada do próprio equipamento.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando leituras manuais de equipamentos normalmente.
+- `SUPERVISOR` continuou acessando leituras manuais de equipamentos normalmente.
+- `CLIENT_USER` foi bloqueado ao tentar listar leituras manuais de equipamentos via API.
+- `CLIENT_USER` foi bloqueado ao tentar criar leitura manual de equipamento via API.
+- `TECHNICIAN` recebeu somente leituras manuais de equipamentos da própria empresa.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para `TECHNICIAN`.
+- `TECHNICIAN` conseguiu criar leitura manual para equipamento da própria empresa.
+- `TECHNICIAN` foi bloqueado ao tentar criar leitura manual para equipamento de outra empresa.
+- Build do backend validado.

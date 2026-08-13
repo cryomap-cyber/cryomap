@@ -1,11 +1,15 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
 import {
   EquipmentTemperatureSource,
   Prisma,
+  UserRole,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateEquipmentTemperatureReadingDto } from './dto/create-equipment-temperature-reading.dto.js';
@@ -64,11 +68,13 @@ export class EquipmentTemperatureReadingsService {
 
   async create(
     createDto: CreateEquipmentTemperatureReadingDto,
-    createdByUserId?: string,
+    actor: AuthUser,
   ) {
+    const companyId = this.resolveCreateCompanyId(createDto, actor);
+
     const equipment = await this.ensureEquipmentExists(
       createDto.equipmentId,
-      createDto.companyId,
+      companyId,
     );
 
     const measuredAt = createDto.measuredAt
@@ -82,10 +88,10 @@ export class EquipmentTemperatureReadingsService {
     return this.prisma.$transaction(async (tx) => {
       const reading = await tx.equipmentTemperatureReading.create({
         data: {
-          companyId: createDto.companyId,
+          companyId,
           roomId: equipment.roomId,
           equipmentId: createDto.equipmentId,
-          createdByUserId,
+          createdByUserId: actor.id,
           temperature: createDto.temperature,
           source: createDto.source ?? EquipmentTemperatureSource.MANUAL,
           notes: createDto.notes?.trim(),
@@ -107,11 +113,13 @@ export class EquipmentTemperatureReadingsService {
     });
   }
 
-  async findAll(filters: FindEquipmentTemperatureReadingsDto) {
+  async findAll(filters: FindEquipmentTemperatureReadingsDto, actor: AuthUser) {
     const where: Prisma.EquipmentTemperatureReadingWhereInput = {};
 
-    if (filters.companyId) {
-      where.companyId = filters.companyId;
+    const scopedCompanyId = this.resolveReadCompanyId(filters.companyId, actor);
+
+    if (scopedCompanyId) {
+      where.companyId = scopedCompanyId;
     }
 
     if (filters.roomId) {
@@ -160,7 +168,7 @@ export class EquipmentTemperatureReadingsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor: AuthUser) {
     const reading = await this.prisma.equipmentTemperatureReading.findUnique({
       where: {
         id,
@@ -172,7 +180,73 @@ export class EquipmentTemperatureReadingsService {
       throw new NotFoundException('Leitura de equipamento não encontrada');
     }
 
+    this.ensureCanAccessCompany(reading.companyId, actor);
+
     return reading;
+  }
+
+  private resolveCreateCompanyId(
+    createDto: CreateEquipmentTemperatureReadingDto,
+    actor: AuthUser,
+  ) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException(
+        'Usuário cliente não pode acessar leituras manuais de equipamentos',
+      );
+    }
+
+    if (actor.role === UserRole.TECHNICIAN) {
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Técnico não está vinculado a uma empresa',
+        );
+      }
+
+      if (createDto.companyId !== actor.companyId) {
+        throw new ForbiddenException(
+          'Técnico só pode registrar leitura de equipamento da própria empresa',
+        );
+      }
+
+      return actor.companyId;
+    }
+
+    return createDto.companyId;
+  }
+
+  private resolveReadCompanyId(
+    requestedCompanyId: string | undefined,
+    actor: AuthUser,
+  ) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException(
+        'Usuário cliente não pode acessar leituras manuais de equipamentos',
+      );
+    }
+
+    if (actor.role === UserRole.TECHNICIAN) {
+      return actor.companyId ?? undefined;
+    }
+
+    return requestedCompanyId;
+  }
+
+  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException(
+        'Usuário cliente não pode acessar leituras manuais de equipamentos',
+      );
+    }
+
+    if (actor.role !== UserRole.TECHNICIAN) {
+      return;
+    }
+
+    if (!actor.companyId || actor.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta empresa',
+      );
+    }
   }
 
   private async ensureEquipmentExists(equipmentId: string, companyId: string) {
