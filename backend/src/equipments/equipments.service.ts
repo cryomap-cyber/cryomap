@@ -1,9 +1,16 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { EquipmentStatus, Prisma } from '../generated/prisma/client.js';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
+import {
+  EquipmentStatus,
+  Prisma,
+  UserRole,
+} from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateEquipmentDto } from './dto/create-equipment.dto.js';
 import { UpdateEquipmentDto } from './dto/update-equipment.dto.js';
@@ -93,7 +100,17 @@ export class EquipmentsService {
     });
   }
 
-  async findAll() {
+  async findAll(actor: AuthUser, companyId?: string, roomId?: string) {
+    if (roomId) {
+      return this.findByRoom(roomId, actor);
+    }
+
+    const scopedCompanyId = this.resolveCompanyScope(actor, companyId);
+
+    if (scopedCompanyId) {
+      return this.findByCompany(scopedCompanyId, actor);
+    }
+
     return this.prisma.equipment.findMany({
       where: {
         deletedAt: null,
@@ -105,7 +122,11 @@ export class EquipmentsService {
     });
   }
 
-  async findByCompany(companyId: string) {
+  async findByCompany(companyId: string, actor?: AuthUser) {
+    if (actor) {
+      this.ensureCanAccessCompany(companyId, actor);
+    }
+
     await this.ensureCompanyExists(companyId);
 
     return this.prisma.equipment.findMany({
@@ -120,8 +141,25 @@ export class EquipmentsService {
     });
   }
 
-  async findByRoom(roomId: string) {
-    await this.ensureRoomExists(roomId);
+  async findByRoom(roomId: string, actor?: AuthUser) {
+    const room = await this.prisma.room.findFirst({
+      where: {
+        id: roomId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        companyId: true,
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Sala não encontrada');
+    }
+
+    if (actor) {
+      this.ensureCanAccessCompany(room.companyId, actor);
+    }
 
     return this.prisma.equipment.findMany({
       where: {
@@ -135,7 +173,7 @@ export class EquipmentsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor?: AuthUser) {
     const equipment = await this.prisma.equipment.findFirst({
       where: {
         id,
@@ -146,6 +184,10 @@ export class EquipmentsService {
 
     if (!equipment) {
       throw new NotFoundException('Equipamento não encontrado');
+    }
+
+    if (actor) {
+      this.ensureCanAccessCompany(equipment.companyId, actor);
     }
 
     return equipment;
@@ -259,6 +301,32 @@ export class EquipmentsService {
     });
   }
 
+  private isCompanyScopedUser(actor: AuthUser) {
+    return (
+      actor.role === UserRole.CLIENT_USER || actor.role === UserRole.TECHNICIAN
+    );
+  }
+
+  private resolveCompanyScope(actor: AuthUser, requestedCompanyId?: string) {
+    if (this.isCompanyScopedUser(actor)) {
+      return actor.companyId ?? undefined;
+    }
+
+    return requestedCompanyId;
+  }
+
+  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+    if (!this.isCompanyScopedUser(actor)) {
+      return;
+    }
+
+    if (!actor.companyId || actor.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta empresa',
+      );
+    }
+  }
+
   private normalizeCode(code: string) {
     return code.trim().toUpperCase();
   }
@@ -305,6 +373,7 @@ export class EquipmentsService {
       where: {
         companyId,
         code,
+        deletedAt: null,
       },
       select: {
         id: true,

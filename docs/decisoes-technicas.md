@@ -2558,3 +2558,33 @@ Testes realizados:
 - Chamados e Atendimentos voltaram a funcionar para usuários não administrativos.
 - Build do backend validado.
 - Lint e build do frontend validados.
+
+## 47. Proteção real de equipamentos no backend
+
+Foi implementada a proteção real da rota de equipamentos no backend.
+
+Arquivos alterados:
+
+- `backend/src/equipments/equipments.controller.ts`
+- `backend/src/equipments/equipments.service.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem listar, visualizar, criar, editar e inativar equipamentos.
+- `CLIENT_USER` pode visualizar somente equipamentos da própria empresa.
+- `TECHNICIAN` pode visualizar somente equipamentos da própria empresa.
+- `CLIENT_USER` não pode criar, editar ou inativar equipamentos.
+- `TECHNICIAN` não pode criar, editar ou inativar equipamentos.
+- Quando `CLIENT_USER` ou `TECHNICIAN` envia `companyId` de outra empresa na query, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- Quando `CLIENT_USER` ou `TECHNICIAN` tenta consultar equipamentos por `roomId`, o backend valida se a sala pertence à empresa do usuário logado.
+- `GET /equipments/:id` bloqueia acesso caso o equipamento pertença a outra empresa.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando equipamentos normalmente.
+- `CLIENT_USER` recebeu somente equipamentos da própria empresa em `GET /equipments`.
+- `TECHNICIAN` recebeu somente equipamentos da própria empresa em `GET /equipments`.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para usuários com escopo restrito.
+- `CLIENT_USER` foi bloqueado ao tentar criar equipamento via API.
+- `TECHNICIAN` foi bloqueado ao tentar criar equipamento via API.
+- Build do backend validado.
