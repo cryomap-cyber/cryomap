@@ -2757,3 +2757,57 @@ Testes realizados:
 - `TECHNICIAN` conseguiu criar tarefa para a própria empresa.
 - `TECHNICIAN` foi bloqueado ao tentar criar tarefa para outra empresa.
 - Build do backend validado.
+
+## 52. Proteção real de atendimentos técnicos no backend
+
+Foi implementada a proteção real da rota de atendimentos técnicos no backend.
+
+Arquivos alterados:
+
+- `backend/src/service-records/service-records.controller.ts`
+- `backend/src/service-records/service-records.service.ts`
+- `frontend/src/services/tasks.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem listar atendimentos de todas as empresas.
+- `MASTER_ADMIN` e `SUPERVISOR` podem criar, editar, finalizar, reabrir e inativar atendimentos.
+- `CLIENT_USER` pode visualizar somente atendimentos da própria empresa.
+- `CLIENT_USER` não pode criar, editar, finalizar, reabrir ou inativar atendimentos.
+- `TECHNICIAN` pode visualizar somente atendimentos da própria empresa.
+- `TECHNICIAN` pode criar atendimento somente para tarefa da própria empresa.
+- `TECHNICIAN` pode editar, finalizar, reabrir e inativar atendimento somente da própria empresa.
+- Quando `CLIENT_USER` ou `TECHNICIAN` envia `companyId` de outra empresa na query, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- `GET /service-records/:id`, `PATCH /service-records/:id` e `DELETE /service-records/:id` bloqueiam acesso caso o atendimento pertença a outra empresa.
+
+Correção complementar no frontend:
+
+- Após a proteção real de `/tasks`, a tela de Atendimentos quebrou para `CLIENT_USER`, porque ainda tentava carregar tarefas para filtros/formulários.
+- O serviço `frontend/src/services/tasks.ts` foi ajustado para que `CLIENT_USER` não chame mais `/tasks`.
+- Para `CLIENT_USER`, `getTasks()` retorna lista vazia.
+- A tela de Atendimentos voltou a funcionar para cliente em modo somente consulta.
+
+Regras de integridade mantidas:
+
+- Um atendimento sempre pertence a uma tarefa existente.
+- Não é possível iniciar atendimento em tarefa cancelada.
+- Uma tarefa não pode ter mais de um atendimento ativo/vinculado.
+- Ao criar atendimento, a tarefa muda para `IN_PROGRESS` ou `DONE`, dependendo de `finishedAt`.
+- Ao finalizar atendimento, o backend calcula `downtimeMinutes`.
+- Ao reabrir atendimento, o backend atualiza a tarefa novamente para `IN_PROGRESS`.
+- Ao remover atendimento, a tarefa volta para `OPEN`.
+- Técnico informado precisa estar ativo e pertencer à empresa do atendimento ou ser usuário administrativo sem empresa.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando atendimentos normalmente.
+- `SUPERVISOR` continuou acessando atendimentos normalmente.
+- `CLIENT_USER` recebeu somente atendimentos da própria empresa.
+- `CLIENT_USER` foi bloqueado ao tentar criar atendimento via API.
+- `TECHNICIAN` recebeu somente atendimentos da própria empresa.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para usuários com escopo restrito.
+- `TECHNICIAN` conseguiu criar atendimento para tarefa da própria empresa.
+- `TECHNICIAN` foi bloqueado ao tentar criar atendimento para tarefa de outra empresa.
+- Tela de Atendimentos voltou a funcionar para `CLIENT_USER`.
+- Build do backend validado.
+- Lint e build do frontend validados.

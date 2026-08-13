@@ -1,10 +1,18 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, TaskStatus, UserStatus } from '../generated/prisma/client.js';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
+import {
+  Prisma,
+  TaskStatus,
+  UserRole,
+  UserStatus,
+} from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateServiceRecordDto } from './dto/create-service-record.dto.js';
 import { FindServiceRecordsDto } from './dto/find-service-records.dto.js';
@@ -78,11 +86,12 @@ const serviceRecordSelect = {
 export class ServiceRecordsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(
-    createDto: CreateServiceRecordDto,
-    authenticatedUserId?: string,
-  ) {
+  async create(createDto: CreateServiceRecordDto, actor: AuthUser) {
+    this.ensureCanWrite(actor);
+
     const task = await this.ensureTaskExists(createDto.taskId);
+
+    this.ensureCanAccessCompany(task.companyId, actor);
 
     if (task.status === TaskStatus.CANCELED) {
       throw new BadRequestException(
@@ -93,7 +102,7 @@ export class ServiceRecordsService {
     await this.ensureTaskHasNoServiceRecord(createDto.taskId);
 
     const technicianId =
-      createDto.technicianId ?? task.assignedToUserId ?? authenticatedUserId;
+      createDto.technicianId ?? task.assignedToUserId ?? actor.id;
 
     if (technicianId) {
       await this.ensureTechnicianExists(technicianId, task.companyId);
@@ -172,17 +181,19 @@ export class ServiceRecordsService {
     });
   }
 
-  async findAll(filters: FindServiceRecordsDto) {
+  async findAll(filters: FindServiceRecordsDto, actor: AuthUser) {
     const where: Prisma.ServiceRecordWhereInput = {
       deletedAt: null,
     };
+
+    const scopedCompanyId = this.resolveReadCompanyId(filters.companyId, actor);
 
     if (filters.taskId) {
       where.taskId = filters.taskId;
     }
 
-    if (filters.companyId) {
-      where.companyId = filters.companyId;
+    if (scopedCompanyId) {
+      where.companyId = scopedCompanyId;
     }
 
     if (filters.roomId) {
@@ -225,7 +236,7 @@ export class ServiceRecordsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor: AuthUser) {
     const serviceRecord = await this.prisma.serviceRecord.findFirst({
       where: {
         id,
@@ -238,11 +249,15 @@ export class ServiceRecordsService {
       throw new NotFoundException('Registro de atendimento não encontrado');
     }
 
+    this.ensureCanAccessCompany(serviceRecord.companyId, actor);
+
     return serviceRecord;
   }
 
-  async update(id: string, updateDto: UpdateServiceRecordDto) {
-    const currentRecord = await this.findOne(id);
+  async update(id: string, updateDto: UpdateServiceRecordDto, actor: AuthUser) {
+    this.ensureCanWrite(actor);
+
+    const currentRecord = await this.findOne(id, actor);
 
     const nextStartedAt = updateDto.startedAt
       ? this.parseDate(updateDto.startedAt, 'Data inicial inválida')
@@ -322,8 +337,10 @@ export class ServiceRecordsService {
     });
   }
 
-  async remove(id: string) {
-    const currentRecord = await this.findOne(id);
+  async remove(id: string, actor: AuthUser) {
+    this.ensureCanWrite(actor);
+
+    const currentRecord = await this.findOne(id, actor);
 
     return this.prisma.$transaction(async (tx) => {
       await tx.task.update({
@@ -348,6 +365,53 @@ export class ServiceRecordsService {
         select: serviceRecordSelect,
       });
     });
+  }
+
+  private ensureCanWrite(actor: AuthUser) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException(
+        'Usuário cliente não pode alterar atendimentos técnicos',
+      );
+    }
+
+    if (actor.role === UserRole.TECHNICIAN && !actor.companyId) {
+      throw new ForbiddenException('Técnico não está vinculado a uma empresa');
+    }
+  }
+
+  private resolveReadCompanyId(
+    requestedCompanyId: string | undefined,
+    actor: AuthUser,
+  ) {
+    if (
+      actor.role === UserRole.CLIENT_USER ||
+      actor.role === UserRole.TECHNICIAN
+    ) {
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Usuário não está vinculado a uma empresa',
+        );
+      }
+
+      return actor.companyId;
+    }
+
+    return requestedCompanyId;
+  }
+
+  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+    if (
+      actor.role !== UserRole.CLIENT_USER &&
+      actor.role !== UserRole.TECHNICIAN
+    ) {
+      return;
+    }
+
+    if (!actor.companyId || actor.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta empresa',
+      );
+    }
   }
 
   private parseDate(value: string, errorMessage: string) {
