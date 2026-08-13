@@ -2409,3 +2409,29 @@ Testes realizados:
 - Build e lint validados.
 
 Essa etapa conclui a tela inicial de gestão de usuários e o controle de acesso inicial no frontend.
+
+### Ajuste de hierarquia do administrador master
+
+Foi adicionada uma proteção inicial no frontend para preservar a hierarquia do `MASTER_ADMIN`.
+
+Regras aplicadas na interface:
+
+- Deve existir apenas um usuário `MASTER_ADMIN`.
+- Não é permitido criar outro usuário com perfil `MASTER_ADMIN`.
+- Não é permitido promover outro usuário para `MASTER_ADMIN`.
+- `SUPERVISOR` não pode editar o usuário `MASTER_ADMIN`.
+- `SUPERVISOR` não pode inativar o usuário `MASTER_ADMIN`.
+- Na visão do `SUPERVISOR`, a linha do `MASTER_ADMIN` aparece como protegida.
+- O próprio `MASTER_ADMIN` não pode inativar seu usuário logado.
+- O `MASTER_ADMIN` pode criar, editar e inativar usuários `SUPERVISOR`, `CLIENT_USER` e `TECHNICIAN`.
+
+Arquivos alterados:
+
+- `frontend/src/pages/Users/Users.tsx`
+- `frontend/src/pages/Users/Users.css`
+
+Decisão técnica:
+
+- Essa proteção ainda é inicial e aplicada no frontend.
+- A proteção definitiva será implementada no backend na próxima etapa.
+- O backend deverá impedir criação de outro `MASTER_ADMIN`, alteração indevida de perfil e inativação do usuário master por chamadas diretas via API.

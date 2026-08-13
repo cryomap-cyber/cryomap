@@ -10,6 +10,7 @@ import {
 } from '../../services/users';
 import type { Company } from '../../types/company';
 import type { User, UserRole, UserStatus } from '../../types/user';
+import { useAuth } from '../../contexts/useAuth';
 import './Users.css';
 
 const userRoleOptions: { value: UserRole; label: string }[] = [
@@ -69,6 +70,10 @@ const emptyFormData: UserFormData = {
 };
 
 export function Users() {
+    const { user: currentUser } = useAuth();
+
+  const isCurrentUserMasterAdmin = currentUser?.role === 'MASTER_ADMIN';
+
   const [users, setUsers] = useState<User[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
@@ -174,12 +179,23 @@ export function Users() {
 
   const usersWithoutCompany = users.filter((user) => !user.companyId).length;
 
+    const availableRoleOptions = useMemo(() => {
+    if (editingUser?.role === 'MASTER_ADMIN') {
+      return userRoleOptions.filter((option) => option.value === 'MASTER_ADMIN');
+    }
+
+    return userRoleOptions.filter((option) => option.value !== 'MASTER_ADMIN');
+  }, [editingUser?.role]);
+
   function openCreateForm() {
     setEditingUser(null);
     setFormData({
       ...emptyFormData,
       companyId: selectedCompanyId,
-      role: selectedRole ? (selectedRole as UserRole) : 'TECHNICIAN',
+            role:
+        selectedRole && selectedRole !== 'MASTER_ADMIN'
+          ? (selectedRole as UserRole)
+          : 'TECHNICIAN',
       status: selectedStatus ? (selectedStatus as UserStatus) : 'ACTIVE',
     });
     setFormError('');
@@ -187,6 +203,10 @@ export function Users() {
   }
 
   function openEditForm(user: User) {
+        if (!canEditUser(user, currentUser?.id, isCurrentUserMasterAdmin)) {
+      setError('Você não tem permissão para editar o administrador master.');
+      return;
+    }
     setEditingUser(user);
     setFormData({
       companyId: user.companyId ?? '',
@@ -247,7 +267,35 @@ export function Users() {
       setFormError('A nova senha precisa ter pelo menos 8 caracteres.');
       return;
     }
+        if (!editingUser && formData.role === 'MASTER_ADMIN') {
+      setFormError('Não é permitido criar outro administrador master.');
+      return;
+    }
 
+    if (
+      editingUser &&
+      editingUser.role !== 'MASTER_ADMIN' &&
+      formData.role === 'MASTER_ADMIN'
+    ) {
+      setFormError('Não é permitido promover outro usuário para administrador master.');
+      return;
+    }
+
+    if (
+      editingUser?.role === 'MASTER_ADMIN' &&
+      formData.role !== 'MASTER_ADMIN'
+    ) {
+      setFormError('O administrador master principal não pode perder o perfil master.');
+      return;
+    }
+
+    if (
+      editingUser?.role === 'MASTER_ADMIN' &&
+      !isCurrentUserMasterAdmin
+    ) {
+      setFormError('Somente o administrador master pode editar o próprio cadastro master.');
+      return;
+    }
     setIsSaving(true);
 
     try {
@@ -289,6 +337,14 @@ export function Users() {
   }
 
   async function handleInactivate(user: User) {
+        if (!canInactivateUser(user, currentUser?.id)) {
+      setError(
+        user.id === currentUser?.id
+          ? 'Você não pode inativar o próprio usuário logado.'
+          : 'O administrador master não pode ser inativado.',
+      );
+      return;
+    }
     const confirmed = window.confirm(
       `Deseja realmente inativar o usuário "${user.name}"?`,
     );
@@ -441,7 +497,7 @@ export function Users() {
                   updateFormField('role', event.target.value as UserRole)
                 }
               >
-                {userRoleOptions.map((option) => (
+                  {availableRoleOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -607,17 +663,26 @@ export function Users() {
 
                     <td>
                       <div className="user-row-actions">
-                        <button type="button" onClick={() => openEditForm(user)}>
-                          Editar
-                        </button>
+                      {canEditUser(user, currentUser?.id, isCurrentUserMasterAdmin) ? (
+                       <button type="button" onClick={() => openEditForm(user)}>
+                             Editar
+                       </button>
+                      ) : null}
 
-                        <button
+                    {canInactivateUser(user, currentUser?.id) ? (
+                       <button
                           type="button"
                           onClick={() => void handleInactivate(user)}
                         >
                           Inativar
                         </button>
-                      </div>
+                      ) : null}
+
+                      {!canEditUser(user, currentUser?.id, isCurrentUserMasterAdmin) &&
+                      !canInactivateUser(user, currentUser?.id) ? (
+                        <span className="user-protected-badge">Protegido</span>
+                      ) : null}
+                    </div>
                     </td>
                   </tr>
                 ))}
@@ -737,4 +802,31 @@ function getRequestErrorMessage(error: unknown) {
   }
 
   return 'Não foi possível salvar o usuário.';
+}
+
+function canEditUser(
+  targetUser: User,
+  currentUserId: string | undefined,
+  isCurrentUserMasterAdmin: boolean,
+) {
+  if (targetUser.role !== 'MASTER_ADMIN') {
+    return true;
+  }
+
+  return isCurrentUserMasterAdmin && targetUser.id === currentUserId;
+}
+
+function canInactivateUser(
+  targetUser: User,
+  currentUserId: string | undefined,
+) {
+  if (targetUser.role === 'MASTER_ADMIN') {
+    return false;
+  }
+
+  if (targetUser.id === currentUserId) {
+    return false;
+  }
+
+  return true;
 }
