@@ -1,12 +1,16 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
 import {
   Prisma,
   TaskPriority,
   TaskStatus,
+  UserRole,
   UserStatus,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -69,29 +73,25 @@ const taskSelect = {
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createTaskDto: CreateTaskDto) {
-    await this.ensureCompanyExists(createTaskDto.companyId);
+  async create(createTaskDto: CreateTaskDto, actor: AuthUser) {
+    const companyId = this.resolveCreateCompanyId(createTaskDto, actor);
+
+    await this.ensureCompanyExists(companyId);
 
     if (createTaskDto.roomId) {
-      await this.ensureRoomExists(
-        createTaskDto.roomId,
-        createTaskDto.companyId,
-      );
+      await this.ensureRoomExists(createTaskDto.roomId, companyId);
     }
 
     if (createTaskDto.equipmentId) {
       await this.ensureEquipmentExists(
         createTaskDto.equipmentId,
-        createTaskDto.companyId,
+        companyId,
         createTaskDto.roomId,
       );
     }
 
     if (createTaskDto.assignedToUserId) {
-      await this.ensureUserExists(
-        createTaskDto.assignedToUserId,
-        createTaskDto.companyId,
-      );
+      await this.ensureUserExists(createTaskDto.assignedToUserId, companyId);
     }
 
     const dueDate = createTaskDto.dueDate
@@ -100,7 +100,7 @@ export class TasksService {
 
     return this.prisma.task.create({
       data: {
-        companyId: createTaskDto.companyId,
+        companyId,
         roomId: createTaskDto.roomId,
         equipmentId: createTaskDto.equipmentId,
         assignedToUserId: createTaskDto.assignedToUserId,
@@ -116,13 +116,15 @@ export class TasksService {
     });
   }
 
-  async findAll(filters: FindTasksDto) {
+  async findAll(filters: FindTasksDto, actor: AuthUser) {
     const where: Prisma.TaskWhereInput = {
       deletedAt: null,
     };
 
-    if (filters.companyId) {
-      where.companyId = filters.companyId;
+    const scopedCompanyId = this.resolveReadCompanyId(filters.companyId, actor);
+
+    if (scopedCompanyId) {
+      where.companyId = scopedCompanyId;
     }
 
     if (filters.roomId) {
@@ -178,7 +180,7 @@ export class TasksService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor?: AuthUser) {
     const task = await this.prisma.task.findFirst({
       where: {
         id,
@@ -191,33 +193,42 @@ export class TasksService {
       throw new NotFoundException('Tarefa não encontrada');
     }
 
+    if (actor) {
+      this.ensureCanAccessCompany(task.companyId, actor);
+    }
+
     return task;
   }
 
-  async update(id: string, updateTaskDto: UpdateTaskDto) {
-    const currentTask = await this.findOne(id);
+  async update(id: string, updateTaskDto: UpdateTaskDto, actor: AuthUser) {
+    const currentTask = await this.findOne(id, actor);
 
     const data: Prisma.TaskUpdateInput = {};
 
-    const nextCompanyId = updateTaskDto.companyId ?? currentTask.companyId;
+    const nextCompanyId = this.resolveUpdateCompanyId(
+      updateTaskDto.companyId,
+      currentTask.companyId,
+      actor,
+    );
+
     const nextRoomId =
       updateTaskDto.roomId === undefined
         ? currentTask.roomId
         : updateTaskDto.roomId;
 
     if (updateTaskDto.companyId !== undefined) {
-      await this.ensureCompanyExists(updateTaskDto.companyId);
+      await this.ensureCompanyExists(nextCompanyId);
 
       data.company = {
         connect: {
-          id: updateTaskDto.companyId,
+          id: nextCompanyId,
         },
       };
 
       if (
         currentTask.roomId &&
         updateTaskDto.roomId === undefined &&
-        updateTaskDto.companyId !== currentTask.companyId
+        nextCompanyId !== currentTask.companyId
       ) {
         data.room = {
           disconnect: true,
@@ -227,7 +238,7 @@ export class TasksService {
       if (
         currentTask.equipmentId &&
         updateTaskDto.equipmentId === undefined &&
-        updateTaskDto.companyId !== currentTask.companyId
+        nextCompanyId !== currentTask.companyId
       ) {
         data.equipment = {
           disconnect: true,
@@ -329,8 +340,8 @@ export class TasksService {
     });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, actor: AuthUser) {
+    await this.findOne(id, actor);
 
     return this.prisma.task.update({
       where: {
@@ -341,6 +352,101 @@ export class TasksService {
       },
       select: taskSelect,
     });
+  }
+
+  private resolveCreateCompanyId(
+    createTaskDto: CreateTaskDto,
+    actor: AuthUser,
+  ) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException('Usuário cliente não pode acessar tarefas');
+    }
+
+    if (actor.role === UserRole.TECHNICIAN) {
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Técnico não está vinculado a uma empresa',
+        );
+      }
+
+      if (createTaskDto.companyId !== actor.companyId) {
+        throw new ForbiddenException(
+          'Técnico só pode criar tarefas da própria empresa',
+        );
+      }
+
+      return actor.companyId;
+    }
+
+    return createTaskDto.companyId;
+  }
+
+  private resolveReadCompanyId(
+    requestedCompanyId: string | undefined,
+    actor: AuthUser,
+  ) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException('Usuário cliente não pode acessar tarefas');
+    }
+
+    if (actor.role === UserRole.TECHNICIAN) {
+      return actor.companyId ?? undefined;
+    }
+
+    return requestedCompanyId;
+  }
+
+  private resolveUpdateCompanyId(
+    requestedCompanyId: string | undefined,
+    currentCompanyId: string,
+    actor: AuthUser,
+  ) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException('Usuário cliente não pode acessar tarefas');
+    }
+
+    if (actor.role === UserRole.TECHNICIAN) {
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Técnico não está vinculado a uma empresa',
+        );
+      }
+
+      if (
+        requestedCompanyId !== undefined &&
+        requestedCompanyId !== actor.companyId
+      ) {
+        throw new ForbiddenException(
+          'Técnico não pode mover tarefa para outra empresa',
+        );
+      }
+
+      if (currentCompanyId !== actor.companyId) {
+        throw new ForbiddenException(
+          'Técnico não pode alterar tarefa de outra empresa',
+        );
+      }
+
+      return actor.companyId;
+    }
+
+    return requestedCompanyId ?? currentCompanyId;
+  }
+
+  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException('Usuário cliente não pode acessar tarefas');
+    }
+
+    if (actor.role !== UserRole.TECHNICIAN) {
+      return;
+    }
+
+    if (!actor.companyId || actor.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta empresa',
+      );
+    }
   }
 
   private parseDate(value: string, errorMessage: string) {

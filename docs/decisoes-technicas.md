@@ -2714,3 +2714,46 @@ Testes realizados:
 - `TECHNICIAN` conseguiu criar leitura manual para equipamento da própria empresa.
 - `TECHNICIAN` foi bloqueado ao tentar criar leitura manual para equipamento de outra empresa.
 - Build do backend validado.
+
+## 51. Proteção real de tarefas/chamados no backend
+
+Foi implementada a proteção real da rota de tarefas/chamados no backend.
+
+Arquivos alterados:
+
+- `backend/src/tasks/tasks.controller.ts`
+- `backend/src/tasks/tasks.service.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem listar tarefas de todas as empresas.
+- `MASTER_ADMIN` e `SUPERVISOR` podem criar, editar e inativar tarefas.
+- `CLIENT_USER` não pode acessar tarefas/chamados.
+- `CLIENT_USER` não pode criar tarefas/chamados.
+- `TECHNICIAN` pode listar somente tarefas da própria empresa.
+- `TECHNICIAN` pode criar tarefas somente para a própria empresa.
+- `TECHNICIAN` pode editar tarefas somente da própria empresa.
+- `TECHNICIAN` pode inativar tarefas somente da própria empresa.
+- Quando `TECHNICIAN` envia `companyId` de outra empresa na query, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- `GET /tasks/:id`, `PATCH /tasks/:id` e `DELETE /tasks/:id` bloqueiam acesso caso a tarefa pertença a outra empresa.
+
+Regras de integridade mantidas:
+
+- A tarefa precisa pertencer a uma empresa existente.
+- Sala informada precisa pertencer à empresa da tarefa.
+- Equipamento informado precisa pertencer à empresa e, quando houver sala informada, também à sala da tarefa.
+- Responsável informado precisa estar ativo e pertencer à empresa da tarefa ou ser usuário administrativo sem empresa.
+- Ao marcar tarefa como `DONE`, o backend preenche `completedAt`.
+- Ao mudar tarefa de `DONE` para outro status, o backend limpa `completedAt`.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando tarefas normalmente.
+- `SUPERVISOR` continuou acessando tarefas normalmente.
+- `CLIENT_USER` foi bloqueado ao tentar listar tarefas via API.
+- `CLIENT_USER` foi bloqueado ao tentar criar tarefa via API.
+- `TECHNICIAN` recebeu somente tarefas da própria empresa.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para `TECHNICIAN`.
+- `TECHNICIAN` conseguiu criar tarefa para a própria empresa.
+- `TECHNICIAN` foi bloqueado ao tentar criar tarefa para outra empresa.
+- Build do backend validado.
