@@ -2588,3 +2588,45 @@ Testes realizados:
 - `CLIENT_USER` foi bloqueado ao tentar criar equipamento via API.
 - `TECHNICIAN` foi bloqueado ao tentar criar equipamento via API.
 - Build do backend validado.
+
+## 48. Proteção real de sensores no backend
+
+Foi implementada a proteção real da rota de sensores no backend.
+
+Arquivos alterados:
+
+- `backend/src/sensors/sensors.controller.ts`
+- `backend/src/sensors/sensors.service.ts`
+- `frontend/src/services/sensors.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem listar, visualizar, criar, editar e inativar sensores.
+- `CLIENT_USER` pode visualizar somente sensores da própria empresa.
+- `CLIENT_USER` não pode criar, editar ou inativar sensores.
+- `TECHNICIAN` não pode acessar sensores.
+- Quando `CLIENT_USER` envia `companyId` de outra empresa na query, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- Quando `CLIENT_USER` tenta consultar sensores por `roomId`, o backend valida se a sala pertence à empresa do usuário logado.
+- `GET /sensors/:id` bloqueia acesso caso o sensor pertença a outra empresa.
+- `TECHNICIAN` recebe `403 Forbidden` ao tentar acessar `GET /sensors`.
+- `TECHNICIAN` recebe `403 Forbidden` ao tentar criar sensores.
+
+Correção complementar no frontend:
+
+- Após a proteção real de `/sensors`, a tela de Leituras quebrou para `TECHNICIAN`, porque ainda tentava carregar sensores para o filtro.
+- O serviço `frontend/src/services/sensors.ts` foi ajustado para que `TECHNICIAN` não chame mais `/sensors`.
+- Para `TECHNICIAN`, `getSensors()` retorna lista vazia.
+- A tela de Leituras continua funcionando para técnico, apenas sem opções de sensor no filtro/cadastro manual.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando sensores normalmente.
+- `SUPERVISOR` continuou acessando sensores normalmente.
+- `CLIENT_USER` recebeu somente sensores da própria empresa em `GET /sensors`.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para `CLIENT_USER`.
+- `CLIENT_USER` foi bloqueado ao tentar criar sensor via API.
+- `TECHNICIAN` foi bloqueado ao tentar listar sensores via API.
+- `TECHNICIAN` foi bloqueado ao tentar criar sensor via API.
+- Tela de Leituras voltou a funcionar para `TECHNICIAN`.
+- Build do backend validado.
+- Lint e build do frontend validados.

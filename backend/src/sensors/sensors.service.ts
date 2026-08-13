@@ -1,12 +1,16 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
 import {
   Prisma,
   SensorStatus,
   SensorType,
+  UserRole,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateSensorDto } from './dto/create-sensor.dto.js';
@@ -78,7 +82,17 @@ export class SensorsService {
     });
   }
 
-  async findAll() {
+  async findAll(actor: AuthUser, companyId?: string, roomId?: string) {
+    if (roomId) {
+      return this.findByRoom(roomId, actor);
+    }
+
+    const scopedCompanyId = this.resolveCompanyScope(actor, companyId);
+
+    if (scopedCompanyId) {
+      return this.findByCompany(scopedCompanyId, actor);
+    }
+
     return this.prisma.sensor.findMany({
       where: {
         deletedAt: null,
@@ -90,7 +104,11 @@ export class SensorsService {
     });
   }
 
-  async findByCompany(companyId: string) {
+  async findByCompany(companyId: string, actor?: AuthUser) {
+    if (actor) {
+      this.ensureCanAccessCompany(companyId, actor);
+    }
+
     await this.ensureCompanyExists(companyId);
 
     return this.prisma.sensor.findMany({
@@ -105,8 +123,25 @@ export class SensorsService {
     });
   }
 
-  async findByRoom(roomId: string) {
-    await this.ensureRoomExists(roomId);
+  async findByRoom(roomId: string, actor?: AuthUser) {
+    const room = await this.prisma.room.findFirst({
+      where: {
+        id: roomId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        companyId: true,
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Sala não encontrada');
+    }
+
+    if (actor) {
+      this.ensureCanAccessCompany(room.companyId, actor);
+    }
 
     return this.prisma.sensor.findMany({
       where: {
@@ -120,7 +155,7 @@ export class SensorsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor?: AuthUser) {
     const sensor = await this.prisma.sensor.findFirst({
       where: {
         id,
@@ -131,6 +166,10 @@ export class SensorsService {
 
     if (!sensor) {
       throw new NotFoundException('Sensor não encontrado');
+    }
+
+    if (actor) {
+      this.ensureCanAccessCompany(sensor.companyId, actor);
     }
 
     return sensor;
@@ -224,6 +263,30 @@ export class SensorsService {
       },
       select: sensorSelect,
     });
+  }
+
+  private isCompanyScopedUser(actor: AuthUser) {
+    return actor.role === UserRole.CLIENT_USER;
+  }
+
+  private resolveCompanyScope(actor: AuthUser, requestedCompanyId?: string) {
+    if (this.isCompanyScopedUser(actor)) {
+      return actor.companyId ?? undefined;
+    }
+
+    return requestedCompanyId;
+  }
+
+  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+    if (!this.isCompanyScopedUser(actor)) {
+      return;
+    }
+
+    if (!actor.companyId || actor.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta empresa',
+      );
+    }
   }
 
   private normalizeCode(code: string) {
