@@ -1,5 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, ThermalStatus } from '../generated/prisma/client.js';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
+import { Prisma, ThermalStatus, UserRole } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateRoomDto } from './dto/create-room.dto.js';
 import { UpdateRoomDto } from './dto/update-room.dto.js';
@@ -59,7 +65,24 @@ export class RoomsService {
     });
   }
 
-  async findAll() {
+  async findAll(actor: AuthUser, companyId?: string) {
+    const scopedCompanyId = this.resolveCompanyScope(actor, companyId);
+
+    if (scopedCompanyId) {
+      await this.ensureCompanyExists(scopedCompanyId);
+
+      return this.prisma.room.findMany({
+        where: {
+          companyId: scopedCompanyId,
+          deletedAt: null,
+        },
+        select: roomSelect,
+        orderBy: {
+          name: 'asc',
+        },
+      });
+    }
+
     return this.prisma.room.findMany({
       where: {
         deletedAt: null,
@@ -71,12 +94,20 @@ export class RoomsService {
     });
   }
 
-  async findByCompany(companyId: string) {
-    await this.ensureCompanyExists(companyId);
+  async findByCompany(companyId: string, actor?: AuthUser) {
+    const scopedCompanyId = actor
+      ? this.resolveCompanyScope(actor, companyId)
+      : companyId;
+
+    if (!scopedCompanyId) {
+      return [];
+    }
+
+    await this.ensureCompanyExists(scopedCompanyId);
 
     return this.prisma.room.findMany({
       where: {
-        companyId,
+        companyId: scopedCompanyId,
         deletedAt: null,
       },
       select: roomSelect,
@@ -86,7 +117,7 @@ export class RoomsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor?: AuthUser) {
     const room = await this.prisma.room.findFirst({
       where: {
         id,
@@ -97,6 +128,10 @@ export class RoomsService {
 
     if (!room) {
       throw new NotFoundException('Sala não encontrada');
+    }
+
+    if (actor) {
+      this.ensureCanAccessCompany(room.companyId, actor);
     }
 
     return room;
@@ -196,6 +231,32 @@ export class RoomsService {
       },
       select: roomSelect,
     });
+  }
+
+  private isCompanyScopedUser(actor: AuthUser) {
+    return (
+      actor.role === UserRole.CLIENT_USER || actor.role === UserRole.TECHNICIAN
+    );
+  }
+
+  private resolveCompanyScope(actor: AuthUser, requestedCompanyId?: string) {
+    if (this.isCompanyScopedUser(actor)) {
+      return actor.companyId ?? undefined;
+    }
+
+    return requestedCompanyId;
+  }
+
+  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+    if (!this.isCompanyScopedUser(actor)) {
+      return;
+    }
+
+    if (!actor.companyId || actor.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta empresa',
+      );
+    }
   }
 
   private async ensureCompanyExists(companyId: string) {
