@@ -1,11 +1,15 @@
 import {
+  BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+
 import { Prisma, UserRole, UserStatus } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import type { AuthUser } from '../auth/types/auth-user.type.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 
@@ -32,11 +36,17 @@ const userSelect = {
   },
 } satisfies Prisma.UserSelect;
 
+type SelectedUser = Prisma.UserGetPayload<{
+  select: typeof userSelect;
+}>;
+
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto, actor: AuthUser) {
+    await this.ensureActorCanCreateUser(createUserDto, actor);
+
     const normalizedEmail = this.normalizeEmail(createUserDto.email);
 
     await this.ensureEmailIsAvailable(normalizedEmail);
@@ -90,8 +100,10 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
-    await this.findOne(id);
+  async update(id: string, updateUserDto: UpdateUserDto, actor: AuthUser) {
+    const targetUser = await this.findOne(id);
+
+    await this.ensureActorCanUpdateUser(targetUser, updateUserDto, actor);
 
     const data: Prisma.UserUpdateInput = {};
 
@@ -152,8 +164,10 @@ export class UsersService {
     });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, actor: AuthUser) {
+    const targetUser = await this.findOne(id);
+
+    this.ensureActorCanRemoveUser(targetUser, actor);
 
     return this.prisma.user.update({
       where: {
@@ -165,6 +179,104 @@ export class UsersService {
       },
       select: userSelect,
     });
+  }
+
+  private async ensureActorCanCreateUser(
+    createUserDto: CreateUserDto,
+    actor: AuthUser,
+  ) {
+    if (
+      actor.role !== UserRole.MASTER_ADMIN &&
+      actor.role !== UserRole.SUPERVISOR
+    ) {
+      throw new ForbiddenException(
+        'Você não tem permissão para criar usuários',
+      );
+    }
+
+    if (createUserDto.role === UserRole.MASTER_ADMIN) {
+      throw new BadRequestException(
+        'Não é permitido criar outro administrador master',
+      );
+    }
+
+    const existingMasterAdmin = await this.prisma.user.findFirst({
+      where: {
+        role: UserRole.MASTER_ADMIN,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!existingMasterAdmin) {
+      throw new BadRequestException(
+        'Administrador master principal não encontrado. Use o seed para criar o usuário master.',
+      );
+    }
+  }
+
+  private async ensureActorCanUpdateUser(
+    targetUser: SelectedUser,
+    updateUserDto: UpdateUserDto,
+    actor: AuthUser,
+  ) {
+    if (targetUser.id === actor.id && updateUserDto.status !== undefined) {
+      if (updateUserDto.status !== UserStatus.ACTIVE) {
+        throw new ForbiddenException(
+          'Você não pode inativar ou bloquear o próprio usuário logado',
+        );
+      }
+    }
+
+    if (targetUser.role === UserRole.MASTER_ADMIN) {
+      if (actor.role !== UserRole.MASTER_ADMIN || targetUser.id !== actor.id) {
+        throw new ForbiddenException(
+          'Somente o próprio administrador master pode editar o cadastro master',
+        );
+      }
+
+      if (
+        updateUserDto.role !== undefined &&
+        updateUserDto.role !== UserRole.MASTER_ADMIN
+      ) {
+        throw new BadRequestException(
+          'O administrador master principal não pode perder o perfil master',
+        );
+      }
+
+      if (
+        updateUserDto.status !== undefined &&
+        updateUserDto.status !== UserStatus.ACTIVE
+      ) {
+        throw new BadRequestException(
+          'O administrador master principal não pode ser inativado ou bloqueado',
+        );
+      }
+
+      return;
+    }
+
+    if (updateUserDto.role === UserRole.MASTER_ADMIN) {
+      throw new BadRequestException(
+        'Não é permitido promover outro usuário para administrador master',
+      );
+    }
+  }
+
+  private ensureActorCanRemoveUser(targetUser: SelectedUser, actor: AuthUser) {
+    if (targetUser.id === actor.id) {
+      throw new ForbiddenException(
+        'Você não pode inativar o próprio usuário logado',
+      );
+    }
+
+    if (targetUser.role === UserRole.MASTER_ADMIN) {
+      throw new ForbiddenException(
+        'O administrador master não pode ser inativado',
+      );
+    }
   }
 
   private normalizeEmail(email: string) {

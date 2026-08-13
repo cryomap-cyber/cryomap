@@ -2435,3 +2435,48 @@ Decisão técnica:
 - Essa proteção ainda é inicial e aplicada no frontend.
 - A proteção definitiva será implementada no backend na próxima etapa.
 - O backend deverá impedir criação de outro `MASTER_ADMIN`, alteração indevida de perfil e inativação do usuário master por chamadas diretas via API.
+
+### Proteção da hierarquia do administrador master no backend
+
+Foi adicionada proteção real no backend para preservar a hierarquia do `MASTER_ADMIN`.
+
+Arquivos criados:
+
+- `backend/src/auth/decorators/roles.decorator.ts`
+- `backend/src/auth/guards/roles.guard.ts`
+
+Arquivos alterados:
+
+- `backend/src/auth/auth.module.ts`
+- `backend/src/users/users.controller.ts`
+- `backend/src/users/users.service.ts`
+
+Regras implementadas no backend:
+
+- Apenas `MASTER_ADMIN` e `SUPERVISOR` podem acessar rotas de gestão de usuários.
+- Não é permitido criar outro usuário com perfil `MASTER_ADMIN`.
+- Não é permitido promover outro usuário para `MASTER_ADMIN`.
+- O usuário `MASTER_ADMIN` principal não pode perder o perfil master.
+- O usuário `MASTER_ADMIN` principal não pode ser inativado ou bloqueado.
+- O `SUPERVISOR` não pode editar o usuário `MASTER_ADMIN`.
+- O `SUPERVISOR` não pode inativar o usuário `MASTER_ADMIN`.
+- O usuário logado não pode inativar o próprio cadastro.
+- `MASTER_ADMIN` pode criar, editar e inativar usuários `SUPERVISOR`, `CLIENT_USER` e `TECHNICIAN`.
+- `SUPERVISOR` pode criar, editar e inativar usuários comuns, mas não pode afetar o `MASTER_ADMIN`.
+
+Testes realizados:
+
+- Tentativa de criar outro `MASTER_ADMIN` via interface foi bloqueada.
+- Tentativa de criar outro `MASTER_ADMIN` via API direta foi bloqueada.
+- Tentativa de promover usuário comum para `MASTER_ADMIN` foi bloqueada.
+- Tentativa de inativar o próprio `MASTER_ADMIN` via API direta foi bloqueada.
+- `SUPERVISOR` não conseguiu editar o `MASTER_ADMIN`.
+- `SUPERVISOR` não conseguiu inativar o `MASTER_ADMIN`.
+- `MASTER_ADMIN` continuou conseguindo gerenciar usuários comuns.
+- Build do backend validado.
+
+Decisão técnica:
+
+- A hierarquia do administrador master agora está protegida no frontend e no backend.
+- Essa correção evita que a segurança dependa apenas da interface.
+- A próxima etapa será expandir o controle real do backend para escopo por perfil e empresa em todas as rotas operacionais.
