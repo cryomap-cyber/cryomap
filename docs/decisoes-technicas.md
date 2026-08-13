@@ -2630,3 +2630,47 @@ Testes realizados:
 - Tela de Leituras voltou a funcionar para `TECHNICIAN`.
 - Build do backend validado.
 - Lint e build do frontend validados.
+
+## 49. Proteção real de leituras de temperatura no backend
+
+Foi implementada a proteção real da rota de leituras de temperatura das salas no backend.
+
+Arquivos alterados:
+
+- `backend/src/temperature-readings/temperature-readings.controller.ts`
+- `backend/src/temperature-readings/temperature-readings.service.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem listar leituras de todas as empresas.
+- `MASTER_ADMIN` e `SUPERVISOR` podem criar leituras para qualquer empresa, sala e sensor válido.
+- `CLIENT_USER` pode visualizar somente leituras da própria empresa.
+- `CLIENT_USER` não pode criar leituras de temperatura.
+- `TECHNICIAN` pode visualizar somente leituras da própria empresa.
+- `TECHNICIAN` pode criar leitura manual somente para sala da própria empresa.
+- `TECHNICIAN` não pode criar leitura vinculada a sensor.
+- `TECHNICIAN` não pode criar leitura para outra empresa.
+- Quando `CLIENT_USER` ou `TECHNICIAN` envia `companyId` de outra empresa na query, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- `GET /temperature-readings/:id` bloqueia acesso caso a leitura pertença a outra empresa.
+
+Regras de integridade mantidas:
+
+- A leitura atualiza a temperatura atual da sala.
+- A leitura recalcula o status térmico da sala.
+- A leitura pode gerar alerta térmico crítico.
+- A leitura normal pode resolver alertas térmicos abertos ou reconhecidos.
+- Quando existe `sensorId`, o sensor é atualizado com última temperatura, última umidade e última comunicação.
+- Sensor informado precisa pertencer à sala e empresa da leitura.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando leituras normalmente.
+- `SUPERVISOR` continuou acessando leituras normalmente.
+- `CLIENT_USER` recebeu somente leituras da própria empresa em `GET /temperature-readings`.
+- `TECHNICIAN` recebeu somente leituras da própria empresa em `GET /temperature-readings`.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para usuários com escopo restrito.
+- `CLIENT_USER` foi bloqueado ao tentar criar leitura via API.
+- `TECHNICIAN` conseguiu criar leitura manual para sala da própria empresa.
+- `TECHNICIAN` foi bloqueado ao tentar criar leitura em outra empresa.
+- `TECHNICIAN` foi bloqueado ao tentar criar leitura vinculada a sensor.
+- Build do backend validado.

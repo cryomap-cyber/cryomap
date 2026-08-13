@@ -1,14 +1,18 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
 import {
   Prisma,
   ReadingSource,
   ThermalAlertSeverity,
   ThermalAlertStatus,
   ThermalStatus,
+  UserRole,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateRoomTemperatureReadingDto } from './dto/create-room-temperature-reading.dto.js';
@@ -59,17 +63,16 @@ const roomTemperatureReadingSelect = {
 export class TemperatureReadingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createDto: CreateRoomTemperatureReadingDto) {
-    const room = await this.ensureRoomExists(
-      createDto.roomId,
-      createDto.companyId,
-    );
+  async create(createDto: CreateRoomTemperatureReadingDto, actor?: AuthUser) {
+    const companyId = this.resolveCreateCompanyId(createDto, actor);
+
+    const room = await this.ensureRoomExists(createDto.roomId, companyId);
 
     if (createDto.sensorId) {
       await this.ensureSensorExists(
         createDto.sensorId,
         createDto.roomId,
-        createDto.companyId,
+        companyId,
       );
     }
 
@@ -88,7 +91,7 @@ export class TemperatureReadingsService {
     return this.prisma.$transaction(async (tx) => {
       const reading = await tx.roomTemperatureReading.create({
         data: {
-          companyId: createDto.companyId,
+          companyId,
           roomId: createDto.roomId,
           sensorId: createDto.sensorId,
           temperature: createDto.temperature,
@@ -167,7 +170,7 @@ export class TemperatureReadingsService {
         } else {
           await tx.thermalAlert.create({
             data: {
-              companyId: createDto.companyId,
+              companyId,
               roomId: createDto.roomId,
               ...alertData,
             },
@@ -179,7 +182,7 @@ export class TemperatureReadingsService {
             roomId: createDto.roomId,
             deletedAt: null,
             status: {
-              in: [ThermalAlertStatus.OPEN,
+              in: [ThermalAlertStatus.OPEN, 
                 ThermalAlertStatus.ACKNOWLEDGED,
               ],
             },
@@ -195,11 +198,13 @@ export class TemperatureReadingsService {
     });
   }
 
-  async findAll(filters: FindRoomTemperatureReadingsDto) {
+  async findAll(filters: FindRoomTemperatureReadingsDto, actor?: AuthUser) {
     const where: Prisma.RoomTemperatureReadingWhereInput = {};
 
-    if (filters.companyId) {
-      where.companyId = filters.companyId;
+    const scopedCompanyId = this.resolveReadCompanyId(filters.companyId, actor);
+
+    if (scopedCompanyId) {
+      where.companyId = scopedCompanyId;
     }
 
     if (filters.roomId) {
@@ -244,7 +249,7 @@ export class TemperatureReadingsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor?: AuthUser) {
     const reading = await this.prisma.roomTemperatureReading.findUnique({
       where: {
         id,
@@ -256,7 +261,80 @@ export class TemperatureReadingsService {
       throw new NotFoundException('Leitura não encontrada');
     }
 
+    if (actor) {
+      this.ensureCanAccessCompany(reading.companyId, actor);
+    }
+
     return reading;
+  }
+
+  private resolveCreateCompanyId(
+    createDto: CreateRoomTemperatureReadingDto,
+    actor?: AuthUser,
+  ) {
+    if (!actor) {
+      return createDto.companyId;
+    }
+
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException(
+        'Usuário cliente não pode criar leituras de temperatura',
+      );
+    }
+
+    if (actor.role === UserRole.TECHNICIAN) {
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Técnico não está vinculado a uma empresa',
+        );
+      }
+
+      if (createDto.companyId !== actor.companyId) {
+        throw new ForbiddenException(
+          'Técnico só pode criar leituras da própria empresa',
+        );
+      }
+
+      if (createDto.sensorId) {
+        throw new ForbiddenException(
+          'Técnico deve registrar leitura manual sem sensor vinculado',
+        );
+      }
+
+      return actor.companyId;
+    }
+
+    return createDto.companyId;
+  }
+
+  private resolveReadCompanyId(requestedCompanyId?: string, actor?: AuthUser) {
+    if (!actor) {
+      return requestedCompanyId;
+    }
+
+    if (
+      actor.role === UserRole.CLIENT_USER ||
+      actor.role === UserRole.TECHNICIAN
+    ) {
+      return actor.companyId ?? undefined;
+    }
+
+    return requestedCompanyId;
+  }
+
+  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+    if (
+      actor.role !== UserRole.CLIENT_USER &&
+      actor.role !== UserRole.TECHNICIAN
+    ) {
+      return;
+    }
+
+    if (!actor.companyId || actor.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta empresa',
+      );
+    }
   }
 
   private async ensureRoomExists(roomId: string, companyId: string) {
