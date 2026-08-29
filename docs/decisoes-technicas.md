@@ -2859,3 +2859,34 @@ Testes realizados:
 - `TECHNICIAN` conseguiu fazer upload para a própria empresa.
 - `TECHNICIAN` foi bloqueado ao tentar fazer upload para outra empresa.
 - Build do backend validado.
+
+## 46. Proteção real de salas no backend
+
+Foi implementada a proteção real da rota de salas no backend.
+
+Arquivos alterados:
+
+- `backend/src/rooms/rooms.controller.ts`
+- `backend/src/rooms/rooms.service.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem listar, visualizar, criar, editar e inativar salas.
+- `CLIENT_USER` pode visualizar somente salas da própria empresa.
+- `TECHNICIAN` pode visualizar somente salas da própria empresa.
+- `CLIENT_USER` não pode criar, editar ou inativar salas.
+- `TECHNICIAN` não pode criar, editar ou inativar salas.
+- Quando `CLIENT_USER` ou `TECHNICIAN` envia `companyId` de outra empresa na query, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- `GET /rooms/:id` bloqueia acesso caso a sala pertença a outra empresa.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando salas normalmente.
+- `CLIENT_USER` recebeu somente salas da própria empresa em `GET /rooms`.
+- `TECHNICIAN` recebeu somente salas da própria empresa em `GET /rooms`.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para usuários com escopo restrito.
+- `CLIENT_USER` foi bloqueado ao tentar criar sala via API.
+- `TECHNICIAN` foi bloqueado ao tentar criar sala via API.
+- Build do backend validado.
+- Lint e build do frontend validados.
+
