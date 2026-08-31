@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
 import {
   EquipmentStatus,
   SensorStatus,
@@ -7,28 +13,35 @@ import {
   ThermalAlertSeverity,
   ThermalAlertStatus,
   ThermalStatus,
+  UserRole,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { DashboardQueryDto } from './dto/dashboard-query.dto.js';
+
+type CompanyFilter = {
+  companyId?: string;
+};
 
 @Injectable()
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getOverview(query: DashboardQueryDto) {
-    if (query.companyId) {
-      await this.ensureCompanyExists(query.companyId);
+  async getOverview(query: DashboardQueryDto, actor: AuthUser) {
+    const companyId = this.resolveCompanyScope(query.companyId, actor);
+
+    if (companyId) {
+      await this.ensureCompanyExists(companyId);
     }
 
-    const companyFilter = query.companyId
+    const companyFilter: CompanyFilter = companyId
       ? {
-          companyId: query.companyId,
+          companyId,
         }
       : {};
 
-    const companyWhere = query.companyId
+    const companyWhere = companyId
       ? {
-          id: query.companyId,
+          id: companyId,
           deletedAt: null,
         }
       : {
@@ -62,7 +75,7 @@ export class DashboardService {
     return {
       generatedAt: new Date(),
       filters: {
-        companyId: query.companyId ?? null,
+        companyId: companyId ?? null,
       },
       companies,
       rooms,
@@ -103,7 +116,7 @@ export class DashboardService {
     };
   }
 
-  private async getRoomsSummary(companyFilter: { companyId?: string }) {
+  private async getRoomsSummary(companyFilter: CompanyFilter) {
     const baseWhere = {
       ...companyFilter,
       deletedAt: null,
@@ -148,7 +161,7 @@ export class DashboardService {
     };
   }
 
-  private async getSensorsSummary(companyFilter: { companyId?: string }) {
+  private async getSensorsSummary(companyFilter: CompanyFilter) {
     const baseWhere = {
       ...companyFilter,
       deletedAt: null,
@@ -193,7 +206,7 @@ export class DashboardService {
     };
   }
 
-  private async getEquipmentsSummary(companyFilter: { companyId?: string }) {
+  private async getEquipmentsSummary(companyFilter: CompanyFilter) {
     const baseWhere = {
       ...companyFilter,
       deletedAt: null,
@@ -253,7 +266,7 @@ export class DashboardService {
     };
   }
 
-  private async getTasksSummary(companyFilter: { companyId?: string }) {
+  private async getTasksSummary(companyFilter: CompanyFilter) {
     const baseWhere = {
       ...companyFilter,
       deletedAt: null,
@@ -316,7 +329,7 @@ export class DashboardService {
     };
   }
 
-  private async getThermalAlertsSummary(companyFilter: { companyId?: string }) {
+  private async getThermalAlertsSummary(companyFilter: CompanyFilter) {
     const baseWhere = {
       ...companyFilter,
       deletedAt: null,
@@ -393,9 +406,7 @@ export class DashboardService {
     };
   }
 
-  private async getActiveThermalAlertRooms(companyFilter: {
-    companyId?: string;
-  }) {
+  private async getActiveThermalAlertRooms(companyFilter: CompanyFilter) {
     const alerts = await this.prisma.thermalAlert.findMany({
       where: {
         ...companyFilter,
@@ -442,7 +453,7 @@ export class DashboardService {
     };
   }
 
-  private async getRecentThermalAlerts(companyFilter: { companyId?: string }) {
+  private async getRecentThermalAlerts(companyFilter: CompanyFilter) {
     return this.prisma.thermalAlert.findMany({
       where: {
         ...companyFilter,
@@ -487,7 +498,7 @@ export class DashboardService {
     });
   }
 
-  private async getRecentServiceRecords(companyFilter: { companyId?: string }) {
+  private async getRecentServiceRecords(companyFilter: CompanyFilter) {
     return this.prisma.serviceRecord.findMany({
       where: {
         ...companyFilter,
@@ -547,9 +558,7 @@ export class DashboardService {
     });
   }
 
-  private async getLatestRoomTemperatureReadings(companyFilter: {
-    companyId?: string;
-  }) {
+  private async getLatestRoomTemperatureReadings(companyFilter: CompanyFilter) {
     return this.prisma.roomTemperatureReading.findMany({
       where: companyFilter,
       select: {
@@ -583,6 +592,29 @@ export class DashboardService {
       },
       take: 10,
     });
+  }
+
+  private isCompanyScopedUser(actor: AuthUser) {
+    return (
+      actor.role === UserRole.CLIENT_USER || actor.role === UserRole.TECHNICIAN
+    );
+  }
+
+  private resolveCompanyScope(
+    requestedCompanyId: string | undefined,
+    actor: AuthUser,
+  ) {
+    if (this.isCompanyScopedUser(actor)) {
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Usuário não está vinculado a uma empresa',
+        );
+      }
+
+      return actor.companyId;
+    }
+
+    return requestedCompanyId;
   }
 
   private async ensureCompanyExists(companyId: string) {

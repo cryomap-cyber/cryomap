@@ -2966,3 +2966,51 @@ Testes realizados:
 - Lint e build do frontend validados.
 
 
+## 55. Proteção real do dashboard no backend
+
+Foi implementada a proteção real das rotas de dashboard no backend.
+
+Arquivos alterados:
+
+- `backend/src/dashboard/dashboard.controller.ts`
+- `backend/src/dashboard/dashboard.service.ts`
+- `backend/src/dashboard/dashboard-timeseries.controller.ts`
+- `backend/src/dashboard/dashboard-timeseries.service.ts`
+
+Rotas protegidas:
+
+- `GET /dashboard/overview`
+- `GET /dashboard/room-temperature-series`
+- `GET /dashboard/room-humidity-series`
+- `GET /dashboard/room-readings-summary`
+- `GET /dashboard/recent-room-readings`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem visualizar o dashboard geral.
+- `MASTER_ADMIN` e `SUPERVISOR` podem filtrar o dashboard por qualquer empresa.
+- `CLIENT_USER` pode visualizar somente dados da própria empresa.
+- `TECHNICIAN` pode visualizar somente dados da própria empresa.
+- Quando `CLIENT_USER` ou `TECHNICIAN` envia `companyId` de outra empresa, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- Nas séries temporais, o backend valida se a sala pertence à empresa resolvida para o usuário.
+- Em leituras recentes, o backend aplica escopo de empresa para usuários restritos.
+
+Regras de integridade mantidas:
+
+- O dashboard continua retornando resumo de empresas, salas, sensores, equipamentos, tarefas, alertas térmicos, atendimentos recentes e últimas leituras.
+- As séries de temperatura e umidade continuam usando período padrão de 24 horas.
+- Os limites de consulta continuam validados entre 1 e 1000.
+- Empresas e salas inexistentes continuam retornando erro apropriado.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando dashboard normalmente.
+- `SUPERVISOR` continuou acessando dashboard normalmente.
+- `CLIENT_USER` recebeu somente dados da própria empresa.
+- `TECHNICIAN` recebeu somente dados da própria empresa.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para usuários com escopo restrito.
+- `GET /dashboard/overview` retornou `filters.companyId` com a empresa correta para cliente e técnico.
+- `GET /dashboard/recent-room-readings` retornou somente leituras da empresa do usuário restrito.
+- Build do backend validado.
+- Lint e build do frontend validados.
+

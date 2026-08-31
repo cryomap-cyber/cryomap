@@ -1,9 +1,12 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '../generated/prisma/client.js';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
+import { Prisma, UserRole } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RecentRoomReadingsQueryDto } from './dto/recent-room-readings-query.dto.js';
 import { RoomSeriesQueryDto } from './dto/room-series-query.dto.js';
@@ -12,14 +15,15 @@ import { RoomSeriesQueryDto } from './dto/room-series-query.dto.js';
 export class DashboardTimeseriesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getRoomTemperatureSeries(query: RoomSeriesQueryDto) {
-    const room = await this.ensureRoomExists(query.companyId, query.roomId);
+  async getRoomTemperatureSeries(query: RoomSeriesQueryDto, actor: AuthUser) {
+    const companyId = this.resolveRequiredCompanyScope(query.companyId, actor);
+    const room = await this.ensureRoomExists(companyId, query.roomId);
     const period = this.resolvePeriod(query.startDate, query.endDate);
     const limit = this.resolveLimit(query.limit, 500);
 
     const readings = await this.prisma.roomTemperatureReading.findMany({
       where: {
-        companyId: query.companyId,
+        companyId,
         roomId: query.roomId,
         readAt: {
           gte: period.startDate,
@@ -49,7 +53,7 @@ export class DashboardTimeseriesService {
     return {
       generatedAt: new Date(),
       filters: {
-        companyId: query.companyId,
+        companyId,
         roomId: query.roomId,
         startDate: period.startDate,
         endDate: period.endDate,
@@ -69,14 +73,15 @@ export class DashboardTimeseriesService {
     };
   }
 
-  async getRoomHumiditySeries(query: RoomSeriesQueryDto) {
-    const room = await this.ensureRoomExists(query.companyId, query.roomId);
+  async getRoomHumiditySeries(query: RoomSeriesQueryDto, actor: AuthUser) {
+    const companyId = this.resolveRequiredCompanyScope(query.companyId, actor);
+    const room = await this.ensureRoomExists(companyId, query.roomId);
     const period = this.resolvePeriod(query.startDate, query.endDate);
     const limit = this.resolveLimit(query.limit, 500);
 
     const readings = await this.prisma.roomTemperatureReading.findMany({
       where: {
-        companyId: query.companyId,
+        companyId,
         roomId: query.roomId,
         readAt: {
           gte: period.startDate,
@@ -109,7 +114,7 @@ export class DashboardTimeseriesService {
     return {
       generatedAt: new Date(),
       filters: {
-        companyId: query.companyId,
+        companyId,
         roomId: query.roomId,
         startDate: period.startDate,
         endDate: period.endDate,
@@ -129,12 +134,13 @@ export class DashboardTimeseriesService {
     };
   }
 
-  async getRoomReadingsSummary(query: RoomSeriesQueryDto) {
-    const room = await this.ensureRoomExists(query.companyId, query.roomId);
+  async getRoomReadingsSummary(query: RoomSeriesQueryDto, actor: AuthUser) {
+    const companyId = this.resolveRequiredCompanyScope(query.companyId, actor);
+    const room = await this.ensureRoomExists(companyId, query.roomId);
     const period = this.resolvePeriod(query.startDate, query.endDate);
 
     const where: Prisma.RoomTemperatureReadingWhereInput = {
-      companyId: query.companyId,
+      companyId,
       roomId: query.roomId,
       readAt: {
         gte: period.startDate,
@@ -206,7 +212,7 @@ export class DashboardTimeseriesService {
     return {
       generatedAt: new Date(),
       filters: {
-        companyId: query.companyId,
+        companyId,
         roomId: query.roomId,
         startDate: period.startDate,
         endDate: period.endDate,
@@ -232,21 +238,29 @@ export class DashboardTimeseriesService {
     };
   }
 
-  async getRecentRoomReadings(query: RecentRoomReadingsQueryDto) {
+  async getRecentRoomReadings(
+    query: RecentRoomReadingsQueryDto,
+    actor: AuthUser,
+  ) {
     const limit = this.resolveLimit(query.limit, 50);
+    const companyId = this.resolveOptionalCompanyScope(query.companyId, actor);
 
-    if (query.companyId) {
-      await this.ensureCompanyExists(query.companyId);
+    if (companyId) {
+      await this.ensureCompanyExists(companyId);
     }
 
-    if (query.companyId && query.roomId) {
-      await this.ensureRoomExists(query.companyId, query.roomId);
+    if (query.roomId) {
+      if (companyId) {
+        await this.ensureRoomExists(companyId, query.roomId);
+      } else {
+        await this.ensureRoomExistsById(query.roomId);
+      }
     }
 
     const where: Prisma.RoomTemperatureReadingWhereInput = {};
 
-    if (query.companyId) {
-      where.companyId = query.companyId;
+    if (companyId) {
+      where.companyId = companyId;
     }
 
     if (query.roomId) {
@@ -297,13 +311,53 @@ export class DashboardTimeseriesService {
     return {
       generatedAt: new Date(),
       filters: {
-        companyId: query.companyId ?? null,
+        companyId: companyId ?? null,
         roomId: query.roomId ?? null,
         limit,
       },
       total: readings.length,
       readings,
     };
+  }
+
+  private isCompanyScopedUser(actor: AuthUser) {
+    return (
+      actor.role === UserRole.CLIENT_USER || actor.role === UserRole.TECHNICIAN
+    );
+  }
+
+  private resolveRequiredCompanyScope(
+    requestedCompanyId: string,
+    actor: AuthUser,
+  ) {
+    if (this.isCompanyScopedUser(actor)) {
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Usuário não está vinculado a uma empresa',
+        );
+      }
+
+      return actor.companyId;
+    }
+
+    return requestedCompanyId;
+  }
+
+  private resolveOptionalCompanyScope(
+    requestedCompanyId: string | undefined,
+    actor: AuthUser,
+  ) {
+    if (this.isCompanyScopedUser(actor)) {
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Usuário não está vinculado a uma empresa',
+        );
+      }
+
+      return actor.companyId;
+    }
+
+    return requestedCompanyId;
   }
 
   private resolvePeriod(startDate?: string, endDate?: string) {
@@ -370,6 +424,30 @@ export class DashboardTimeseriesService {
       where: {
         id: roomId,
         companyId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        companyId: true,
+        name: true,
+        thermalStatus: true,
+        currentTemperature: true,
+        minTemperature: true,
+        maxTemperature: true,
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Sala não encontrada');
+    }
+
+    return room;
+  }
+
+  private async ensureRoomExistsById(roomId: string) {
+    const room = await this.prisma.room.findFirst({
+      where: {
+        id: roomId,
         deletedAt: null,
       },
       select: {
