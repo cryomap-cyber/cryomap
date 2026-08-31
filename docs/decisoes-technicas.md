@@ -3484,3 +3484,72 @@ Testes realizados:
 - Exportações de relatórios continuaram funcionando.
 - Regras de somente consulta continuaram funcionando.
 - Responsividade validada.
+
+## 60.5. Revisão visual final da beta
+
+Foi realizada uma revisão visual geral da beta atual do CryoMap após a padronização do Dashboard, telas internas principais e telas operacionais.
+
+Telas revisadas:
+
+- Dashboard
+- Empresas
+- Salas
+- Equipamentos
+- Sensores
+- Chamados/Tarefas
+- Atendimentos
+- Leituras de temperatura das salas
+- Temperaturas dos equipamentos
+- Alertas térmicos
+- Anexos
+- Relatórios
+- Usuários
+- Login
+- Menu lateral
+- Menu mobile
+
+Objetivos da revisão:
+
+- Conferir consistência visual entre as telas.
+- Validar cabeçalhos, cards, painéis, tabelas, filtros, botões, badges e formulários.
+- Conferir responsividade.
+- Conferir navegação pelo menu lateral e menu mobile.
+- Confirmar que os ajustes visuais não quebraram regras de negócio.
+- Confirmar que os ajustes visuais não quebraram permissões por perfil.
+
+Validações realizadas:
+
+- Cabeçalhos estão seguindo o mesmo padrão visual.
+- Cards de resumo estão coerentes entre as telas.
+- Tabelas continuam legíveis.
+- Filtros continuam alinhados e funcionais.
+- Botões principais seguem o padrão azul da identidade CryoMap.
+- Botões destrutivos seguem o padrão vermelho.
+- Badges continuam coerentes por status, prioridade, severidade, perfil e tipo.
+- Formulários flutuantes continuam abrindo corretamente.
+- Responsividade geral foi validada.
+- Menu lateral continua funcionando.
+- Menu mobile continua funcionando.
+- Tela de login continua coerente com a identidade visual.
+- Nenhuma tela apresentou visual antigo destoando de forma relevante.
+
+Validação por perfil:
+
+- MASTER_ADMIN manteve acesso completo.
+- SUPERVISOR manteve acesso administrativo sem permissões indevidas sobre o administrador master.
+- CLIENT_USER continuou sem acesso a Empresas, Usuários, Chamados e Temperaturas dos equipamentos.
+- CLIENT_USER continuou em modo somente consulta onde aplicável.
+- CLIENT_USER continuou com relatórios escopados à própria empresa.
+- TECHNICIAN continuou sem acesso a Empresas, Usuários, Sensores e Relatórios.
+- TECHNICIAN continuou com permissões operacionais em Chamados, Atendimentos, Leituras, Alertas e Anexos.
+
+Testes realizados:
+
+- `npm run lint` passou.
+- `npm run build` passou.
+- Execução em desenvolvimento validada com `npm run dev`.
+- Backend executado em desenvolvimento.
+- Frontend executado em desenvolvimento.
+- Navegação geral revisada.
+- Permissões por perfil revisadas.
+- Responsividade revisada.
