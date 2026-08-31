@@ -3334,3 +3334,68 @@ Testes realizados:
 - Menu mobile validado.
 - Dashboard validado após a mudança global.
 - Demais telas principais continuaram funcionando normalmente.
+
+## 60.3. Ajuste visual das telas internas principais
+
+Foi realizada a primeira rodada de padronização visual das telas internas principais do CryoMap.
+
+Telas ajustadas:
+
+- Empresas
+- Salas
+- Equipamentos
+- Sensores
+
+Arquivos alterados:
+
+- `frontend/src/pages/Companies/Companies.css`
+- `frontend/src/pages/Rooms/Rooms.css`
+- `frontend/src/pages/Equipments/Equipments.css`
+- `frontend/src/pages/Sensors/Sensors.css`
+
+Objetivos:
+
+- Alinhar as telas internas com o novo Dashboard.
+- Aplicar a identidade visual baseada na logo CryoMap.
+- Padronizar cabeçalhos, cards, painéis, tabelas, filtros, formulários, botões e badges.
+- Manter a responsividade existente.
+- Melhorar a legibilidade das tabelas.
+- Melhorar o visual dos formulários flutuantes.
+- Manter todas as regras de negócio e permissões sem alteração.
+
+Ajustes realizados:
+
+- Cabeçalhos das telas receberam fundo branco/gelado com destaque em ciano.
+- Cards de resumo receberam lateral de destaque em azul/ciano.
+- Cards de alerta/crítico passaram a usar vermelho padronizado.
+- Painéis principais receberam borda, sombra e raio alinhados ao Dashboard.
+- Tabelas receberam cabeçalho mais limpo, hover e bordas suaves.
+- Inputs e selects foram padronizados com foco em ciano.
+- Botões principais receberam degradê azul escuro/azul vivo.
+- Botões secundários receberam fundo claro.
+- Botões destrutivos receberam vermelho padronizado.
+- Badges de status foram alinhados às variáveis globais.
+- Formulários flutuantes receberam visual mais moderno e coerente com o restante do sistema.
+
+Regras mantidas:
+
+- Nenhuma regra de permissão foi alterada.
+- Nenhuma rota foi alterada.
+- Nenhum endpoint do backend foi alterado.
+- Nenhuma regra de negócio foi alterada.
+
+Testes realizados:
+
+- `npm run lint` passou.
+- `npm run build` passou.
+- Execução em desenvolvimento validada com `npm run dev`.
+- Tela Empresas validada.
+- Tela Salas validada.
+- Tela Equipamentos validada.
+- Tela Sensores validada.
+- Filtros continuaram funcionando.
+- Tabelas continuaram funcionando.
+- Formulários de criação/edição continuaram funcionando.
+- Ações de inativação continuaram funcionando.
+- Responsividade validada.
+
