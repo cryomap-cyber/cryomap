@@ -3220,3 +3220,60 @@ Resultado:
 - Não foram identificados erros inesperados `403`, `400` ou `500` durante a revisão.
 - O frontend permaneceu coerente com as permissões reais implementadas no backend.
 - A beta atual foi considerada estável para seguir para as próximas funcionalidades.
+
+## 60.1. Melhoria visual do Dashboard principal
+
+Foi realizada a primeira melhoria visual do Dashboard principal do CryoMap.
+
+Arquivos criados:
+
+- `frontend/src/types/dashboard.ts`
+- `frontend/src/services/dashboard.ts`
+
+Arquivos alterados:
+
+- `frontend/src/pages/Dashboard/Dashboard.tsx`
+- `frontend/src/pages/Dashboard/Dashboard.css`
+
+Objetivos:
+
+- Melhorar a primeira tela visualizada pelo usuário.
+- Deixar o dashboard mais profissional e coerente com a identidade visual da logo CryoMap.
+- Organizar melhor os dados operacionais.
+- Destacar status geral da operação.
+- Destacar salas com alerta ativo.
+- Exibir últimas leituras térmicas.
+- Exibir últimos alertas.
+- Exibir últimos atendimentos.
+- Separar tipos e service de dashboard para melhorar manutenção.
+
+Ajustes visuais:
+
+- Aplicada paleta inspirada na logo CryoMap:
+  - azul escuro;
+  - azul vivo;
+  - ciano;
+  - fundo branco/gelado.
+- Criado bloco principal de status operacional.
+- Criados cards KPI mais modernos.
+- Criados painéis para risco térmico, tempo real, histórico e operação.
+- Melhorada responsividade para tablet e mobile.
+- Adicionado estado de carregamento visual.
+- Melhorado estado de erro.
+
+Regras mantidas:
+
+- Nenhuma regra de permissão foi alterada.
+- O backend não foi alterado nesta etapa.
+- `MASTER_ADMIN` e `SUPERVISOR` continuam vendo visão geral conforme permissão.
+- `CLIENT_USER` continua vendo apenas dados da própria empresa.
+- `TECHNICIAN` continua vendo apenas dados da própria empresa.
+
+Testes realizados:
+
+- Dashboard validado com `MASTER_ADMIN`/`SUPERVISOR`.
+- Dashboard validado com `CLIENT_USER`.
+- Dashboard validado com `TECHNICIAN`.
+- `npm run lint` passou.
+- `npm run build` passou.
+- Execução em desenvolvimento validada com `npm run dev`.
