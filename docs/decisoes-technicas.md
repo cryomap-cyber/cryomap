@@ -2890,3 +2890,79 @@ Testes realizados:
 - Build do backend validado.
 - Lint e build do frontend validados.
 
+## 47. Proteção real de equipamentos no backend
+
+Foi implementada a proteção real da rota de equipamentos no backend.
+
+Arquivos alterados:
+
+- `backend/src/equipments/equipments.controller.ts`
+- `backend/src/equipments/equipments.service.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem listar, visualizar, criar, editar e inativar equipamentos.
+- `CLIENT_USER` pode visualizar somente equipamentos da própria empresa.
+- `TECHNICIAN` pode visualizar somente equipamentos da própria empresa.
+- `CLIENT_USER` não pode criar, editar ou inativar equipamentos.
+- `TECHNICIAN` não pode criar, editar ou inativar equipamentos.
+- Quando `CLIENT_USER` ou `TECHNICIAN` envia `companyId` de outra empresa na query, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- Quando `CLIENT_USER` ou `TECHNICIAN` tenta consultar equipamentos por `roomId`, o backend valida se a sala pertence à empresa do usuário logado.
+- `GET /equipments/:id` bloqueia acesso caso o equipamento pertença a outra empresa.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando equipamentos normalmente.
+- `CLIENT_USER` recebeu somente equipamentos da própria empresa em `GET /equipments`.
+- `TECHNICIAN` recebeu somente equipamentos da própria empresa em `GET /equipments`.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para usuários com escopo restrito.
+- `CLIENT_USER` foi bloqueado ao tentar criar equipamento via API.
+- `TECHNICIAN` foi bloqueado ao tentar criar equipamento via API.
+- Build do backend validado.
+- Lint e build do frontend validados.
+
+## 54. Proteção real de alertas térmicos no backend
+
+Foi implementada a proteção real da rota de alertas térmicos no backend.
+
+Arquivos alterados:
+
+- `backend/src/thermal-alerts/thermal-alerts.controller.ts`
+- `backend/src/thermal-alerts/thermal-alerts.service.ts`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem listar alertas de todas as empresas.
+- `MASTER_ADMIN` e `SUPERVISOR` podem reconhecer, resolver, dispensar e remover alertas.
+- `CLIENT_USER` pode visualizar somente alertas da própria empresa.
+- `CLIENT_USER` não pode reconhecer, resolver, dispensar ou remover alertas.
+- `TECHNICIAN` pode visualizar somente alertas da própria empresa.
+- `TECHNICIAN` pode reconhecer, resolver, dispensar e remover alertas da própria empresa.
+- Quando `CLIENT_USER` ou `TECHNICIAN` envia `companyId` de outra empresa na query, o backend ignora esse valor e usa a empresa vinculada ao usuário logado.
+- Quando `CLIENT_USER` ou `TECHNICIAN` tenta consultar alertas por `roomId`, o backend valida se a sala pertence à empresa do usuário logado.
+- Quando `CLIENT_USER` ou `TECHNICIAN` tenta consultar alertas por `sensorId`, o backend valida se o sensor pertence à empresa do usuário logado.
+- `GET /thermal-alerts/:id`, `PATCH /thermal-alerts/:id/acknowledge`, `PATCH /thermal-alerts/:id/resolve`, `PATCH /thermal-alerts/:id/dismiss` e `DELETE /thermal-alerts/:id` bloqueiam acesso caso o alerta pertença a outra empresa.
+
+Regras de integridade mantidas:
+
+- Alertas continuam sendo gerados automaticamente por leituras críticas.
+- Alertas continuam sendo resolvidos automaticamente por leituras normais.
+- O reconhecimento salva o usuário autenticado em `acknowledgedByUserId`.
+- A remoção continua sendo lógica, preenchendo `deletedAt`.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando alertas normalmente.
+- `SUPERVISOR` continuou acessando alertas normalmente.
+- `CLIENT_USER` recebeu somente alertas da própria empresa.
+- `CLIENT_USER` foi bloqueado ao tentar reconhecer alerta via API.
+- `CLIENT_USER` foi bloqueado ao tentar resolver alerta via API.
+- `TECHNICIAN` recebeu somente alertas da própria empresa.
+- Tentativa de forçar `companyId` de outra empresa foi ignorada para usuários com escopo restrito.
+- `TECHNICIAN` conseguiu reconhecer alerta da própria empresa.
+- `TECHNICIAN` conseguiu resolver alerta da própria empresa.
+- `TECHNICIAN` foi bloqueado ao tentar acessar alerta de outra empresa.
+- Build do backend validado.
+- Lint e build do frontend validados.
+
+

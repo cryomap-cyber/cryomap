@@ -1,9 +1,16 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, ThermalAlertStatus } from '../generated/prisma/client.js';
+
+import type { AuthUser } from '../auth/types/auth-user.type.js';
+import {
+  Prisma,
+  ThermalAlertStatus,
+  UserRole,
+} from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { FindThermalAlertsDto } from './dto/find-thermal-alerts.dto.js';
 
@@ -79,20 +86,29 @@ const thermalAlertSelect = {
 export class ThermalAlertsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(filters: FindThermalAlertsDto) {
+  async findAll(filters: FindThermalAlertsDto, actor: AuthUser) {
     const where: Prisma.ThermalAlertWhereInput = {
       deletedAt: null,
     };
 
-    if (filters.companyId) {
-      where.companyId = filters.companyId;
+    const scopedCompanyId = this.resolveReadCompanyId(filters.companyId, actor);
+
+    if (scopedCompanyId) {
+      where.companyId = scopedCompanyId;
     }
 
     if (filters.roomId) {
+      await this.ensureRoomCanBeUsed(filters.roomId, scopedCompanyId, actor);
       where.roomId = filters.roomId;
     }
 
     if (filters.sensorId) {
+      await this.ensureSensorCanBeUsed(
+        filters.sensorId,
+        scopedCompanyId,
+        filters.roomId,
+        actor,
+      );
       where.sensorId = filters.sensorId;
     }
 
@@ -109,21 +125,23 @@ export class ThermalAlertsService {
     }
 
     if (filters.startDate || filters.endDate) {
-      where.triggeredAt = {};
+      const triggeredAtFilter: Prisma.DateTimeFilter = {};
 
       if (filters.startDate) {
-        where.triggeredAt.gte = this.parseDate(
+        triggeredAtFilter.gte = this.parseDate(
           filters.startDate,
           'Data inicial inválida',
         );
       }
 
       if (filters.endDate) {
-        where.triggeredAt.lte = this.parseDate(
+        triggeredAtFilter.lte = this.parseDate(
           filters.endDate,
           'Data final inválida',
         );
       }
+
+      where.triggeredAt = triggeredAtFilter;
     }
 
     return this.prisma.thermalAlert.findMany({
@@ -136,7 +154,7 @@ export class ThermalAlertsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, actor: AuthUser) {
     const alert = await this.prisma.thermalAlert.findFirst({
       where: {
         id,
@@ -149,11 +167,15 @@ export class ThermalAlertsService {
       throw new NotFoundException('Alerta térmico não encontrado');
     }
 
+    this.ensureCanAccessCompany(alert.companyId, actor);
+
     return alert;
   }
 
-  async acknowledge(id: string, userId?: string) {
-    await this.findOne(id);
+  async acknowledge(id: string, actor: AuthUser) {
+    this.ensureCanWrite(actor);
+
+    await this.findOne(id, actor);
 
     return this.prisma.thermalAlert.update({
       where: {
@@ -162,20 +184,20 @@ export class ThermalAlertsService {
       data: {
         status: ThermalAlertStatus.ACKNOWLEDGED,
         acknowledgedAt: new Date(),
-        acknowledgedByUser: userId
-          ? {
-              connect: {
-                id: userId,
-              },
-            }
-          : undefined,
+        acknowledgedByUser: {
+          connect: {
+            id: actor.id,
+          },
+        },
       },
       select: thermalAlertSelect,
     });
   }
 
-  async resolve(id: string) {
-    await this.findOne(id);
+  async resolve(id: string, actor: AuthUser) {
+    this.ensureCanWrite(actor);
+
+    await this.findOne(id, actor);
 
     return this.prisma.thermalAlert.update({
       where: {
@@ -189,8 +211,10 @@ export class ThermalAlertsService {
     });
   }
 
-  async dismiss(id: string) {
-    await this.findOne(id);
+  async dismiss(id: string, actor: AuthUser) {
+    this.ensureCanWrite(actor);
+
+    await this.findOne(id, actor);
 
     return this.prisma.thermalAlert.update({
       where: {
@@ -204,8 +228,10 @@ export class ThermalAlertsService {
     });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, actor: AuthUser) {
+    this.ensureCanWrite(actor);
+
+    await this.findOne(id, actor);
 
     return this.prisma.thermalAlert.update({
       where: {
@@ -216,6 +242,119 @@ export class ThermalAlertsService {
       },
       select: thermalAlertSelect,
     });
+  }
+
+  private ensureCanWrite(actor: AuthUser) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException(
+        'Usuário cliente não pode alterar alertas térmicos',
+      );
+    }
+
+    if (actor.role === UserRole.TECHNICIAN && !actor.companyId) {
+      throw new ForbiddenException('Técnico não está vinculado a uma empresa');
+    }
+  }
+
+  private resolveReadCompanyId(
+    requestedCompanyId: string | undefined,
+    actor: AuthUser,
+  ) {
+    if (
+      actor.role === UserRole.CLIENT_USER ||
+      actor.role === UserRole.TECHNICIAN
+    ) {
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Usuário não está vinculado a uma empresa',
+        );
+      }
+
+      return actor.companyId;
+    }
+
+    return requestedCompanyId;
+  }
+
+  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+    if (
+      actor.role !== UserRole.CLIENT_USER &&
+      actor.role !== UserRole.TECHNICIAN
+    ) {
+      return;
+    }
+
+    if (!actor.companyId || actor.companyId !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta empresa',
+      );
+    }
+  }
+
+  private async ensureRoomCanBeUsed(
+    roomId: string,
+    scopedCompanyId: string | undefined,
+    actor: AuthUser,
+  ) {
+    const room = await this.prisma.room.findFirst({
+      where: {
+        id: roomId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        companyId: true,
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Sala não encontrada');
+    }
+
+    this.ensureCanAccessCompany(room.companyId, actor);
+
+    if (scopedCompanyId && room.companyId !== scopedCompanyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta sala',
+      );
+    }
+  }
+
+  private async ensureSensorCanBeUsed(
+    sensorId: string,
+    scopedCompanyId: string | undefined,
+    roomId: string | undefined,
+    actor: AuthUser,
+  ) {
+    const sensor = await this.prisma.sensor.findFirst({
+      where: {
+        id: sensorId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        companyId: true,
+        roomId: true,
+      },
+    });
+
+    if (!sensor) {
+      throw new NotFoundException('Sensor não encontrado');
+    }
+
+    this.ensureCanAccessCompany(sensor.companyId, actor);
+
+    if (scopedCompanyId && sensor.companyId !== scopedCompanyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar este sensor',
+      );
+    }
+
+    if (roomId && sensor.roomId !== roomId) {
+      throw new BadRequestException(
+        'O sensor informado não pertence à sala informada',
+      );
+    }
   }
 
   private parseDate(value: string, errorMessage: string) {
