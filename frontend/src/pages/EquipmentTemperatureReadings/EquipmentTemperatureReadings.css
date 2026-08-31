@@ -8,37 +8,57 @@
   justify-content: space-between;
   gap: 24px;
   align-items: flex-start;
+  padding: 26px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(34, 193, 255, 0.14),
+      transparent 24rem
+    ),
+    rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-panel);
 }
 
-.equipment-temperature-readings-header span {
+.equipment-temperature-readings-header span,
+.equipment-temperature-readings-panel-header span,
+.equipment-temperature-reading-form-header span {
   color: var(--color-primary);
-  font-weight: 800;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-size: 12px;
 }
 
 .equipment-temperature-readings-header h1 {
   margin: 6px 0 8px;
-  font-size: 38px;
-  color: var(--color-text);
+  font-size: 36px;
+  color: var(--color-primary-dark);
+  letter-spacing: -0.04em;
 }
 
 .equipment-temperature-readings-header p {
   margin: 0;
   color: var(--color-muted);
   max-width: 760px;
+  line-height: 1.55;
 }
 
 .equipment-temperature-readings-header button {
   border: 0;
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 12px 18px;
-  background: var(--color-primary);
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-primary-dark),
+      var(--color-primary)
+    );
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 14px 30px rgba(15, 95, 143, 0.16);
+  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.2);
 }
 
 .equipment-temperature-readings-summary {
@@ -48,29 +68,51 @@
 }
 
 .equipment-temperature-readings-summary-card {
-  background: var(--color-surface);
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.96),
+      rgba(245, 251, 255, 0.96)
+    );
   border: 1px solid var(--color-border-soft);
-  border-radius: 22px;
+  border-radius: 24px;
   padding: 20px;
-  box-shadow: var(--shadow-panel);
+  box-shadow: var(--shadow-card);
+}
+
+.equipment-temperature-readings-summary-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-primary),
+      var(--color-primary-light)
+    );
 }
 
 .equipment-temperature-readings-summary-card span {
   display: block;
   color: var(--color-muted);
   font-size: 13px;
+  font-weight: 800;
   margin-bottom: 10px;
 }
 
 .equipment-temperature-readings-summary-card strong {
-  font-size: 28px;
-  color: var(--color-text);
+  font-size: 30px;
+  color: var(--color-primary-dark);
+  letter-spacing: -0.05em;
 }
 
 .equipment-temperature-readings-panel {
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.94);
   border: 1px solid var(--color-border-soft);
-  border-radius: 26px;
+  border-radius: 28px;
   padding: 22px;
   box-shadow: var(--shadow-panel);
 }
@@ -85,12 +127,15 @@
 
 .equipment-temperature-readings-panel-header h2 {
   margin: 0 0 4px;
-  color: var(--color-text);
+  color: var(--color-primary-dark);
+  font-size: 24px;
+  letter-spacing: -0.03em;
 }
 
 .equipment-temperature-readings-panel-header p {
   margin: 0;
   color: var(--color-muted);
+  line-height: 1.5;
 }
 
 .equipment-temperature-readings-actions {
@@ -108,10 +153,22 @@
   padding: 0 12px;
   color: var(--color-text);
   background: #ffffff;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(3, 20, 63, 0.03);
 }
 
 .equipment-temperature-readings-actions input[type='search'] {
   min-width: 290px;
+}
+
+.equipment-temperature-readings-actions input::placeholder {
+  color: #8a9aaa;
+}
+
+.equipment-temperature-readings-actions input:focus,
+.equipment-temperature-readings-actions select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(34, 193, 255, 0.18);
 }
 
 .equipment-temperature-readings-actions button,
@@ -120,10 +177,16 @@
   border-radius: 14px;
   padding: 0 14px;
   min-height: 42px;
-  background: var(--color-primary);
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-primary-dark),
+      var(--color-primary)
+    );
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
+  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
 }
 
 .equipment-temperature-readings-error {
@@ -132,19 +195,32 @@
   gap: 16px;
   align-items: center;
   background: var(--color-danger-bg);
-  border: 1px solid #ffd6d6;
+  border: 1px solid rgba(217, 48, 37, 0.12);
   color: var(--color-danger-text);
-  padding: 14px;
-  border-radius: 16px;
+  padding: 16px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+
+.equipment-temperature-readings-error button {
+  background: var(--color-danger-text);
+  box-shadow: 0 14px 34px rgba(217, 48, 37, 0.18);
 }
 
 .equipment-temperature-readings-empty {
   margin: 0;
-  color: var(--color-muted);
+  color: #8a9aaa;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--color-surface-soft);
+  text-align: center;
 }
 
 .equipment-temperature-readings-table-wrapper {
   overflow-x: auto;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 22px;
+  background: #ffffff;
 }
 
 .equipment-temperature-readings-table {
@@ -157,15 +233,31 @@
   text-align: left;
   color: var(--color-muted);
   font-size: 12px;
-  padding: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 14px 12px;
   border-bottom: 1px solid var(--color-border-soft);
+  background: var(--color-surface-soft);
 }
 
 .equipment-temperature-readings-table td {
-  padding: 14px 12px;
-  border-bottom: 1px solid var(--color-border-soft);
-  color: var(--color-text);
+  padding: 15px 12px;
+  border-bottom: 1px solid rgba(9, 109, 242, 0.08);
+  color: var(--color-text-soft);
   vertical-align: top;
+}
+
+.equipment-temperature-readings-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.equipment-temperature-readings-table tbody tr:hover {
+  background: rgba(237, 247, 255, 0.72);
+}
+
+.equipment-temperature-readings-table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .equipment-temperature-readings-table td strong,
@@ -173,9 +265,13 @@
   display: block;
 }
 
+.equipment-temperature-readings-table td strong {
+  color: var(--color-primary-dark);
+}
+
 .equipment-temperature-readings-table td small {
   display: block;
-  color: var(--color-muted);
+  color: #8a9aaa;
   margin-top: 4px;
   max-width: 280px;
 }
@@ -202,11 +298,17 @@
   max-height: calc(100vh - 48px);
   margin: auto;
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(217, 232, 242, 0.96);
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(34, 193, 255, 0.1),
+      transparent 22rem
+    ),
+    rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--color-border-soft);
   border-radius: 28px;
   padding: 22px;
-  box-shadow: 0 30px 90px rgba(7, 31, 48, 0.22);
+  box-shadow: var(--shadow-strong);
   animation: equipmentTemperatureReadingFormEnter 0.18s ease-out;
 }
 
@@ -218,17 +320,10 @@
   margin-bottom: 18px;
 }
 
-.equipment-temperature-reading-form-header span {
-  color: var(--color-primary);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 12px;
-}
-
 .equipment-temperature-reading-form-header h2 {
   margin: 4px 0 0;
-  color: var(--color-text);
+  color: var(--color-primary-dark);
+  letter-spacing: -0.03em;
 }
 
 .equipment-temperature-reading-form-header button {
@@ -237,7 +332,7 @@
   padding: 10px 14px;
   background: var(--color-surface-soft);
   color: var(--color-primary);
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
 }
 
@@ -252,7 +347,7 @@
   gap: 7px;
   color: var(--color-text-soft);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .equipment-temperature-reading-form input,
@@ -260,10 +355,18 @@
 .equipment-temperature-reading-form textarea {
   width: 100%;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 15px;
   padding: 11px 12px;
   color: var(--color-text);
   background: #ffffff;
+  outline: none;
+}
+
+.equipment-temperature-reading-form input:focus,
+.equipment-temperature-reading-form select:focus,
+.equipment-temperature-reading-form textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(34, 193, 255, 0.18);
 }
 
 .equipment-temperature-reading-form textarea {
@@ -280,7 +383,7 @@
 .equipment-temperature-reading-form-error {
   color: var(--color-danger-text);
   background: var(--color-danger-bg);
-  border: 1px solid #ffd6d6;
+  border: 1px solid rgba(217, 48, 37, 0.12);
   border-radius: 14px;
   padding: 12px;
 }
@@ -295,7 +398,7 @@
   border: 0;
   border-radius: 14px;
   padding: 12px 16px;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
 }
 
@@ -305,8 +408,20 @@
 }
 
 .equipment-temperature-reading-form-actions button:last-child {
-  background: var(--color-primary);
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-primary-dark),
+      var(--color-primary)
+    );
   color: #ffffff;
+  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
+}
+
+.equipment-temperature-reading-form-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 @media (max-width: 1000px) {
@@ -420,6 +535,12 @@
 @media (max-width: 700px) {
   .equipment-temperature-readings-page {
     gap: 14px;
+  }
+
+  .equipment-temperature-readings-header {
+    flex-direction: column;
+    padding: 22px;
+    border-radius: 24px;
   }
 
   .equipment-temperature-readings-header h1 {

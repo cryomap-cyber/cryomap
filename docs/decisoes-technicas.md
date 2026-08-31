@@ -3399,3 +3399,88 @@ Testes realizados:
 - Ações de inativação continuaram funcionando.
 - Responsividade validada.
 
+## 60.4. Ajuste visual das telas operacionais
+
+Foi realizada a padronização visual das telas operacionais e administrativas complementares do CryoMap.
+
+Telas ajustadas:
+
+- Chamados/Tarefas
+- Atendimentos
+- Leituras de temperatura das salas
+- Temperaturas dos equipamentos
+- Alertas térmicos
+- Anexos
+- Relatórios
+- Usuários
+
+Arquivos alterados:
+
+- `frontend/src/pages/Tasks/Tasks.css`
+- `frontend/src/pages/ServiceRecords/ServiceRecords.css`
+- `frontend/src/pages/TemperatureReadings/TemperatureReadings.css`
+- `frontend/src/pages/EquipmentTemperatureReadings/EquipmentTemperatureReadings.css`
+- `frontend/src/pages/ThermalAlerts/ThermalAlerts.css`
+- `frontend/src/pages/Attachments/Attachments.css`
+- `frontend/src/pages/Reports/Reports.css`
+- `frontend/src/pages/Users/Users.css`
+
+Objetivos:
+
+- Alinhar as telas operacionais ao novo Dashboard.
+- Aplicar a identidade visual baseada na logo CryoMap.
+- Padronizar cabeçalhos, cards, painéis, tabelas, filtros, formulários, botões e badges.
+- Melhorar a legibilidade das tabelas.
+- Melhorar o visual dos formulários flutuantes.
+- Melhorar a experiência em telas menores.
+- Manter todas as regras de negócio e permissões sem alteração.
+
+Ajustes realizados:
+
+- Cabeçalhos receberam fundo branco/gelado com destaque visual em ciano.
+- Cards de resumo receberam lateral de destaque em azul/ciano.
+- Cards críticos, atrasados, bloqueados ou com alerta passaram a usar vermelho padronizado.
+- Painéis principais receberam borda, sombra e raio alinhados ao Dashboard.
+- Tabelas receberam cabeçalho mais limpo, hover e bordas suaves.
+- Inputs e selects foram padronizados com foco em ciano.
+- Botões principais receberam degradê azul escuro/azul vivo.
+- Botões secundários receberam fundo claro.
+- Botões destrutivos receberam vermelho padronizado.
+- Badges de status, prioridade, severidade, perfil, tipo e somente consulta foram alinhados às variáveis globais.
+- Formulários flutuantes receberam visual mais moderno e coerente com o restante do sistema.
+- Telas com upload, exportação, consulta e ações operacionais mantiveram seus fluxos existentes.
+
+Regras mantidas:
+
+- Nenhuma regra de permissão foi alterada.
+- Nenhuma rota foi alterada.
+- Nenhum endpoint do backend foi alterado.
+- Nenhuma regra de negócio foi alterada.
+- CLIENT_USER continua com acesso somente às telas permitidas.
+- CLIENT_USER continua em modo somente consulta onde aplicável.
+- TECHNICIAN continua com permissões operacionais onde aplicável.
+- TECHNICIAN continua sem acesso a relatórios.
+- MASTER_ADMIN e SUPERVISOR continuam com acesso administrativo.
+- Hierarquia do administrador master foi mantida.
+
+Testes realizados:
+
+- `npm run lint` passou.
+- `npm run build` passou.
+- Execução em desenvolvimento validada com `npm run dev`.
+- Tela Chamados/Tarefas validada.
+- Tela Atendimentos validada.
+- Tela Leituras de temperatura validada.
+- Tela Temperaturas dos equipamentos validada.
+- Tela Alertas térmicos validada.
+- Tela Anexos validada.
+- Tela Relatórios validada.
+- Tela Usuários validada.
+- Filtros continuaram funcionando.
+- Tabelas continuaram funcionando.
+- Formulários continuaram funcionando.
+- Ações operacionais continuaram funcionando.
+- Upload e download de anexos continuaram funcionando.
+- Exportações de relatórios continuaram funcionando.
+- Regras de somente consulta continuaram funcionando.
+- Responsividade validada.

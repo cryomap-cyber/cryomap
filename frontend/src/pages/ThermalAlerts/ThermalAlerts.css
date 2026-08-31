@@ -8,37 +8,56 @@
   justify-content: space-between;
   gap: 24px;
   align-items: flex-start;
+  padding: 26px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(34, 193, 255, 0.14),
+      transparent 24rem
+    ),
+    rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-panel);
 }
 
-.thermal-alerts-header span {
+.thermal-alerts-header span,
+.thermal-alerts-panel-header span {
   color: var(--color-primary);
-  font-weight: 800;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-size: 12px;
 }
 
 .thermal-alerts-header h1 {
   margin: 6px 0 8px;
-  font-size: 38px;
-  color: var(--color-text);
+  font-size: 36px;
+  color: var(--color-primary-dark);
+  letter-spacing: -0.04em;
 }
 
 .thermal-alerts-header p {
   margin: 0;
   color: var(--color-muted);
   max-width: 760px;
+  line-height: 1.55;
 }
 
 .thermal-alerts-header button {
   border: 0;
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 12px 18px;
-  background: var(--color-primary);
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-primary-dark),
+      var(--color-primary)
+    );
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 14px 30px rgba(15, 95, 143, 0.16);
+  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.2);
 }
 
 .thermal-alerts-summary {
@@ -48,23 +67,54 @@
 }
 
 .thermal-alerts-summary-card {
-  background: var(--color-surface);
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.96),
+      rgba(245, 251, 255, 0.96)
+    );
   border: 1px solid var(--color-border-soft);
-  border-radius: 22px;
+  border-radius: 24px;
   padding: 20px;
-  box-shadow: var(--shadow-panel);
+  box-shadow: var(--shadow-card);
+}
+
+.thermal-alerts-summary-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-primary),
+      var(--color-primary-light)
+    );
 }
 
 .thermal-alerts-summary-card span {
   display: block;
   color: var(--color-muted);
   font-size: 13px;
+  font-weight: 800;
   margin-bottom: 10px;
 }
 
 .thermal-alerts-summary-card strong {
   font-size: 30px;
-  color: var(--color-text);
+  color: var(--color-primary-dark);
+  letter-spacing: -0.05em;
+}
+
+.thermal-alerts-summary-card.danger {
+  border-color: rgba(217, 48, 37, 0.18);
+  background: linear-gradient(180deg, #fff7f7, #ffffff);
+}
+
+.thermal-alerts-summary-card.danger::before {
+  background: var(--color-danger-text);
 }
 
 .thermal-alerts-summary-card.danger strong {
@@ -72,9 +122,9 @@
 }
 
 .thermal-alerts-panel {
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.94);
   border: 1px solid var(--color-border-soft);
-  border-radius: 26px;
+  border-radius: 28px;
   padding: 22px;
   box-shadow: var(--shadow-panel);
 }
@@ -89,12 +139,15 @@
 
 .thermal-alerts-panel-header h2 {
   margin: 0 0 4px;
-  color: var(--color-text);
+  color: var(--color-primary-dark);
+  font-size: 24px;
+  letter-spacing: -0.03em;
 }
 
 .thermal-alerts-panel-header p {
   margin: 0;
   color: var(--color-muted);
+  line-height: 1.5;
 }
 
 .thermal-alerts-actions {
@@ -112,10 +165,22 @@
   padding: 0 12px;
   color: var(--color-text);
   background: #ffffff;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(3, 20, 63, 0.03);
 }
 
 .thermal-alerts-actions input[type='search'] {
   min-width: 280px;
+}
+
+.thermal-alerts-actions input::placeholder {
+  color: #8a9aaa;
+}
+
+.thermal-alerts-actions input:focus,
+.thermal-alerts-actions select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(34, 193, 255, 0.18);
 }
 
 .thermal-alerts-actions button,
@@ -124,10 +189,16 @@
   border-radius: 14px;
   padding: 0 14px;
   min-height: 42px;
-  background: var(--color-primary);
+  background:
+    linear-gradient(
+      135deg,
+      var(--color-primary-dark),
+      var(--color-primary)
+    );
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
+  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
 }
 
 .thermal-alerts-error {
@@ -136,19 +207,32 @@
   gap: 16px;
   align-items: center;
   background: var(--color-danger-bg);
-  border: 1px solid #ffd6d6;
+  border: 1px solid rgba(217, 48, 37, 0.12);
   color: var(--color-danger-text);
-  padding: 14px;
-  border-radius: 16px;
+  padding: 16px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+
+.thermal-alerts-error button {
+  background: var(--color-danger-text);
+  box-shadow: 0 14px 34px rgba(217, 48, 37, 0.18);
 }
 
 .thermal-alerts-empty {
   margin: 0;
-  color: var(--color-muted);
+  color: #8a9aaa;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--color-surface-soft);
+  text-align: center;
 }
 
 .thermal-alerts-table-wrapper {
   overflow-x: auto;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 22px;
+  background: #ffffff;
 }
 
 .thermal-alerts-table {
@@ -161,15 +245,31 @@
   text-align: left;
   color: var(--color-muted);
   font-size: 12px;
-  padding: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 14px 12px;
   border-bottom: 1px solid var(--color-border-soft);
+  background: var(--color-surface-soft);
 }
 
 .thermal-alerts-table td {
-  padding: 14px 12px;
-  border-bottom: 1px solid var(--color-border-soft);
-  color: var(--color-text);
+  padding: 15px 12px;
+  border-bottom: 1px solid rgba(9, 109, 242, 0.08);
+  color: var(--color-text-soft);
   vertical-align: top;
+}
+
+.thermal-alerts-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.thermal-alerts-table tbody tr:hover {
+  background: rgba(237, 247, 255, 0.72);
+}
+
+.thermal-alerts-table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .thermal-alerts-table td strong,
@@ -177,9 +277,13 @@
   display: block;
 }
 
+.thermal-alerts-table td strong {
+  color: var(--color-primary-dark);
+}
+
 .thermal-alerts-table td small {
   display: block;
-  color: var(--color-muted);
+  color: #8a9aaa;
   margin-top: 4px;
   max-width: 280px;
 }
@@ -190,7 +294,8 @@
 }
 
 .thermal-alert-severity,
-.thermal-alert-status {
+.thermal-alert-status,
+.thermal-alert-readonly-badge {
   display: inline-flex;
   align-items: center;
   width: fit-content;
@@ -226,7 +331,8 @@
   color: var(--color-success-text);
 }
 
-.thermal-alert-status.dismissed {
+.thermal-alert-status.dismissed,
+.thermal-alert-readonly-badge {
   background: var(--color-surface-soft);
   color: var(--color-muted);
 }
@@ -239,11 +345,11 @@
 
 .thermal-alert-row-actions button {
   border: 0;
-  border-radius: 12px;
-  padding: 8px 10px;
+  border-radius: 14px;
+  padding: 9px 11px;
   background: var(--color-surface-soft);
   color: var(--color-primary);
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
 }
 
@@ -258,8 +364,9 @@
 }
 
 .thermal-alert-row-actions button:disabled {
-  opacity: 0.6;
+  opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 @media (max-width: 1200px) {
@@ -390,6 +497,12 @@
 @media (max-width: 700px) {
   .thermal-alerts-page {
     gap: 14px;
+  }
+
+  .thermal-alerts-header {
+    flex-direction: column;
+    padding: 22px;
+    border-radius: 24px;
   }
 
   .thermal-alerts-header h1 {
