@@ -37,7 +37,7 @@ export class CompaniesController {
 
   @Get(':id')
   findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
-    return this.companiesService.findOne(id, request.user!);
+    return this.companiesService.findOne(id, request.user);
   }
 
   @Roles(UserRole.MASTER_ADMIN, UserRole.SUPERVISOR)

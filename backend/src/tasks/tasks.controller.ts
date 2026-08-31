@@ -45,7 +45,7 @@ export class TasksController {
 
   @Get(':id')
   findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
-    return this.tasksService.findOne(id, request.user!);
+    return this.tasksService.findOne(id, request.user);
   }
 
   @Patch(':id')

@@ -131,9 +131,7 @@ export class TemperatureReadingsService {
             roomId: createDto.roomId,
             deletedAt: null,
             status: {
-              in: [ThermalAlertStatus.OPEN,
-                ThermalAlertStatus.ACKNOWLEDGED,
-              ],
+              in: [ThermalAlertStatus.OPEN, ThermalAlertStatus.ACKNOWLEDGED],
             },
           },
           select: {
@@ -182,9 +180,7 @@ export class TemperatureReadingsService {
             roomId: createDto.roomId,
             deletedAt: null,
             status: {
-              in: [ThermalAlertStatus.OPEN, 
-                ThermalAlertStatus.ACKNOWLEDGED,
-              ],
+              in: [ThermalAlertStatus.OPEN, ThermalAlertStatus.ACKNOWLEDGED],
             },
           },
           data: {

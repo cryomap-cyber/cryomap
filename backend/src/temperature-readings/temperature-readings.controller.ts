@@ -31,7 +31,7 @@ export class TemperatureReadingsController {
     @Body() createDto: CreateRoomTemperatureReadingDto,
     @Req() request: AuthenticatedRequest,
   ) {
-    return this.temperatureReadingsService.create(createDto, request.user!);
+    return this.temperatureReadingsService.create(createDto, request.user);
   }
 
   @Get()
@@ -39,11 +39,11 @@ export class TemperatureReadingsController {
     @Query() filters: FindRoomTemperatureReadingsDto,
     @Req() request: AuthenticatedRequest,
   ) {
-    return this.temperatureReadingsService.findAll(filters, request.user!);
+    return this.temperatureReadingsService.findAll(filters, request.user);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
-    return this.temperatureReadingsService.findOne(id, request.user!);
+    return this.temperatureReadingsService.findOne(id, request.user);
   }
 }

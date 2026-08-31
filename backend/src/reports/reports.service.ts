@@ -521,7 +521,7 @@ export class ReportsService {
           readAt: true,
         },
       }),
-            this.prisma.room.findMany({
+      this.prisma.room.findMany({
         where: {
           ...this.buildBaseFilter(query),
           ...(query.roomId

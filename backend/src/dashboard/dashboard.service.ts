@@ -375,9 +375,7 @@ export class DashboardService {
         where: {
           ...baseWhere,
           status: {
-            in: [ThermalAlertStatus.OPEN,
-              ThermalAlertStatus.ACKNOWLEDGED,
-            ],
+            in: [ThermalAlertStatus.OPEN, ThermalAlertStatus.ACKNOWLEDGED],
           },
         },
       }),
@@ -403,9 +401,7 @@ export class DashboardService {
         ...companyFilter,
         deletedAt: null,
         status: {
-          in: [ThermalAlertStatus.OPEN,
-            ThermalAlertStatus.ACKNOWLEDGED,
-          ],
+          in: [ThermalAlertStatus.OPEN, ThermalAlertStatus.ACKNOWLEDGED],
         },
       },
       select: {

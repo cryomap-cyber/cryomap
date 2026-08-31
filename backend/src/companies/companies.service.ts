@@ -159,7 +159,9 @@ export class CompaniesService {
   }
 
   private isCompanyScopedUser(actor: AuthUser) {
-    return actor.role === UserRole.CLIENT_USER || actor.role === UserRole.TECHNICIAN;
+    return (
+      actor.role === UserRole.CLIENT_USER || actor.role === UserRole.TECHNICIAN
+    );
   }
 
   private ensureCanAccessCompany(companyId: string, actor: AuthUser) {

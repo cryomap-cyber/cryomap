@@ -44,7 +44,7 @@ export class SensorsController {
   @Roles(UserRole.MASTER_ADMIN, UserRole.SUPERVISOR, UserRole.CLIENT_USER)
   @Get(':id')
   findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
-    return this.sensorsService.findOne(id, request.user!);
+    return this.sensorsService.findOne(id, request.user);
   }
 
   @Roles(UserRole.MASTER_ADMIN, UserRole.SUPERVISOR)

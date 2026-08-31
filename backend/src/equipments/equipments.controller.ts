@@ -42,7 +42,7 @@ export class EquipmentsController {
 
   @Get(':id')
   findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
-    return this.equipmentsService.findOne(id, request.user!);
+    return this.equipmentsService.findOne(id, request.user);
   }
 
   @Roles(UserRole.MASTER_ADMIN, UserRole.SUPERVISOR)

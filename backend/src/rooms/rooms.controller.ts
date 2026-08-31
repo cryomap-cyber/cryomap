@@ -41,7 +41,7 @@ export class RoomsController {
 
   @Get(':id')
   findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
-    return this.roomsService.findOne(id, request.user!);
+    return this.roomsService.findOne(id, request.user);
   }
 
   @Roles(UserRole.MASTER_ADMIN, UserRole.SUPERVISOR)
