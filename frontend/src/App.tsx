@@ -1,21 +1,37 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+
 import { AppLayout } from './components/AppLayout/AppLayout';
-import { Login } from './pages/Login/Login';
-import { Dashboard } from './pages/Dashboard/Dashboard';
-import { Companies } from './pages/Companies/Companies';
-import { Rooms } from './pages/Rooms/Rooms';
-import { Equipments } from './pages/Equipments/Equipments';
-import { Sensors } from './pages/Sensors/Sensors';
-import { ProtectedRoute } from './routes/ProtectedRoute';
-import { Tasks } from './pages/Tasks/Tasks';
-import { ServiceRecords } from './pages/ServiceRecords/ServiceRecords';
-import { Reports } from './pages/Reports/Reports';
-import { TemperatureReadings } from './pages/TemperatureReadings/TemperatureReadings';
-import { EquipmentTemperatureReadings } from './pages/EquipmentTemperatureReadings/EquipmentTemperatureReadings';
-import { ThermalAlerts } from './pages/ThermalAlerts/ThermalAlerts';
+import {
+  allRoles,
+  managementRoles,
+} from './permissions/role-permissions';
 import { Attachments } from './pages/Attachments/Attachments';
+import { Companies } from './pages/Companies/Companies';
+import { Dashboard } from './pages/Dashboard/Dashboard';
+import { EquipmentTemperatureReadings } from './pages/EquipmentTemperatureReadings/EquipmentTemperatureReadings';
+import { Equipments } from './pages/Equipments/Equipments';
+import { Login } from './pages/Login/Login';
+import { Reports } from './pages/Reports/Reports';
+import { Rooms } from './pages/Rooms/Rooms';
+import { Sensors } from './pages/Sensors/Sensors';
+import { ServiceRecords } from './pages/ServiceRecords/ServiceRecords';
+import { Tasks } from './pages/Tasks/Tasks';
+import { TemperatureReadings } from './pages/TemperatureReadings/TemperatureReadings';
+import { ThermalAlerts } from './pages/ThermalAlerts/ThermalAlerts';
 import { Users } from './pages/Users/Users';
-import { allRoles, managementRoles } from './permissions/role-permissions';
+import { ProtectedRoute } from './routes/ProtectedRoute';
+
+const clientAndAdminRoles = [
+  'MASTER_ADMIN',
+  'SUPERVISOR',
+  'CLIENT_USER',
+] as const;
+
+const technicianAndAdminRoles = [
+  'MASTER_ADMIN',
+  'SUPERVISOR',
+  'TECHNICIAN',
+] as const;
 
 export function App() {
   return (
@@ -28,9 +44,13 @@ export function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/rooms" element={<Rooms />} />
             <Route path="/equipments" element={<Equipments />} />
-            <Route path="/temperature-readings" element={<TemperatureReadings />} />
+            <Route
+              path="/temperature-readings"
+              element={<TemperatureReadings />}
+            />
             <Route path="/thermal-alerts" element={<ThermalAlerts />} />
             <Route path="/attachments" element={<Attachments />} />
+            <Route path="/service-records" element={<ServiceRecords />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={managementRoles} />}>
@@ -40,9 +60,7 @@ export function App() {
 
           <Route
             element={
-              <ProtectedRoute
-                allowedRoles={['MASTER_ADMIN', 'SUPERVISOR', 'CLIENT_USER']}
-              />
+              <ProtectedRoute allowedRoles={[...clientAndAdminRoles]} />
             }
           >
             <Route path="/sensors" element={<Sensors />} />
@@ -51,27 +69,15 @@ export function App() {
 
           <Route
             element={
-           <ProtectedRoute
-             allowedRoles={['MASTER_ADMIN', 'SUPERVISOR', 'TECHNICIAN']}
-               />
-              }
-            >
-          <Route path="/tasks" element={<Tasks />} />
-          <Route
-                 path="/equipment-temperature-readings"
-                element={<EquipmentTemperatureReadings />}
-                />
-              </Route>
-
-              <Route
-              element={
-               <ProtectedRoute
-                 allowedRoles={['MASTER_ADMIN', 'SUPERVISOR', 'CLIENT_USER', 'TECHNICIAN']}
-                />
-             }
-              >
-            <Route path="/service-records" element={<ServiceRecords />} />
-        </Route>
+              <ProtectedRoute allowedRoles={[...technicianAndAdminRoles]} />
+            }
+          >
+            <Route path="/tasks" element={<Tasks />} />
+            <Route
+              path="/equipment-temperature-readings"
+              element={<EquipmentTemperatureReadings />}
+            />
+          </Route>
         </Route>
       </Route>
 

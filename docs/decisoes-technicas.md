@@ -3136,3 +3136,31 @@ Testes realizados:
 - `npm run lint` passou após os ajustes.
 - `npm run build` do frontend passou.
 
+## 58. Limpeza do roteamento do frontend
+
+Foi realizada uma limpeza no roteamento principal do frontend.
+
+Arquivo alterado:
+
+- `frontend/src/App.tsx`
+
+Objetivo:
+
+- Melhorar a organização e legibilidade das rotas protegidas.
+- Corrigir indentação e agrupamento visual das permissões.
+- Manter as mesmas regras de acesso já validadas anteriormente.
+
+Regras mantidas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` continuam com acesso administrativo completo.
+- `CLIENT_USER` continua acessando somente as telas permitidas para cliente.
+- `TECHNICIAN` continua acessando somente as telas operacionais permitidas para técnico.
+- Nenhuma regra de permissão foi alterada nesta etapa.
+
+Testes realizados:
+
+- `npm run lint` passou.
+- `npm run build` passou.
+- Navegação validada para `MASTER_ADMIN`/`SUPERVISOR`.
+- Navegação validada para `CLIENT_USER`.
+- Navegação validada para `TECHNICIAN`.
