@@ -3164,3 +3164,59 @@ Testes realizados:
 - Navegação validada para `MASTER_ADMIN`/`SUPERVISOR`.
 - Navegação validada para `CLIENT_USER`.
 - Navegação validada para `TECHNICIAN`.
+
+## 59. Revisão geral da beta atual
+
+Foi realizada uma revisão geral da beta atual do CryoMap após a implementação das proteções reais por perfil e empresa.
+
+Validações realizadas:
+
+- Ambiente Docker/PostgreSQL iniciado corretamente.
+- Backend compilado e executado em modo desenvolvimento.
+- Frontend validado com lint, build e execução em modo desenvolvimento.
+- Login validado por perfil.
+- Navegação validada por perfil.
+- Fluxos principais testados no navegador.
+- Console e Network do navegador revisados durante os testes.
+
+Perfis revisados:
+
+- `MASTER_ADMIN`
+- `SUPERVISOR`
+- `CLIENT_USER`
+- `TECHNICIAN`
+
+Validações por perfil:
+
+- `MASTER_ADMIN` e `SUPERVISOR` mantiveram acesso administrativo completo.
+- `CLIENT_USER` visualizou somente dados da própria empresa.
+- `CLIENT_USER` não visualizou telas administrativas ou operacionais bloqueadas.
+- `CLIENT_USER` acessou alertas, anexos e atendimentos em modo compatível com suas permissões.
+- `CLIENT_USER` acessou relatórios somente da própria empresa.
+- `TECHNICIAN` visualizou somente dados da própria empresa.
+- `TECHNICIAN` acessou telas operacionais permitidas.
+- `TECHNICIAN` não acessou Sensores nem Relatórios.
+- Ações operacionais do técnico foram validadas nas telas permitidas.
+
+Telas revisadas:
+
+- Dashboard
+- Empresas
+- Usuários
+- Salas
+- Equipamentos
+- Sensores
+- Leituras
+- Alertas
+- Anexos
+- Atendimentos
+- Chamados
+- Temperaturas de Equipamentos
+- Relatórios
+
+Resultado:
+
+- Não foram identificados erros inesperados de permissão.
+- Não foram identificados erros inesperados `403`, `400` ou `500` durante a revisão.
+- O frontend permaneceu coerente com as permissões reais implementadas no backend.
+- A beta atual foi considerada estável para seguir para as próximas funcionalidades.
