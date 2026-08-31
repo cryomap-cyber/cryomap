@@ -6,6 +6,7 @@ import { ReportsPdfExportController } from './reports-pdf-export.controller.js';
 import { ReportsPdfExportService } from './reports-pdf-export.service.js';
 import { ReportsController } from './reports.controller.js';
 import { ReportsService } from './reports.service.js';
+import { ReportsAccessService } from './reports-access.service.js';
 
 @Module({
   imports: [AuthModule],
@@ -14,6 +15,11 @@ import { ReportsService } from './reports.service.js';
     ReportsExportController,
     ReportsPdfExportController,
   ],
-  providers: [ReportsService, ReportsExportService, ReportsPdfExportService],
+  providers: [
+    ReportsService,
+    ReportsExportService,
+    ReportsPdfExportService,
+    ReportsAccessService,
+  ],
 })
 export class ReportsModule {}

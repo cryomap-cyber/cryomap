@@ -3014,3 +3014,72 @@ Testes realizados:
 - Build do backend validado.
 - Lint e build do frontend validados.
 
+
+## 56. Proteção real de relatórios no backend
+
+Foi implementada a proteção real das rotas de relatórios no backend.
+
+Arquivos criados:
+
+- `backend/src/reports/reports-access.service.ts`
+
+Arquivos alterados:
+
+- `backend/src/reports/reports.controller.ts`
+- `backend/src/reports/reports-export.controller.ts`
+- `backend/src/reports/reports-pdf-export.controller.ts`
+- `backend/src/reports/reports.module.ts`
+
+Rotas protegidas:
+
+- `GET /reports/operational-summary`
+- `GET /reports/tasks-summary`
+- `GET /reports/service-records-summary`
+- `GET /reports/downtime-summary`
+- `GET /reports/thermal-readings-summary`
+- `GET /reports/export/tasks.xlsx`
+- `GET /reports/export/service-records.xlsx`
+- `GET /reports/export/downtime.xlsx`
+- `GET /reports/export/thermal-readings.xlsx`
+- `GET /reports/export/tasks.pdf`
+- `GET /reports/export/service-records.pdf`
+- `GET /reports/export/downtime.pdf`
+- `GET /reports/export/thermal-readings.pdf`
+
+Regras implementadas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem acessar relatórios gerais.
+- `MASTER_ADMIN` e `SUPERVISOR` podem filtrar relatórios por qualquer empresa.
+- `CLIENT_USER` pode acessar somente relatórios da própria empresa.
+- Quando `CLIENT_USER` envia `companyId` de outra empresa, o backend substitui pelo `companyId` vinculado ao usuário logado.
+- `TECHNICIAN` não pode acessar relatórios.
+- `TECHNICIAN` recebe `403 Forbidden` ao tentar acessar relatórios via API direta.
+- A mesma regra foi aplicada aos relatórios JSON, exportações Excel e exportações PDF.
+
+Decisão técnica:
+
+- Foi criado o `ReportsAccessService` para resolver o escopo de acesso antes de chamar os services de relatórios.
+- Os services existentes de relatórios foram preservados.
+- A proteção foi aplicada nos controllers, enviando aos services uma query já segura.
+- Essa abordagem evita duplicar lógica nos services de JSON, Excel e PDF.
+
+Regras de integridade mantidas:
+
+- Os relatórios continuam validando empresa, sala, equipamento, técnico e período.
+- O período padrão continua sendo os últimos 30 dias.
+- Exportações Excel continuam gerando arquivos `.xlsx` válidos.
+- Exportações PDF continuam gerando arquivos `.pdf` válidos.
+- Os filtros originais continuam funcionando para usuários administrativos.
+
+Testes realizados:
+
+- `MASTER_ADMIN` continuou acessando relatórios normalmente.
+- `SUPERVISOR` continuou acessando relatórios normalmente.
+- `CLIENT_USER` recebeu somente dados da própria empresa.
+- Tentativa de forçar `companyId` de outra empresa foi substituída pela empresa do cliente.
+- `TECHNICIAN` foi bloqueado ao tentar acessar relatório via API.
+- Exportação Excel como `CLIENT_USER` gerou arquivo válido.
+- Exportação PDF como `CLIENT_USER` gerou arquivo válido.
+- Build do backend validado.
+- Lint e build do frontend validados.
+
