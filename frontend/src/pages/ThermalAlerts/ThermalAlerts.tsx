@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+
+import { useAuth } from '../../contexts/useAuth';
 import { getCompanies } from '../../services/companies';
 import { getRooms } from '../../services/rooms';
 import { getSensors } from '../../services/sensors';
@@ -68,6 +70,13 @@ const alertStatusOptions: {
 ];
 
 export function ThermalAlerts() {
+  const { user } = useAuth();
+
+  const canManageThermalAlerts =
+    user?.role === 'MASTER_ADMIN' ||
+    user?.role === 'SUPERVISOR' ||
+    user?.role === 'TECHNICIAN';
+
   const [alerts, setAlerts] = useState<ThermalAlert[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -254,6 +263,10 @@ export function ThermalAlerts() {
   ).length;
 
   async function handleAcknowledge(alert: ThermalAlert) {
+    if (!canManageThermalAlerts) {
+      return;
+    }
+
     const confirmed = window.confirm(
       `Deseja reconhecer o alerta da sala "${alert.room?.name ?? alert.roomId}"?`,
     );
@@ -276,6 +289,10 @@ export function ThermalAlerts() {
   }
 
   async function handleResolve(alert: ThermalAlert) {
+    if (!canManageThermalAlerts) {
+      return;
+    }
+
     const confirmed = window.confirm(
       `Deseja resolver o alerta da sala "${alert.room?.name ?? alert.roomId}"?`,
     );
@@ -298,6 +315,10 @@ export function ThermalAlerts() {
   }
 
   async function handleDismiss(alert: ThermalAlert) {
+    if (!canManageThermalAlerts) {
+      return;
+    }
+
     const confirmed = window.confirm(
       `Deseja dispensar o alerta da sala "${alert.room?.name ?? alert.roomId}"?`,
     );
@@ -320,6 +341,10 @@ export function ThermalAlerts() {
   }
 
   async function handleRemove(alert: ThermalAlert) {
+    if (!canManageThermalAlerts) {
+      return;
+    }
+
     const confirmed = window.confirm(
       `Deseja realmente remover o alerta da sala "${alert.room?.name ?? alert.roomId}"?`,
     );
@@ -364,8 +389,16 @@ export function ThermalAlerts() {
 
       <section className="thermal-alerts-summary">
         <SummaryCard title="Total" value={alerts.length} />
-        <SummaryCard title="Ativos" value={activeAlerts} danger={activeAlerts > 0} />
-        <SummaryCard title="Abertos" value={openAlerts} danger={openAlerts > 0} />
+        <SummaryCard
+          title="Ativos"
+          value={activeAlerts}
+          danger={activeAlerts > 0}
+        />
+        <SummaryCard
+          title="Abertos"
+          value={openAlerts}
+          danger={openAlerts > 0}
+        />
         <SummaryCard title="Reconhecidos" value={acknowledgedAlerts} />
         <SummaryCard
           title="Críticos"
@@ -544,7 +577,9 @@ export function ThermalAlerts() {
                     <td>
                       <strong>{alert.room?.name ?? alert.roomId}</strong>
                       {alert.room?.thermalStatus ? (
-                        <small>{formatThermalStatus(alert.room.thermalStatus)}</small>
+                        <small>
+                          {formatThermalStatus(alert.room.thermalStatus)}
+                        </small>
                       ) : null}
                     </td>
 
@@ -593,45 +628,51 @@ export function ThermalAlerts() {
                     </td>
 
                     <td>
-                      <div className="thermal-alert-row-actions">
-                        {alert.status === 'OPEN' ? (
+                      {canManageThermalAlerts ? (
+                        <div className="thermal-alert-row-actions">
+                          {alert.status === 'OPEN' ? (
+                            <button
+                              type="button"
+                              disabled={actionAlertId === alert.id}
+                              onClick={() => void handleAcknowledge(alert)}
+                            >
+                              Reconhecer
+                            </button>
+                          ) : null}
+
+                          {['OPEN', 'ACKNOWLEDGED'].includes(alert.status) ? (
+                            <>
+                              <button
+                                type="button"
+                                disabled={actionAlertId === alert.id}
+                                onClick={() => void handleResolve(alert)}
+                              >
+                                Resolver
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={actionAlertId === alert.id}
+                                onClick={() => void handleDismiss(alert)}
+                              >
+                                Dispensar
+                              </button>
+                            </>
+                          ) : null}
+
                           <button
                             type="button"
                             disabled={actionAlertId === alert.id}
-                            onClick={() => void handleAcknowledge(alert)}
+                            onClick={() => void handleRemove(alert)}
                           >
-                            Reconhecer
+                            Remover
                           </button>
-                        ) : null}
-
-                        {['OPEN', 'ACKNOWLEDGED'].includes(alert.status) ? (
-                          <>
-                            <button
-                              type="button"
-                              disabled={actionAlertId === alert.id}
-                              onClick={() => void handleResolve(alert)}
-                            >
-                              Resolver
-                            </button>
-
-                            <button
-                              type="button"
-                              disabled={actionAlertId === alert.id}
-                              onClick={() => void handleDismiss(alert)}
-                            >
-                              Dispensar
-                            </button>
-                          </>
-                        ) : null}
-
-                        <button
-                          type="button"
-                          disabled={actionAlertId === alert.id}
-                          onClick={() => void handleRemove(alert)}
-                        >
-                          Remover
-                        </button>
-                      </div>
+                        </div>
+                      ) : (
+                        <span className="thermal-alert-readonly-badge">
+                          Somente consulta
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -654,7 +695,9 @@ function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
   return (
     <article
       className={
-        danger ? 'thermal-alerts-summary-card danger' : 'thermal-alerts-summary-card'
+        danger
+          ? 'thermal-alerts-summary-card danger'
+          : 'thermal-alerts-summary-card'
       }
     >
       <span>{title}</span>

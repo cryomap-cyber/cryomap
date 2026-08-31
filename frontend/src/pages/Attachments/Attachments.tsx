@@ -1,4 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+
+import { useAuth } from '../../contexts/useAuth';
 import {
   createAttachment,
   downloadAttachment,
@@ -56,6 +58,13 @@ const emptyFormData: AttachmentFormData = {
 };
 
 export function Attachments() {
+  const { user } = useAuth();
+
+  const canManageAttachments =
+    user?.role === 'MASTER_ADMIN' ||
+    user?.role === 'SUPERVISOR' ||
+    user?.role === 'TECHNICIAN';
+
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -237,7 +246,7 @@ export function Attachments() {
   ]);
 
   useEffect(() => {
-    if (!isFormOpen) {
+    if (!isFormOpen || !canManageAttachments) {
       return;
     }
 
@@ -287,7 +296,13 @@ export function Attachments() {
     return () => {
       isMounted = false;
     };
-  }, [isFormOpen, formData.companyId, formData.taskId, formData.serviceRecordId]);
+  }, [
+    isFormOpen,
+    canManageAttachments,
+    formData.companyId,
+    formData.taskId,
+    formData.serviceRecordId,
+  ]);
 
   const filteredAttachments = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -336,6 +351,10 @@ export function Attachments() {
   ).length;
 
   function openCreateForm() {
+    if (!canManageAttachments) {
+      return;
+    }
+
     setFormData({
       ...emptyFormData,
       companyId: selectedCompanyId,
@@ -373,6 +392,10 @@ export function Attachments() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!canManageAttachments) {
+      return;
+    }
 
     setFormError('');
 
@@ -425,6 +448,10 @@ export function Attachments() {
   }
 
   async function handleRemove(attachment: Attachment) {
+    if (!canManageAttachments) {
+      return;
+    }
+
     const confirmed = window.confirm(
       `Deseja realmente remover o anexo "${attachment.originalName}"?`,
     );
@@ -462,9 +489,11 @@ export function Attachments() {
           </p>
         </div>
 
-        <button type="button" onClick={openCreateForm}>
-          Novo anexo
-        </button>
+        {canManageAttachments ? (
+          <button type="button" onClick={openCreateForm}>
+            Novo anexo
+          </button>
+        ) : null}
       </header>
 
       <section className="attachments-summary">
@@ -476,7 +505,7 @@ export function Attachments() {
         <SummaryCard title="Tamanho total" value={formatFileSize(totalSize)} />
       </section>
 
-      {isFormOpen ? (
+      {isFormOpen && canManageAttachments ? (
         <section className="attachment-form-panel">
           <div className="attachment-form-header">
             <div>
@@ -798,13 +827,19 @@ export function Attachments() {
                           Baixar
                         </button>
 
-                        <button
-                          type="button"
-                          disabled={actionAttachmentId === attachment.id}
-                          onClick={() => void handleRemove(attachment)}
-                        >
-                          Remover
-                        </button>
+                        {canManageAttachments ? (
+                          <button
+                            type="button"
+                            disabled={actionAttachmentId === attachment.id}
+                            onClick={() => void handleRemove(attachment)}
+                          >
+                            Remover
+                          </button>
+                        ) : (
+                          <span className="attachment-readonly-badge">
+                            Somente consulta
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>

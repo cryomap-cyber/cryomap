@@ -3083,3 +3083,56 @@ Testes realizados:
 - Build do backend validado.
 - Lint e build do frontend validados.
 
+## 57. Revisão final de controle de acesso no frontend
+
+Foi realizada a revisão final do controle de acesso no frontend após a proteção real das rotas no backend.
+
+Arquivos revisados:
+
+- `frontend/src/services/api.ts`
+- `frontend/src/services/auth-storage.ts`
+- `frontend/src/permissions/role-permissions.ts`
+- `frontend/src/App.tsx`
+- `frontend/src/components/AppLayout/AppLayout.tsx`
+- `frontend/src/services/reports.ts`
+- `frontend/src/services/tasks.ts`
+- `frontend/src/services/sensors.ts`
+- `frontend/src/services/attachments.ts`
+- `frontend/src/services/thermal-alerts.ts`
+- `frontend/src/services/service-records.ts`
+- `frontend/src/services/equipment-temperature-readings.ts`
+- `frontend/src/pages/ThermalAlerts/ThermalAlerts.tsx`
+- `frontend/src/pages/Attachments/Attachments.tsx`
+- `frontend/src/pages/ServiceRecords/ServiceRecords.tsx`
+
+Ajustes realizados:
+
+- Em `ThermalAlerts.tsx`, `CLIENT_USER` passou a visualizar alertas em modo somente consulta.
+- Em `ThermalAlerts.tsx`, `CLIENT_USER` não visualiza mais ações de reconhecer, resolver, dispensar ou remover alertas.
+- Em `Attachments.tsx`, `CLIENT_USER` passou a visualizar anexos em modo somente consulta.
+- Em `Attachments.tsx`, `CLIENT_USER` pode baixar anexos.
+- Em `Attachments.tsx`, `CLIENT_USER` não visualiza mais o botão de novo anexo.
+- Em `Attachments.tsx`, `CLIENT_USER` não visualiza mais a ação de remover anexo.
+- `ServiceRecords.tsx` já estava correto, mantendo `CLIENT_USER` em modo somente consulta.
+
+Regras confirmadas:
+
+- `CLIENT_USER` não acessa Chamados.
+- `CLIENT_USER` não acessa Temperaturas de Equipamentos.
+- `CLIENT_USER` acessa Relatórios apenas da própria empresa.
+- `CLIENT_USER` acessa Atendimentos, Alertas e Anexos em modo compatível com suas permissões.
+- `TECHNICIAN` não acessa Sensores.
+- `TECHNICIAN` não acessa Relatórios.
+- `TECHNICIAN` acessa e opera Chamados, Atendimentos, Alertas, Anexos e Temperaturas de Equipamentos dentro da própria empresa.
+- `MASTER_ADMIN` e `SUPERVISOR` mantêm acesso administrativo completo.
+
+Testes realizados:
+
+- `CLIENT_USER` visualizou alertas sem botões de ação.
+- `CLIENT_USER` visualizou anexos com opção de baixar, mas sem upload/remover.
+- `CLIENT_USER` continuou visualizando atendimentos em modo somente consulta.
+- `TECHNICIAN` visualizou ações operacionais em alertas, anexos e atendimentos.
+- `MASTER_ADMIN` e `SUPERVISOR` continuaram operando normalmente.
+- `npm run lint` passou após os ajustes.
+- `npm run build` do frontend passou.
+
