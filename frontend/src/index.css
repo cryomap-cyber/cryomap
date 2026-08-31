@@ -1,36 +1,41 @@
 :root {
-  --color-primary: #0b4f71;
-  --color-primary-dark: #06364f;
-  --color-primary-light: #14a8d8;
+  --color-primary: #096df2;
+  --color-primary-dark: #03143f;
+  --color-primary-medium: #063fa7;
+  --color-primary-light: #22c1ff;
   --color-accent: #35c7f3;
 
-  --color-background: #f3f9fc;
+  --color-background: #f5fbff;
+  --color-background-deep: #eaf6ff;
   --color-surface: #ffffff;
-  --color-surface-soft: #edf6fb;
+  --color-surface-soft: #edf7ff;
+  --color-surface-strong: #e3f2ff;
 
-  --color-text: #143244;
+  --color-text: #102033;
   --color-text-soft: #284558;
-  --color-muted: #6b7c88;
+  --color-muted: #6d7f90;
 
-  --color-border: #d9e8f2;
-  --color-border-soft: #e4eef5;
+  --color-border: rgba(9, 109, 242, 0.16);
+  --color-border-soft: rgba(9, 109, 242, 0.1);
 
-  --color-success-bg: #e9f9f0;
-  --color-success-text: #167a3f;
+  --color-success-bg: #e8f8f1;
+  --color-success-text: #0f8f61;
 
-  --color-warning-bg: #fff8e5;
-  --color-warning-text: #9a6400;
+  --color-warning-bg: #fff7e6;
+  --color-warning-text: #a76400;
 
   --color-danger-bg: #fff1f1;
-  --color-danger-text: #c62828;
+  --color-danger-text: #d93025;
 
-  --shadow-card: 0 14px 40px rgba(15, 95, 143, 0.08);
-  --shadow-panel: 0 14px 40px rgba(15, 95, 143, 0.06);
+  --shadow-card: 0 18px 50px rgba(9, 109, 242, 0.08);
+  --shadow-panel: 0 18px 50px rgba(3, 20, 63, 0.07);
+  --shadow-strong: 0 28px 80px rgba(3, 20, 63, 0.18);
 
   --radius-sm: 12px;
   --radius-md: 18px;
   --radius-lg: 24px;
   --radius-xl: 30px;
+  --radius-2xl: 36px;
 }
 
 * {
@@ -48,10 +53,20 @@ body {
   background:
     radial-gradient(
       circle at top left,
-      rgba(53, 199, 243, 0.16),
-      transparent 32rem
+      rgba(34, 193, 255, 0.2),
+      transparent 34rem
     ),
-    var(--color-background);
+    radial-gradient(
+      circle at top right,
+      rgba(9, 109, 242, 0.12),
+      transparent 30rem
+    ),
+    linear-gradient(
+      180deg,
+      var(--color-background) 0%,
+      #ffffff 45%,
+      var(--color-background-deep) 100%
+    );
   color: var(--color-text);
   font-family:
     Inter,
@@ -75,7 +90,10 @@ button {
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
-    opacity 0.15s ease;
+    opacity 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 button:not(:disabled):hover {
@@ -84,10 +102,50 @@ button:not(:disabled):hover {
 
 button:disabled {
   cursor: not-allowed;
+  opacity: 0.65;
+}
+
+input,
+select,
+textarea {
+  color: var(--color-text);
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgba(34, 193, 255, 0.34);
+  outline-offset: 2px;
 }
 
 a {
   color: inherit;
+}
+
+::selection {
+  background: rgba(34, 193, 255, 0.28);
+  color: var(--color-primary-dark);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(237, 247, 255, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(9, 109, 242, 0.28);
+  border-radius: 999px;
+  border: 2px solid rgba(237, 247, 255, 0.8);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(9, 109, 242, 0.46);
 }
 
 .page-center {
@@ -97,7 +155,12 @@ a {
   background:
     radial-gradient(
       circle at top left,
-      rgba(53, 199, 243, 0.16),
+      rgba(34, 193, 255, 0.2),
+      transparent 34rem
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(9, 109, 242, 0.14),
       transparent 32rem
     ),
     var(--color-background);
@@ -424,7 +487,7 @@ a {
   margin: auto !important;
   overflow-y: auto !important;
   border-radius: 28px !important;
-  box-shadow: 0 30px 90px rgba(7, 31, 48, 0.22) !important;
+  box-shadow: 0 30px 90px rgba(3, 20, 63, 0.22) !important;
   animation: formPanelEnter 0.18s ease-out;
 }
 

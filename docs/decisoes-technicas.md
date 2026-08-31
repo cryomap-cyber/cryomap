@@ -3277,3 +3277,60 @@ Testes realizados:
 - `npm run lint` passou.
 - `npm run build` passou.
 - Execução em desenvolvimento validada com `npm run dev`.
+
+## 60.2. Padronização global de cores com a identidade CryoMap
+
+Foi realizada a padronização global das cores do sistema com base na identidade visual da logo CryoMap.
+
+Arquivos alterados:
+
+- `frontend/src/index.css`
+- `frontend/src/components/AppLayout/AppLayout.css`
+
+Objetivos:
+
+- Aproximar o visual geral do sistema da logo CryoMap.
+- Aplicar uma paleta mais consistente em todo o frontend.
+- Melhorar a aparência global do fundo, sidebar, menu mobile, botões, foco, sombras e superfícies.
+- Manter o sistema com aparência limpa, moderna, tecnológica e coerente com monitoramento térmico.
+
+Paleta aplicada:
+
+- Azul escuro para identidade e estrutura visual.
+- Azul vivo para ações principais.
+- Ciano para destaque, tecnologia e sensação de frio.
+- Branco gelado para fundos e superfícies.
+- Cinzas azulados para textos secundários.
+- Vermelho, amarelo e verde preservados para estados críticos, atenção e sucesso.
+
+Ajustes realizados:
+
+- Atualizadas variáveis globais de cor no `:root`.
+- Melhorado fundo geral do sistema.
+- Melhorados estados de foco.
+- Ajustadas sombras globais.
+- Ajustada aparência de scrollbars.
+- Melhorado visual da sidebar desktop.
+- Melhorado item ativo da sidebar.
+- Melhorado menu mobile.
+- Melhorada topbar mobile.
+- Mantida responsividade existente.
+- Mantidos formulários flutuantes e ajustes compactos já existentes.
+
+Regras mantidas:
+
+- Nenhuma regra de permissão foi alterada.
+- Nenhuma rota foi alterada.
+- Nenhum endpoint do backend foi alterado.
+- Nenhuma regra de negócio foi alterada.
+
+Testes realizados:
+
+- `npm run lint` passou.
+- `npm run build` passou.
+- Execução em desenvolvimento validada com `npm run dev`.
+- Sidebar desktop validada.
+- Topbar mobile validada.
+- Menu mobile validado.
+- Dashboard validado após a mudança global.
+- Demais telas principais continuaram funcionando normalmente.
