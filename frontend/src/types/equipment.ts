@@ -14,6 +14,22 @@ export type RefrigerantFluid =
   | 'R404A'
   | 'R407C';
 
+export type EquipmentLatestMeasurement = {
+  id: string;
+  temperature: number;
+  dischargePressure?: number | null;
+  suctionPressure?: number | null;
+  liquidLineTemperature?: number | null;
+  evaporationTemperature?: number | null;
+  superheating?: number | null;
+  subcooling?: number | null;
+  airFlow?: number | null;
+  source?: string | null;
+  notes?: string | null;
+  measuredAt: string;
+  createdAt: string;
+};
+
 export type Equipment = {
   id: string;
   companyId: string;
@@ -40,4 +56,5 @@ export type Equipment = {
     id: string;
     name: string;
   } | null;
+  equipmentTemperatureReadings?: EquipmentLatestMeasurement[];
 };

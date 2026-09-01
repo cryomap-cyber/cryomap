@@ -49,6 +49,27 @@ const equipmentSelect = {
       currentTemperature: true,
     },
   },
+  equipmentTemperatureReadings: {
+    take: 1,
+    orderBy: {
+      measuredAt: 'desc',
+    },
+    select: {
+      id: true,
+      temperature: true,
+      dischargePressure: true,
+      suctionPressure: true,
+      liquidLineTemperature: true,
+      evaporationTemperature: true,
+      superheating: true,
+      subcooling: true,
+      airFlow: true,
+      source: true,
+      notes: true,
+      measuredAt: true,
+      createdAt: true,
+    },
+  },
 } satisfies Prisma.EquipmentSelect;
 
 @Injectable()

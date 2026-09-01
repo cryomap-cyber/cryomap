@@ -3840,3 +3840,78 @@ Testes realizados:
 - Botão `Nova medição` ficou oculto para `CLIENT_USER`.
 - Histórico da própria empresa ficou visível para `CLIENT_USER`.
 - `MASTER_ADMIN`, `SUPERVISOR` e `TECHNICIAN` mantiveram acesso à criação de medições.
+
+## 63.2.2. Resumo da última medição técnica na tela de equipamentos
+
+Foi adicionada à tela de equipamentos a exibição resumida da última medição técnica registrada para cada equipamento.
+
+Objetivo:
+
+- Permitir que usuários visualizem rapidamente a condição técnica mais recente de cada equipamento.
+- Evitar que o cliente precise acessar apenas a tela de histórico completo para entender a situação atual.
+- Manter a tela de equipamentos como visão resumida e a tela de medições como histórico completo.
+- Melhorar o acompanhamento operacional para contratos reais.
+
+Alterações no backend:
+
+- O retorno de equipamentos passou a incluir a última medição técnica relacionada.
+- A última medição é buscada a partir de `equipmentTemperatureReadings`.
+- A ordenação considera `measuredAt` em ordem decrescente.
+- Cada equipamento retorna no máximo uma medição técnica recente.
+- Foram incluídos no retorno os campos:
+  - temperatura;
+  - pressão de descarga;
+  - pressão de sucção;
+  - temperatura da linha de líquido;
+  - temperatura de evaporação;
+  - superaquecimento;
+  - subresfriamento;
+  - vazão de ar;
+  - origem;
+  - observações;
+  - data da medição.
+
+Alterações no frontend:
+
+- Atualizado o type de equipamento para aceitar `equipmentTemperatureReadings`.
+- Criado type auxiliar para última medição técnica do equipamento.
+- A tela `Equipamentos` passou a exibir:
+  - última temperatura medida;
+  - data/hora da última medição;
+  - pressão de descarga;
+  - pressão de sucção;
+  - superaquecimento;
+  - subresfriamento;
+  - vazão de ar.
+- Equipamentos sem medição técnica exibem indicação de ausência de medição.
+- A busca passou a considerar dados da última medição técnica.
+- `CLIENT_USER` também consegue visualizar o resumo da última medição na tela de equipamentos.
+
+Decisão técnica:
+
+- A tela de equipamentos mostra apenas um resumo da medição mais recente.
+- O histórico completo permanece na tela `Medições Equip.`.
+- Não foi criada nova tabela, pois o histórico técnico usa a tabela de medições de equipamentos já existente.
+- Não foram alteradas permissões de criação de medições.
+
+Regras mantidas:
+
+- Cliente continua sem permissão para criar medições técnicas.
+- Cliente visualiza apenas dados da própria empresa.
+- Técnico continua limitado à própria empresa.
+- Equipamentos continuam sem sensores.
+- Sensores continuam vinculados às salas.
+- Temperatura e medições técnicas de equipamentos continuam sendo registros manuais.
+
+Testes realizados:
+
+- Backend `npm run lint` passou.
+- Backend `npm run build` passou.
+- Retorno de `/equipments` passou a incluir a última medição técnica.
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela de Equipamentos exibiu resumo da última medição.
+- Equipamentos sem medição exibiram estado vazio/traço corretamente.
+- Busca por fluido, pressão e temperatura funcionou.
+- Visualização como `CLIENT_USER` foi validada.
+
