@@ -3978,3 +3978,57 @@ Testes realizados:
 - `TECHNICIAN` manteve criação de medições.
 - `MASTER_ADMIN` manteve criação de medições.
 
+## 63.2. Fechamento do histórico técnico de medições dos equipamentos
+
+A etapa 63.2 foi concluída e revisada.
+
+Escopo entregue:
+
+- Histórico técnico de medições dos equipamentos.
+- Campos técnicos adicionais nas medições:
+  - pressão de descarga;
+  - pressão de sucção;
+  - temperatura da linha de líquido;
+  - temperatura de evaporação;
+  - superaquecimento;
+  - subresfriamento;
+  - vazão de ar.
+- Unidades adotadas:
+  - pressões em psi;
+  - temperaturas em °C;
+  - superaquecimento em °C;
+  - subresfriamento em °C;
+  - vazão de ar em m³/h.
+- `CLIENT_USER` pode visualizar medições técnicas da própria empresa em modo somente leitura.
+- `TECHNICIAN` pode visualizar e criar medições técnicas da própria empresa.
+- `MASTER_ADMIN` e `SUPERVISOR` mantêm acesso completo.
+- Tela `Equipamentos` mostra resumo da última medição técnica.
+- Tela `Medições Equip.` mostra histórico completo.
+- Tela `Medições Equip.` possui gráfico de colunas por equipamento, indicador e período.
+
+Regras confirmadas:
+
+- Equipamentos continuam sem sensores.
+- Sensores continuam vinculados somente às salas.
+- Temperatura de equipamento continua manual.
+- Cliente não cria medições técnicas.
+- Cliente não visualiza dados de outra empresa.
+- Técnico não visualiza dados de outra empresa.
+
+Revisão final:
+
+- Backend `npm run lint` passou.
+- Backend `npm run build` passou.
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela `Equipamentos` exibiu fluido refrigerante e última medição técnica.
+- Tela `Medições Equip.` exibiu histórico técnico e gráfico.
+- `CLIENT_USER` visualizou histórico/gráfico sem botão de criação.
+- `TECHNICIAN` manteve criação de medições.
+- Menus e rotas permaneceram corretos por perfil.
+
+Observação:
+
+- A instalação do `recharts` gerou aviso de bundle/chunk grande no Vite.
+- O aviso não bloqueia a beta.
+- Otimização de bundle será tratada em etapa futura, se necessário.
