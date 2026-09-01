@@ -22,6 +22,13 @@ const equipmentTemperatureReadingSelect = {
   equipmentId: true,
   createdByUserId: true,
   temperature: true,
+  dischargePressure: true,
+  suctionPressure: true,
+  liquidLineTemperature: true,
+  evaporationTemperature: true,
+  superheating: true,
+  subcooling: true,
+  airFlow: true,
   source: true,
   notes: true,
   measuredAt: true,
@@ -47,6 +54,7 @@ const equipmentTemperatureReadingSelect = {
       id: true,
       name: true,
       code: true,
+      refrigerantFluid: true,
       currentTemperature: true,
       status: true,
     },
@@ -93,6 +101,13 @@ export class EquipmentTemperatureReadingsService {
           equipmentId: createDto.equipmentId,
           createdByUserId: actor.id,
           temperature: createDto.temperature,
+          dischargePressure: createDto.dischargePressure,
+          suctionPressure: createDto.suctionPressure,
+          liquidLineTemperature: createDto.liquidLineTemperature,
+          evaporationTemperature: createDto.evaporationTemperature,
+          superheating: createDto.superheating,
+          subcooling: createDto.subcooling,
+          airFlow: createDto.airFlow,
           source: createDto.source ?? EquipmentTemperatureSource.MANUAL,
           notes: createDto.notes?.trim(),
           measuredAt,
@@ -191,7 +206,7 @@ export class EquipmentTemperatureReadingsService {
   ) {
     if (actor.role === UserRole.CLIENT_USER) {
       throw new ForbiddenException(
-        'Usuário cliente não pode acessar leituras manuais de equipamentos',
+        'Usuário cliente não pode criar medições técnicas de equipamentos',
       );
     }
 
@@ -204,7 +219,7 @@ export class EquipmentTemperatureReadingsService {
 
       if (createDto.companyId !== actor.companyId) {
         throw new ForbiddenException(
-          'Técnico só pode registrar leitura de equipamento da própria empresa',
+          'Técnico só pode registrar medição de equipamento da própria empresa',
         );
       }
 
@@ -219,26 +234,33 @@ export class EquipmentTemperatureReadingsService {
     actor: AuthUser,
   ) {
     if (actor.role === UserRole.CLIENT_USER) {
-      throw new ForbiddenException(
-        'Usuário cliente não pode acessar leituras manuais de equipamentos',
-      );
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Usuário cliente não está vinculado a uma empresa',
+        );
+      }
+
+      return actor.companyId;
     }
 
     if (actor.role === UserRole.TECHNICIAN) {
-      return actor.companyId ?? undefined;
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Técnico não está vinculado a uma empresa',
+        );
+      }
+
+      return actor.companyId;
     }
 
     return requestedCompanyId;
   }
 
   private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
-    if (actor.role === UserRole.CLIENT_USER) {
-      throw new ForbiddenException(
-        'Usuário cliente não pode acessar leituras manuais de equipamentos',
-      );
-    }
-
-    if (actor.role !== UserRole.TECHNICIAN) {
+    if (
+      actor.role !== UserRole.CLIENT_USER &&
+      actor.role !== UserRole.TECHNICIAN
+    ) {
       return;
     }
 

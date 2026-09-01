@@ -1,8 +1,8 @@
-import { api } from './api';
 import type {
   EquipmentTemperatureReading,
   EquipmentTemperatureSource,
 } from '../types/equipment-temperature-reading';
+import { api } from './api';
 
 export type GetEquipmentTemperatureReadingsParams = {
   companyId?: string;
@@ -16,7 +16,17 @@ export type GetEquipmentTemperatureReadingsParams = {
 export type CreateEquipmentTemperatureReadingPayload = {
   companyId: string;
   equipmentId: string;
+
   temperature: number;
+
+  dischargePressure?: number;
+  suctionPressure?: number;
+  liquidLineTemperature?: number;
+  evaporationTemperature?: number;
+  superheating?: number;
+  subcooling?: number;
+  airFlow?: number;
+
   source?: EquipmentTemperatureSource;
   notes?: string;
   measuredAt?: string;

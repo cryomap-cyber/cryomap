@@ -3789,3 +3789,54 @@ Testes realizados:
 - Exibição do fluido na tabela validada.
 - Busca por fluido refrigerante validada.
 - Filtros por empresa e sala continuaram funcionando.
+
+## 63.2.1. Visualização de medições técnicas por cliente
+
+Foi ajustado o acesso às medições técnicas dos equipamentos para permitir que usuários do tipo cliente acompanhem o histórico técnico dos equipamentos da própria empresa.
+
+Objetivo:
+
+- Permitir que `CLIENT_USER` visualize medições técnicas dos equipamentos.
+- Manter `CLIENT_USER` em modo somente leitura.
+- Preservar a criação de medições apenas para usuários operacionais e administrativos.
+- Evitar que clientes fiquem sem acesso a informações importantes de acompanhamento operacional.
+
+Alterações no backend:
+
+- `GET /equipment-temperature-readings` passou a permitir `CLIENT_USER`.
+- `GET /equipment-temperature-readings/:id` passou a permitir `CLIENT_USER`.
+- `POST /equipment-temperature-readings` continua permitido apenas para `MASTER_ADMIN`, `SUPERVISOR` e `TECHNICIAN`.
+- `CLIENT_USER` visualiza apenas medições da própria empresa.
+- `TECHNICIAN` continua limitado à própria empresa.
+- `MASTER_ADMIN` e `SUPERVISOR` continuam com acesso administrativo completo.
+
+Alterações no frontend:
+
+- A rota `/equipment-temperature-readings` foi liberada para todos os perfis autorizados.
+- O menu passou a exibir `Medições Equip.` para `CLIENT_USER`.
+- A tela de medições passou a identificar quando o usuário é `CLIENT_USER`.
+- Para `CLIENT_USER`, o botão `Nova medição` não é exibido.
+- Para `CLIENT_USER`, o formulário de criação não é exibido.
+- `CLIENT_USER` consegue apenas consultar o histórico da própria empresa.
+- `MASTER_ADMIN`, `SUPERVISOR` e `TECHNICIAN` continuam podendo registrar novas medições.
+
+Regras mantidas:
+
+- Cliente não pode criar medição técnica.
+- Cliente não pode visualizar medições de outra empresa.
+- Técnico não pode visualizar medições de outra empresa.
+- Equipamentos continuam sem sensores.
+- Sensores continuam vinculados às salas.
+- As medições técnicas de equipamentos continuam sendo registros manuais.
+
+Testes realizados:
+
+- Backend `npm run lint` passou.
+- Backend `npm run build` passou.
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Menu `Medições Equip.` apareceu para `CLIENT_USER`.
+- Tela de medições abriu para `CLIENT_USER`.
+- Botão `Nova medição` ficou oculto para `CLIENT_USER`.
+- Histórico da própria empresa ficou visível para `CLIENT_USER`.
+- `MASTER_ADMIN`, `SUPERVISOR` e `TECHNICIAN` mantiveram acesso à criação de medições.

@@ -15,6 +15,18 @@ export const allRoles: UserRole[] = [
 
 export const managementRoles: UserRole[] = ['MASTER_ADMIN', 'SUPERVISOR'];
 
+export const clientAndAdminRoles: UserRole[] = [
+  'MASTER_ADMIN',
+  'SUPERVISOR',
+  'CLIENT_USER',
+];
+
+export const technicianAndAdminRoles: UserRole[] = [
+  'MASTER_ADMIN',
+  'SUPERVISOR',
+  'TECHNICIAN',
+];
+
 export const navigationItems: NavigationItem[] = [
   {
     label: 'Dashboard',
@@ -44,7 +56,7 @@ export const navigationItems: NavigationItem[] = [
   {
     label: 'Sensores',
     to: '/sensors',
-    allowedRoles: ['MASTER_ADMIN', 'SUPERVISOR', 'CLIENT_USER'],
+    allowedRoles: clientAndAdminRoles,
   },
   {
     label: 'Leituras',
@@ -57,19 +69,19 @@ export const navigationItems: NavigationItem[] = [
     allowedRoles: allRoles,
   },
   {
-    label: 'Temp. Equipamentos',
+    label: 'Medições Equip.',
     to: '/equipment-temperature-readings',
-    allowedRoles: ['MASTER_ADMIN', 'SUPERVISOR', 'TECHNICIAN'],
+    allowedRoles: allRoles,
   },
   {
     label: 'Chamados',
     to: '/tasks',
-    allowedRoles: ['MASTER_ADMIN', 'SUPERVISOR', 'TECHNICIAN'],
+    allowedRoles: technicianAndAdminRoles,
   },
   {
     label: 'Atendimentos',
     to: '/service-records',
-    allowedRoles: ['MASTER_ADMIN', 'SUPERVISOR', 'TECHNICIAN', 'CLIENT_USER'],
+    allowedRoles: allRoles,
   },
   {
     label: 'Anexos',
@@ -79,7 +91,7 @@ export const navigationItems: NavigationItem[] = [
   {
     label: 'Relatórios',
     to: '/reports',
-    allowedRoles: ['MASTER_ADMIN', 'SUPERVISOR', 'CLIENT_USER'],
+    allowedRoles: clientAndAdminRoles,
   },
 ];
 

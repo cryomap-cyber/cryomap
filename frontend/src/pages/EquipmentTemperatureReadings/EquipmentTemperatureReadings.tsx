@@ -1,27 +1,39 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+
+import { EmptyState } from '../../components/Feedback/EmptyState';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { useAuth } from '../../contexts/useAuth';
 import { getCompanies } from '../../services/companies';
-import { getEquipments } from '../../services/equipments';
 import {
   createEquipmentTemperatureReading,
   getEquipmentTemperatureReadings,
   type CreateEquipmentTemperatureReadingPayload,
 } from '../../services/equipment-temperature-readings';
+import { getEquipments } from '../../services/equipments';
 import { getRooms } from '../../services/rooms';
 import { getUsers } from '../../services/users';
 import type { Company } from '../../types/company';
 import type { Equipment } from '../../types/equipment';
-import type { EquipmentTemperatureReading } from '../../types/equipment-temperature-reading';
+import type {
+  EquipmentTemperatureReading,
+  EquipmentTemperatureSource,
+} from '../../types/equipment-temperature-reading';
 import type { Room } from '../../types/room';
 import type { User } from '../../types/user';
 import './EquipmentTemperatureReadings.css';
-import { LoadingState } from '../../components/Feedback/LoadingState';
-import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type EquipmentTemperatureReadingFormData = {
   companyId: string;
   equipmentId: string;
   temperature: string;
-  source: 'MANUAL';
+  dischargePressure: string;
+  suctionPressure: string;
+  liquidLineTemperature: string;
+  evaporationTemperature: string;
+  superheating: string;
+  subcooling: string;
+  airFlow: string;
+  source: EquipmentTemperatureSource;
   notes: string;
   measuredAt: string;
 };
@@ -30,12 +42,21 @@ const emptyFormData: EquipmentTemperatureReadingFormData = {
   companyId: '',
   equipmentId: '',
   temperature: '',
+  dischargePressure: '',
+  suctionPressure: '',
+  liquidLineTemperature: '',
+  evaporationTemperature: '',
+  superheating: '',
+  subcooling: '',
+  airFlow: '',
   source: 'MANUAL',
   notes: '',
   measuredAt: '',
 };
 
 export function EquipmentTemperatureReadings() {
+  const { user } = useAuth();
+
   const [readings, setReadings] = useState<EquipmentTemperatureReading[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -56,6 +77,8 @@ export function EquipmentTemperatureReadings() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formData, setFormData] =
     useState<EquipmentTemperatureReadingFormData>(emptyFormData);
+
+  const canCreateMeasurement = user?.role !== 'CLIENT_USER';
 
   async function handleRefresh() {
     setError('');
@@ -90,7 +113,7 @@ export function EquipmentTemperatureReadings() {
       setUsers(usersData);
       setReadings(readingsData);
     } catch {
-      setError('Não foi possível carregar as leituras dos equipamentos.');
+      setError('Não foi possível carregar as medições dos equipamentos.');
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +159,7 @@ export function EquipmentTemperatureReadings() {
           return;
         }
 
-        setError('Não foi possível carregar as leituras dos equipamentos.');
+        setError('Não foi possível carregar as medições dos equipamentos.');
       })
       .finally(() => {
         if (!isMounted) {
@@ -191,7 +214,7 @@ export function EquipmentTemperatureReadings() {
 
         if (
           selectedCreatedByUserId &&
-          !usersData.some((user) => user.id === selectedCreatedByUserId)
+          !usersData.some((item) => item.id === selectedCreatedByUserId)
         ) {
           setSelectedCreatedByUserId('');
         }
@@ -227,11 +250,19 @@ export function EquipmentTemperatureReadings() {
         reading.room?.name ?? '',
         reading.equipment?.name ?? '',
         reading.equipment?.code ?? '',
+        reading.equipment?.refrigerantFluid ?? '',
         reading.createdByUser?.name ?? '',
         reading.createdByUser?.email ?? '',
         reading.source ?? '',
         reading.notes ?? '',
         String(reading.temperature),
+        String(reading.dischargePressure ?? ''),
+        String(reading.suctionPressure ?? ''),
+        String(reading.liquidLineTemperature ?? ''),
+        String(reading.evaporationTemperature ?? ''),
+        String(reading.superheating ?? ''),
+        String(reading.subcooling ?? ''),
+        String(reading.airFlow ?? ''),
       ]
         .join(' ')
         .toLowerCase()
@@ -256,6 +287,10 @@ export function EquipmentTemperatureReadings() {
   ).length;
 
   function openCreateForm() {
+    if (!canCreateMeasurement) {
+      return;
+    }
+
     const selectedEquipment = equipments.find(
       (equipment) => equipment.id === selectedEquipmentId,
     );
@@ -309,6 +344,11 @@ export function EquipmentTemperatureReadings() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (!canCreateMeasurement) {
+      setFormError('Usuário cliente pode apenas visualizar medições.');
+      return;
+    }
+
     setFormError('');
 
     if (!formData.companyId) {
@@ -321,9 +361,9 @@ export function EquipmentTemperatureReadings() {
       return;
     }
 
-    const temperature = Number(formData.temperature.replace(',', '.'));
+    const temperature = optionalNumber(formData.temperature);
 
-    if (Number.isNaN(temperature)) {
+    if (temperature === undefined) {
       setFormError('Informe uma temperatura válida.');
       return;
     }
@@ -335,6 +375,13 @@ export function EquipmentTemperatureReadings() {
         companyId: formData.companyId,
         equipmentId: formData.equipmentId,
         temperature,
+        dischargePressure: optionalNumber(formData.dischargePressure),
+        suctionPressure: optionalNumber(formData.suctionPressure),
+        liquidLineTemperature: optionalNumber(formData.liquidLineTemperature),
+        evaporationTemperature: optionalNumber(formData.evaporationTemperature),
+        superheating: optionalNumber(formData.superheating),
+        subcooling: optionalNumber(formData.subcooling),
+        airFlow: optionalNumber(formData.airFlow),
         source: formData.source,
         notes: optionalValue(formData.notes),
         measuredAt: optionalIsoDateTime(formData.measuredAt),
@@ -353,11 +400,11 @@ export function EquipmentTemperatureReadings() {
 
   if (isLoading) {
     return (
-  <LoadingState
-    title="Carregando leituras de equipamentos..."
-    description="Buscando temperaturas manuais dos equipamentos."
-  />
-);
+      <LoadingState
+        title="Carregando medições de equipamentos..."
+        description="Buscando histórico técnico dos equipamentos."
+      />
+    );
   }
 
   return (
@@ -365,16 +412,26 @@ export function EquipmentTemperatureReadings() {
       <header className="equipment-temperature-readings-header">
         <div>
           <span>Equipamentos</span>
-          <h1>Temperaturas dos equipamentos</h1>
+          <h1>Medições dos equipamentos</h1>
           <p>
-            Registre e acompanhe medições manuais de temperatura dos
-            equipamentos. Equipamentos não usam sensores no CryoMap.
+            Registre e acompanhe o histórico técnico dos equipamentos:
+            temperatura, pressões, superaquecimento, subresfriamento e vazão de
+            ar. Equipamentos não usam sensores no CryoMap.
           </p>
+
+          {!canCreateMeasurement ? (
+            <p>
+              Seu acesso é somente leitura. Você pode consultar as medições da
+              sua empresa, mas não pode criar novos registros.
+            </p>
+          ) : null}
         </div>
 
-        <button type="button" onClick={openCreateForm}>
-          Nova leitura manual
-        </button>
+        {canCreateMeasurement ? (
+          <button type="button" onClick={openCreateForm}>
+            Nova medição
+          </button>
+        ) : null}
       </header>
 
       <section className="equipment-temperature-readings-summary">
@@ -394,12 +451,12 @@ export function EquipmentTemperatureReadings() {
         />
       </section>
 
-      {isFormOpen ? (
+      {isFormOpen && canCreateMeasurement ? (
         <section className="equipment-temperature-reading-form-panel">
           <div className="equipment-temperature-reading-form-header">
             <div>
-              <span>Leitura manual</span>
-              <h2>Nova temperatura de equipamento</h2>
+              <span>Histórico técnico</span>
+              <h2>Nova medição de equipamento</h2>
             </div>
 
             <button type="button" onClick={closeForm}>
@@ -448,7 +505,7 @@ export function EquipmentTemperatureReadings() {
             </label>
 
             <label>
-              Temperatura °C *
+              Temperatura do equipamento (°C) *
               <input
                 type="number"
                 step="0.1"
@@ -456,7 +513,98 @@ export function EquipmentTemperatureReadings() {
                 onChange={(event) =>
                   updateFormField('temperature', event.target.value)
                 }
-                placeholder="Ex: 7.5"
+                placeholder="Ex: -18.5"
+              />
+            </label>
+
+            <label>
+              Pressão de descarga (psi)
+              <input
+                type="number"
+                step="0.1"
+                value={formData.dischargePressure}
+                onChange={(event) =>
+                  updateFormField('dischargePressure', event.target.value)
+                }
+                placeholder="Ex: 220"
+              />
+            </label>
+
+            <label>
+              Pressão de sucção (psi)
+              <input
+                type="number"
+                step="0.1"
+                value={formData.suctionPressure}
+                onChange={(event) =>
+                  updateFormField('suctionPressure', event.target.value)
+                }
+                placeholder="Ex: 28"
+              />
+            </label>
+
+            <label>
+              Temp. linha de líquido (°C)
+              <input
+                type="number"
+                step="0.1"
+                value={formData.liquidLineTemperature}
+                onChange={(event) =>
+                  updateFormField('liquidLineTemperature', event.target.value)
+                }
+                placeholder="Ex: 32.4"
+              />
+            </label>
+
+            <label>
+              Temp. evaporação (°C)
+              <input
+                type="number"
+                step="0.1"
+                value={formData.evaporationTemperature}
+                onChange={(event) =>
+                  updateFormField('evaporationTemperature', event.target.value)
+                }
+                placeholder="Ex: -24.1"
+              />
+            </label>
+
+            <label>
+              Superaquecimento (°C)
+              <input
+                type="number"
+                step="0.1"
+                value={formData.superheating}
+                onChange={(event) =>
+                  updateFormField('superheating', event.target.value)
+                }
+                placeholder="Ex: 6.5"
+              />
+            </label>
+
+            <label>
+              Subresfriamento (°C)
+              <input
+                type="number"
+                step="0.1"
+                value={formData.subcooling}
+                onChange={(event) =>
+                  updateFormField('subcooling', event.target.value)
+                }
+                placeholder="Ex: 4.2"
+              />
+            </label>
+
+            <label>
+              Vazão de ar (m³/h)
+              <input
+                type="number"
+                step="0.1"
+                value={formData.airFlow}
+                onChange={(event) =>
+                  updateFormField('airFlow', event.target.value)
+                }
+                placeholder="Ex: 1800"
               />
             </label>
 
@@ -467,7 +615,7 @@ export function EquipmentTemperatureReadings() {
                 onChange={(event) =>
                   updateFormField(
                     'source',
-                    event.target.value as EquipmentTemperatureReadingFormData['source'],
+                    event.target.value as EquipmentTemperatureSource,
                   )
                 }
               >
@@ -490,7 +638,9 @@ export function EquipmentTemperatureReadings() {
               Observações
               <textarea
                 value={formData.notes}
-                onChange={(event) => updateFormField('notes', event.target.value)}
+                onChange={(event) =>
+                  updateFormField('notes', event.target.value)
+                }
                 placeholder="Observações sobre a medição..."
                 rows={3}
               />
@@ -508,7 +658,7 @@ export function EquipmentTemperatureReadings() {
               </button>
 
               <button type="submit" disabled={isSaving}>
-                {isSaving ? 'Salvando...' : 'Cadastrar leitura'}
+                {isSaving ? 'Salvando...' : 'Cadastrar medição'}
               </button>
             </div>
           </form>
@@ -519,7 +669,7 @@ export function EquipmentTemperatureReadings() {
         <div className="equipment-temperature-readings-panel-header">
           <div>
             <h2>Histórico de medições</h2>
-            <p>{filteredReadings.length} leitura(s) encontrada(s)</p>
+            <p>{filteredReadings.length} medição(ões) encontrada(s)</p>
           </div>
 
           <div className="equipment-temperature-readings-actions">
@@ -578,9 +728,9 @@ export function EquipmentTemperatureReadings() {
             >
               <option value="">Todos os usuários</option>
 
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
+              {users.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
                 </option>
               ))}
             </select>
@@ -601,12 +751,12 @@ export function EquipmentTemperatureReadings() {
 
             <input
               type="search"
-              placeholder="Buscar por equipamento, usuário, observação..."
+              placeholder="Buscar por equipamento, fluido, pressão..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
 
-            <button type="button" onClick={handleRefresh}>
+            <button type="button" onClick={() => void handleRefresh()}>
               Atualizar
             </button>
           </div>
@@ -616,7 +766,7 @@ export function EquipmentTemperatureReadings() {
           <div className="equipment-temperature-readings-error">
             <strong>{error}</strong>
 
-            <button type="button" onClick={handleRefresh}>
+            <button type="button" onClick={() => void handleRefresh()}>
               Tentar novamente
             </button>
           </div>
@@ -624,9 +774,9 @@ export function EquipmentTemperatureReadings() {
 
         {!error && filteredReadings.length === 0 ? (
           <EmptyState
-  title="Nenhuma leitura encontrada."
-  description="Ajuste os filtros ou registre uma nova temperatura de equipamento."
-/>
+            title="Nenhuma medição encontrada."
+            description="Ajuste os filtros ou registre uma nova medição técnica de equipamento."
+          />
         ) : null}
 
         {!error && filteredReadings.length > 0 ? (
@@ -638,7 +788,11 @@ export function EquipmentTemperatureReadings() {
                   <th>Empresa</th>
                   <th>Sala</th>
                   <th>Equipamento</th>
-                  <th>Temperatura</th>
+                  <th>Temp.</th>
+                  <th>Pressões</th>
+                  <th>Temperaturas técnicas</th>
+                  <th>Super/Sub</th>
+                  <th>Vazão de ar</th>
                   <th>Origem</th>
                   <th>Registrado por</th>
                   <th>Observações</th>
@@ -664,6 +818,9 @@ export function EquipmentTemperatureReadings() {
                       {reading.equipment?.code ? (
                         <small>{reading.equipment.code}</small>
                       ) : null}
+                      {reading.equipment?.refrigerantFluid ? (
+                        <small>Fluido: {reading.equipment.refrigerantFluid}</small>
+                      ) : null}
                     </td>
 
                     <td>
@@ -671,6 +828,35 @@ export function EquipmentTemperatureReadings() {
                         {formatTemperature(reading.temperature)}
                       </span>
                     </td>
+
+                    <td>
+                      <span>
+                        Descarga: {formatPressure(reading.dischargePressure)}
+                      </span>
+                      <small>
+                        Sucção: {formatPressure(reading.suctionPressure)}
+                      </small>
+                    </td>
+
+                    <td>
+                      <span>
+                        Linha líquido:{' '}
+                        {formatTemperature(reading.liquidLineTemperature)}
+                      </span>
+                      <small>
+                        Evaporação:{' '}
+                        {formatTemperature(reading.evaporationTemperature)}
+                      </small>
+                    </td>
+
+                    <td>
+                      <span>
+                        Super: {formatTemperature(reading.superheating)}
+                      </span>
+                      <small>Sub: {formatTemperature(reading.subcooling)}</small>
+                    </td>
+
+                    <td>{formatAirFlow(reading.airFlow)}</td>
 
                     <td>{formatSource(reading.source)}</td>
 
@@ -711,6 +897,20 @@ function optionalValue(value: string) {
   const normalized = value.trim();
 
   return normalized || undefined;
+}
+
+function optionalNumber(value: string) {
+  if (!value.trim()) {
+    return undefined;
+  }
+
+  const normalized = Number(value.replace(',', '.'));
+
+  if (Number.isNaN(normalized)) {
+    return undefined;
+  }
+
+  return normalized;
 }
 
 function optionalIsoDateTime(value: string) {
@@ -818,9 +1018,30 @@ function formatTemperature(value?: number | null) {
   }).format(value)} °C`;
 }
 
+function formatPressure(value?: number | null) {
+  if (value === null || value === undefined) {
+    return '-';
+  }
+
+  return `${new Intl.NumberFormat('pt-BR', {
+    maximumFractionDigits: 1,
+  }).format(value)} psi`;
+}
+
+function formatAirFlow(value?: number | null) {
+  if (value === null || value === undefined) {
+    return '-';
+  }
+
+  return `${new Intl.NumberFormat('pt-BR', {
+    maximumFractionDigits: 1,
+  }).format(value)} m³/h`;
+}
+
 function formatSource(value?: string | null) {
   const labels: Record<string, string> = {
     MANUAL: 'Manual',
+    IMPORT: 'Importação',
   };
 
   return labels[value ?? ''] ?? value ?? '-';
@@ -850,5 +1071,5 @@ function getRequestErrorMessage(error: unknown) {
     }
   }
 
-  return 'Não foi possível cadastrar a leitura do equipamento.';
+  return 'Não foi possível cadastrar a medição do equipamento.';
 }

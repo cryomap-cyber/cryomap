@@ -3,7 +3,9 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './components/AppLayout/AppLayout';
 import {
   allRoles,
+  clientAndAdminRoles,
   managementRoles,
+  technicianAndAdminRoles,
 } from './permissions/role-permissions';
 import { Attachments } from './pages/Attachments/Attachments';
 import { Companies } from './pages/Companies/Companies';
@@ -21,18 +23,6 @@ import { ThermalAlerts } from './pages/ThermalAlerts/ThermalAlerts';
 import { Users } from './pages/Users/Users';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
-const clientAndAdminRoles = [
-  'MASTER_ADMIN',
-  'SUPERVISOR',
-  'CLIENT_USER',
-] as const;
-
-const technicianAndAdminRoles = [
-  'MASTER_ADMIN',
-  'SUPERVISOR',
-  'TECHNICIAN',
-] as const;
-
 export function App() {
   return (
     <Routes>
@@ -47,6 +37,10 @@ export function App() {
             <Route
               path="/temperature-readings"
               element={<TemperatureReadings />}
+            />
+            <Route
+              path="/equipment-temperature-readings"
+              element={<EquipmentTemperatureReadings />}
             />
             <Route path="/thermal-alerts" element={<ThermalAlerts />} />
             <Route path="/attachments" element={<Attachments />} />
@@ -73,10 +67,6 @@ export function App() {
             }
           >
             <Route path="/tasks" element={<Tasks />} />
-            <Route
-              path="/equipment-temperature-readings"
-              element={<EquipmentTemperatureReadings />}
-            />
           </Route>
         </Route>
       </Route>

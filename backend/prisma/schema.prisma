@@ -292,16 +292,23 @@ model RoomTemperatureReading {
 }
 
 model EquipmentTemperatureReading {
-  id              String                     @id @default(uuid())
-  companyId       String                     @map("company_id")
-  roomId          String?                    @map("room_id")
-  equipmentId     String                     @map("equipment_id")
-  createdByUserId String?                    @map("created_by_user_id")
-  temperature     Float
-  source          EquipmentTemperatureSource @default(MANUAL)
-  notes           String?
-  measuredAt      DateTime                   @default(now()) @map("measured_at")
-  createdAt       DateTime                   @default(now()) @map("created_at")
+  id                     String                     @id @default(uuid())
+  companyId              String                     @map("company_id")
+  roomId                 String?                    @map("room_id")
+  equipmentId            String                     @map("equipment_id")
+  createdByUserId        String?                    @map("created_by_user_id")
+  temperature            Float
+  dischargePressure      Float?                     @map("discharge_pressure")
+  suctionPressure        Float?                     @map("suction_pressure")
+  liquidLineTemperature  Float?                     @map("liquid_line_temperature")
+  evaporationTemperature Float?                     @map("evaporation_temperature")
+  superheating           Float?
+  subcooling             Float?
+  airFlow                Float?                     @map("air_flow")
+  source                 EquipmentTemperatureSource @default(MANUAL)
+  notes                  String?
+  measuredAt             DateTime                   @default(now()) @map("measured_at")
+  createdAt              DateTime                   @default(now()) @map("created_at")
 
   company       Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
   room          Room?     @relation(fields: [roomId], references: [id], onDelete: SetNull)

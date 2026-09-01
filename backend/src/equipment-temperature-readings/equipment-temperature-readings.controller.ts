@@ -19,7 +19,6 @@ import { FindEquipmentTemperatureReadingsDto } from './dto/find-equipment-temper
 import { EquipmentTemperatureReadingsService } from './equipment-temperature-readings.service.js';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.MASTER_ADMIN, UserRole.SUPERVISOR, UserRole.TECHNICIAN)
 @Controller('equipment-temperature-readings')
 export class EquipmentTemperatureReadingsController {
   constructor(
@@ -27,6 +26,7 @@ export class EquipmentTemperatureReadingsController {
   ) {}
 
   @Post()
+  @Roles(UserRole.MASTER_ADMIN, UserRole.SUPERVISOR, UserRole.TECHNICIAN)
   create(
     @Body() createDto: CreateEquipmentTemperatureReadingDto,
     @Req() request: AuthenticatedRequest,
@@ -38,6 +38,12 @@ export class EquipmentTemperatureReadingsController {
   }
 
   @Get()
+  @Roles(
+    UserRole.MASTER_ADMIN,
+    UserRole.SUPERVISOR,
+    UserRole.CLIENT_USER,
+    UserRole.TECHNICIAN,
+  )
   findAll(
     @Query() filters: FindEquipmentTemperatureReadingsDto,
     @Req() request: AuthenticatedRequest,
@@ -49,6 +55,12 @@ export class EquipmentTemperatureReadingsController {
   }
 
   @Get(':id')
+  @Roles(
+    UserRole.MASTER_ADMIN,
+    UserRole.SUPERVISOR,
+    UserRole.CLIENT_USER,
+    UserRole.TECHNICIAN,
+  )
   findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     return this.equipmentTemperatureReadingsService.findOne(id, request.user!);
   }

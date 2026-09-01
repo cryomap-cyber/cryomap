@@ -6,6 +6,7 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator';
+
 import { EquipmentTemperatureSource } from '../../generated/prisma/client.js';
 
 export class CreateEquipmentTemperatureReadingDto {
@@ -17,6 +18,34 @@ export class CreateEquipmentTemperatureReadingDto {
 
   @IsNumber()
   temperature!: number;
+
+  @IsOptional()
+  @IsNumber()
+  dischargePressure?: number;
+
+  @IsOptional()
+  @IsNumber()
+  suctionPressure?: number;
+
+  @IsOptional()
+  @IsNumber()
+  liquidLineTemperature?: number;
+
+  @IsOptional()
+  @IsNumber()
+  evaporationTemperature?: number;
+
+  @IsOptional()
+  @IsNumber()
+  superheating?: number;
+
+  @IsOptional()
+  @IsNumber()
+  subcooling?: number;
+
+  @IsOptional()
+  @IsNumber()
+  airFlow?: number;
 
   @IsOptional()
   @IsEnum(EquipmentTemperatureSource)
