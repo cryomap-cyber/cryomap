@@ -3915,3 +3915,66 @@ Testes realizados:
 - Busca por fluido, pressão e temperatura funcionou.
 - Visualização como `CLIENT_USER` foi validada.
 
+## 63.2.3. Gráfico de medições técnicas por equipamento
+
+Foi adicionado um gráfico de colunas na tela `Medições Equip.` para acompanhar a evolução das medições técnicas por equipamento e período.
+
+Objetivo:
+
+- Permitir análise visual das medições técnicas dos equipamentos.
+- Facilitar o acompanhamento de temperatura, pressões, superaquecimento, subresfriamento e vazão de ar.
+- Permitir comparação por período: hoje, 7 dias, 30 dias e 12 meses.
+- Dar ao cliente uma visão clara da evolução técnica dos equipamentos da própria empresa.
+
+Alterações no frontend:
+
+- Instalado o pacote `recharts`.
+- Adicionado painel `Gráfico técnico` na tela `Medições Equip.`.
+- Criado seletor de equipamento.
+- Criado seletor de indicador:
+  - Temperatura;
+  - Pressão de descarga;
+  - Pressão de sucção;
+  - Superaquecimento;
+  - Subresfriamento;
+  - Vazão de ar.
+- Criado seletor de período:
+  - Hoje;
+  - 7 dias;
+  - 30 dias;
+  - 12 meses.
+- Criada montagem dos dados do gráfico a partir do histórico já carregado.
+- Para o período `Hoje`, o gráfico exibe medições por horário.
+- Para 7 e 30 dias, o gráfico agrupa medições por dia.
+- Para 12 meses, o gráfico agrupa medições por mês.
+- Quando há múltiplas medições no mesmo agrupamento, o valor exibido é a média.
+- `CLIENT_USER` consegue visualizar o gráfico em modo somente leitura.
+- `TECHNICIAN`, `MASTER_ADMIN` e `SUPERVISOR` mantêm permissão de criação de medições.
+
+Correções durante a etapa:
+
+- Ajustado o uso do equipamento ativo do gráfico para evitar `setState` síncrono dentro de `useEffect`.
+- O equipamento ativo do gráfico passou a ser derivado com `useMemo`.
+
+Observações técnicas:
+
+- A instalação do `recharts` aumentou o bundle JavaScript.
+- O Vite passou a emitir aviso de chunk maior que 500 kB.
+- O aviso não bloqueia build nem funcionamento.
+- Otimização com lazy loading/code splitting será tratada em etapa futura.
+
+Testes realizados:
+
+- `npm run lint` passou.
+- `npm run build` passou.
+- Tela `Medições Equip.` abriu corretamente.
+- Painel `Gráfico técnico` apareceu.
+- Troca de equipamento funcionou.
+- Troca de indicador funcionou.
+- Troca de período funcionou.
+- Gráfico exibiu dados quando havia medições.
+- Estado vazio apareceu quando não havia dados para o gráfico.
+- `CLIENT_USER` visualizou gráfico e histórico sem botão `Nova medição`.
+- `TECHNICIAN` manteve criação de medições.
+- `MASTER_ADMIN` manteve criação de medições.
+

@@ -1,4 +1,13 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 import { EmptyState } from '../../components/Feedback/EmptyState';
 import { LoadingState } from '../../components/Feedback/LoadingState';
@@ -38,6 +47,84 @@ type EquipmentTemperatureReadingFormData = {
   measuredAt: string;
 };
 
+type ChartMetric =
+  | 'temperature'
+  | 'dischargePressure'
+  | 'suctionPressure'
+  | 'superheating'
+  | 'subcooling'
+  | 'airFlow';
+
+type ChartPeriod = 'TODAY' | 'SEVEN_DAYS' | 'THIRTY_DAYS' | 'TWELVE_MONTHS';
+
+type LoadDataOptions = {
+  companyId?: string;
+  roomId?: string;
+  equipmentId?: string;
+  createdByUserId?: string;
+  startDateValue?: string;
+  endDateValue?: string;
+};
+
+type ChartDataItem = {
+  label: string;
+  value: number;
+  count: number;
+  timestamp: number;
+};
+
+const chartMetricOptions: {
+  value: ChartMetric;
+  label: string;
+}[] = [
+  {
+    value: 'temperature',
+    label: 'Temperatura',
+  },
+  {
+    value: 'dischargePressure',
+    label: 'Pressão de descarga',
+  },
+  {
+    value: 'suctionPressure',
+    label: 'Pressão de sucção',
+  },
+  {
+    value: 'superheating',
+    label: 'Superaquecimento',
+  },
+  {
+    value: 'subcooling',
+    label: 'Subresfriamento',
+  },
+  {
+    value: 'airFlow',
+    label: 'Vazão de ar',
+  },
+];
+
+const chartPeriodOptions: {
+  value: ChartPeriod;
+  label: string;
+}[] = [
+  {
+    value: 'TODAY',
+    label: 'Hoje',
+  },
+  {
+    value: 'SEVEN_DAYS',
+    label: '7 dias',
+  },
+  {
+    value: 'THIRTY_DAYS',
+    label: '30 dias',
+  },
+  {
+    value: 'TWELVE_MONTHS',
+    label: '12 meses',
+  },
+];
+
 const emptyFormData: EquipmentTemperatureReadingFormData = {
   companyId: '',
   equipmentId: '',
@@ -67,6 +154,9 @@ export function EquipmentTemperatureReadings() {
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
   const [selectedCreatedByUserId, setSelectedCreatedByUserId] = useState('');
+  const [selectedChartEquipmentId, setSelectedChartEquipmentId] = useState('');
+  const [chartMetric, setChartMetric] = useState<ChartMetric>('temperature');
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('THIRTY_DAYS');
   const [startDate, setStartDate] = useState(defaultStartDate());
   const [endDate, setEndDate] = useState(defaultEndDate());
   const [search, setSearch] = useState('');
@@ -80,29 +170,37 @@ export function EquipmentTemperatureReadings() {
 
   const canCreateMeasurement = user?.role !== 'CLIENT_USER';
 
-  async function handleRefresh() {
+  async function loadData(options?: LoadDataOptions) {
     setError('');
     setIsLoading(true);
+
+    const nextCompanyId = options?.companyId ?? selectedCompanyId;
+    const nextRoomId = options?.roomId ?? selectedRoomId;
+    const nextEquipmentId = options?.equipmentId ?? selectedEquipmentId;
+    const nextCreatedByUserId =
+      options?.createdByUserId ?? selectedCreatedByUserId;
+    const nextStartDate = options?.startDateValue ?? startDate;
+    const nextEndDate = options?.endDateValue ?? endDate;
 
     try {
       const [companiesData, roomsData, equipmentsData, usersData, readingsData] =
         await Promise.all([
           getCompanies(),
-          getRooms(selectedCompanyId || undefined),
+          getRooms(nextCompanyId || undefined),
           getEquipments({
-            companyId: selectedCompanyId || undefined,
-            roomId: selectedRoomId || undefined,
+            companyId: nextCompanyId || undefined,
+            roomId: nextRoomId || undefined,
           }),
           getUsers({
-            companyId: selectedCompanyId || undefined,
+            companyId: nextCompanyId || undefined,
           }),
           getEquipmentTemperatureReadings({
-            companyId: selectedCompanyId || undefined,
-            roomId: selectedRoomId || undefined,
-            equipmentId: selectedEquipmentId || undefined,
-            createdByUserId: selectedCreatedByUserId || undefined,
-            startDate: optionalStartIsoDate(startDate),
-            endDate: optionalEndIsoDate(endDate),
+            companyId: nextCompanyId || undefined,
+            roomId: nextRoomId || undefined,
+            equipmentId: nextEquipmentId || undefined,
+            createdByUserId: nextCreatedByUserId || undefined,
+            startDate: optionalStartIsoDate(nextStartDate),
+            endDate: optionalEndIsoDate(nextEndDate),
           }),
         ]);
 
@@ -117,6 +215,10 @@ export function EquipmentTemperatureReadings() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function handleRefresh() {
+    await loadData();
   }
 
   useEffect(() => {
@@ -218,6 +320,15 @@ export function EquipmentTemperatureReadings() {
         ) {
           setSelectedCreatedByUserId('');
         }
+
+        if (
+          selectedChartEquipmentId &&
+          !equipmentsData.some(
+            (equipment) => equipment.id === selectedChartEquipmentId,
+          )
+        ) {
+          setSelectedChartEquipmentId('');
+        }
       })
       .catch(() => {
         if (!isMounted) {
@@ -235,7 +346,19 @@ export function EquipmentTemperatureReadings() {
     selectedRoomId,
     selectedEquipmentId,
     selectedCreatedByUserId,
+    selectedChartEquipmentId,
   ]);
+
+  const activeChartEquipmentId = useMemo(() => {
+    if (
+      selectedChartEquipmentId &&
+      equipments.some((equipment) => equipment.id === selectedChartEquipmentId)
+    ) {
+      return selectedChartEquipmentId;
+    }
+
+    return equipments[0]?.id ?? '';
+  }, [equipments, selectedChartEquipmentId]);
 
   const filteredReadings = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -269,6 +392,19 @@ export function EquipmentTemperatureReadings() {
         .includes(normalizedSearch);
     });
   }, [readings, search]);
+
+    const chartData = useMemo(() => {
+    return buildChartData(
+      readings,
+      activeChartEquipmentId,
+      chartMetric,
+      chartPeriod,
+    );
+  }, [readings, activeChartEquipmentId, chartMetric, chartPeriod]);
+
+  const selectedChartEquipment = equipments.find(
+    (equipment) => equipment.id === activeChartEquipmentId,
+  );
 
   const averageTemperature = getAverage(
     readings.map((reading) => reading.temperature),
@@ -339,6 +475,28 @@ export function EquipmentTemperatureReadings() {
     } catch {
       setFormError('Não foi possível carregar equipamentos da empresa.');
     }
+  }
+
+  async function handleChartEquipmentChange(equipmentId: string) {
+    setSelectedChartEquipmentId(equipmentId);
+    setSelectedEquipmentId(equipmentId);
+
+    await loadData({
+      equipmentId,
+    });
+  }
+
+  async function handleChartPeriodChange(period: ChartPeriod) {
+    const range = getChartDateRange(period);
+
+    setChartPeriod(period);
+    setStartDate(range.startDate);
+    setEndDate(range.endDate);
+
+    await loadData({
+      startDateValue: range.startDate,
+      endDateValue: range.endDate,
+    });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -449,6 +607,102 @@ export function EquipmentTemperatureReadings() {
           title="Máxima"
           value={formatTemperature(maximumTemperature)}
         />
+      </section>
+
+      <section className="equipment-temperature-chart-panel">
+        <div className="equipment-temperature-chart-header">
+          <div>
+            <span>Gráfico técnico</span>
+            <h2>Evolução por equipamento</h2>
+            <p>
+              Escolha o equipamento, o indicador e o período para acompanhar as
+              medições em gráfico de colunas.
+            </p>
+          </div>
+
+          <div className="equipment-temperature-chart-actions">
+                       <select
+              value={activeChartEquipmentId}
+              onChange={(event) =>
+                void handleChartEquipmentChange(event.target.value)
+              }
+            >
+              <option value="">Selecione um equipamento</option>
+
+              {equipments.map((equipment) => (
+                <option key={equipment.id} value={equipment.id}>
+                  {equipment.name} — {equipment.code}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={chartMetric}
+              onChange={(event) =>
+                setChartMetric(event.target.value as ChartMetric)
+              }
+            >
+              {chartMetricOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={chartPeriod}
+              onChange={(event) =>
+                void handleChartPeriodChange(event.target.value as ChartPeriod)
+              }
+            >
+              {chartPeriodOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {selectedChartEquipment ? (
+          <p className="equipment-temperature-chart-context">
+            Equipamento selecionado:{' '}
+            <strong>
+              {selectedChartEquipment.name} — {selectedChartEquipment.code}
+            </strong>
+            {selectedChartEquipment.refrigerantFluid
+              ? ` | Fluido: ${selectedChartEquipment.refrigerantFluid}`
+              : ''}
+          </p>
+        ) : null}
+
+        {chartData.length > 0 ? (
+          <div className="equipment-temperature-chart-wrapper">
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="label" />
+                <YAxis tickFormatter={(value) => compactNumber(Number(value))} />
+                <Tooltip
+                  formatter={(value) =>
+                    formatMetricValue(Number(value), chartMetric)
+                  }
+                  labelFormatter={(label) => `Período: ${label}`}
+                />
+                <Bar
+                  dataKey="value"
+                  name={getChartMetricLabel(chartMetric)}
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <EmptyState
+            title="Sem dados para o gráfico."
+            description="Selecione outro equipamento, período ou indicador para visualizar medições."
+          />
+        )}
       </section>
 
       {isFormOpen && canCreateMeasurement ? (
@@ -680,6 +934,7 @@ export function EquipmentTemperatureReadings() {
                 setSelectedRoomId('');
                 setSelectedEquipmentId('');
                 setSelectedCreatedByUserId('');
+                setSelectedChartEquipmentId('');
               }}
             >
               <option value="">Todas as empresas</option>
@@ -696,6 +951,7 @@ export function EquipmentTemperatureReadings() {
               onChange={(event) => {
                 setSelectedRoomId(event.target.value);
                 setSelectedEquipmentId('');
+                setSelectedChartEquipmentId('');
               }}
             >
               <option value="">Todas as salas</option>
@@ -709,7 +965,10 @@ export function EquipmentTemperatureReadings() {
 
             <select
               value={selectedEquipmentId}
-              onChange={(event) => setSelectedEquipmentId(event.target.value)}
+              onChange={(event) => {
+                setSelectedEquipmentId(event.target.value);
+                setSelectedChartEquipmentId(event.target.value);
+              }}
             >
               <option value="">Todos os equipamentos</option>
 
@@ -969,14 +1228,13 @@ function getMaximum(values: number[]) {
 }
 
 function defaultStartDate() {
-  const date = new Date();
-  date.setDate(date.getDate() - 30);
+  const range = getChartDateRange('THIRTY_DAYS');
 
-  return date.toISOString().slice(0, 10);
+  return range.startDate;
 }
 
 function defaultEndDate() {
-  return new Date().toISOString().slice(0, 10);
+  return toDateInputValue(new Date());
 }
 
 function optionalStartIsoDate(value: string) {
@@ -1045,6 +1303,194 @@ function formatSource(value?: string | null) {
   };
 
   return labels[value ?? ''] ?? value ?? '-';
+}
+
+function buildChartData(
+  readings: EquipmentTemperatureReading[],
+  equipmentId: string,
+  metric: ChartMetric,
+  period: ChartPeriod,
+): ChartDataItem[] {
+  if (!equipmentId) {
+    return [];
+  }
+
+  const range = getChartDateRange(period);
+  const start = new Date(`${range.startDate}T00:00:00`);
+  const end = new Date(`${range.endDate}T23:59:59`);
+
+  const validReadings = readings
+    .map((reading) => {
+      const measuredAt = new Date(reading.measuredAt);
+      const value = reading[metric];
+
+      if (
+        reading.equipmentId !== equipmentId ||
+        Number.isNaN(measuredAt.getTime()) ||
+        measuredAt < start ||
+        measuredAt > end ||
+        typeof value !== 'number'
+      ) {
+        return null;
+      }
+
+      return {
+        measuredAt,
+        value,
+      };
+    })
+    .filter((reading): reading is { measuredAt: Date; value: number } => {
+      return reading !== null;
+    })
+    .sort((first, second) => {
+      return first.measuredAt.getTime() - second.measuredAt.getTime();
+    });
+
+  if (period === 'TODAY') {
+    return validReadings.map((reading) => ({
+      label: reading.measuredAt.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      value: roundDecimal(reading.value),
+      count: 1,
+      timestamp: reading.measuredAt.getTime(),
+    }));
+  }
+
+  const groupedReadings = new Map<
+    string,
+    {
+      label: string;
+      total: number;
+      count: number;
+      timestamp: number;
+    }
+  >();
+
+  validReadings.forEach((reading) => {
+    const bucket = getChartBucket(reading.measuredAt, period);
+    const current = groupedReadings.get(bucket.key);
+
+    if (!current) {
+      groupedReadings.set(bucket.key, {
+        label: bucket.label,
+        total: reading.value,
+        count: 1,
+        timestamp: bucket.timestamp,
+      });
+
+      return;
+    }
+
+    current.total += reading.value;
+    current.count += 1;
+  });
+
+  return Array.from(groupedReadings.values())
+    .sort((first, second) => first.timestamp - second.timestamp)
+    .map((item) => ({
+      label: item.label,
+      value: roundDecimal(item.total / item.count),
+      count: item.count,
+      timestamp: item.timestamp,
+    }));
+}
+
+function getChartBucket(date: Date, period: ChartPeriod) {
+  if (period === 'TWELVE_MONTHS') {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const bucketDate = new Date(year, month, 1);
+
+    return {
+      key: `${year}-${String(month + 1).padStart(2, '0')}`,
+      label: bucketDate.toLocaleDateString('pt-BR', {
+        month: 'short',
+        year: '2-digit',
+      }),
+      timestamp: bucketDate.getTime(),
+    };
+  }
+
+  const bucketDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  );
+
+  return {
+    key: toDateInputValue(bucketDate),
+    label: bucketDate.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+    }),
+    timestamp: bucketDate.getTime(),
+  };
+}
+
+function getChartDateRange(period: ChartPeriod) {
+  const end = new Date();
+  const start = new Date();
+
+  if (period === 'TODAY') {
+    return {
+      startDate: toDateInputValue(start),
+      endDate: toDateInputValue(end),
+    };
+  }
+
+  if (period === 'SEVEN_DAYS') {
+    start.setDate(start.getDate() - 6);
+  }
+
+  if (period === 'THIRTY_DAYS') {
+    start.setDate(start.getDate() - 29);
+  }
+
+  if (period === 'TWELVE_MONTHS') {
+    start.setMonth(start.getMonth() - 11);
+    start.setDate(1);
+  }
+
+  return {
+    startDate: toDateInputValue(start),
+    endDate: toDateInputValue(end),
+  };
+}
+
+function toDateInputValue(date: Date) {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+
+  return localDate.toISOString().slice(0, 10);
+}
+
+function roundDecimal(value: number) {
+  return Math.round(value * 10) / 10;
+}
+
+function getChartMetricLabel(metric: ChartMetric) {
+  const option = chartMetricOptions.find((item) => item.value === metric);
+
+  return option?.label ?? metric;
+}
+
+function formatMetricValue(value: number, metric: ChartMetric) {
+  if (metric === 'dischargePressure' || metric === 'suctionPressure') {
+    return formatPressure(value);
+  }
+
+  if (metric === 'airFlow') {
+    return formatAirFlow(value);
+  }
+
+  return formatTemperature(value);
+}
+
+function compactNumber(value: number) {
+  return new Intl.NumberFormat('pt-BR', {
+    maximumFractionDigits: 1,
+  }).format(value);
 }
 
 function getRequestErrorMessage(error: unknown) {
