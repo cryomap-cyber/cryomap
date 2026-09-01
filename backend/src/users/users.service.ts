@@ -103,7 +103,7 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto, actor: AuthUser) {
     const targetUser = await this.findOne(id);
 
-    await this.ensureActorCanUpdateUser(targetUser, updateUserDto, actor);
+    this.ensureActorCanUpdateUser(targetUser, updateUserDto, actor);
 
     const data: Prisma.UserUpdateInput = {};
 
@@ -217,7 +217,7 @@ export class UsersService {
     }
   }
 
-  private async ensureActorCanUpdateUser(
+  private ensureActorCanUpdateUser(
     targetUser: SelectedUser,
     updateUserDto: UpdateUserDto,
     actor: AuthUser,
