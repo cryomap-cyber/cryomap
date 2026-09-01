@@ -14,6 +14,8 @@ import type { EquipmentTemperatureReading } from '../../types/equipment-temperat
 import type { Room } from '../../types/room';
 import type { User } from '../../types/user';
 import './EquipmentTemperatureReadings.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type EquipmentTemperatureReadingFormData = {
   companyId: string;
@@ -350,7 +352,12 @@ export function EquipmentTemperatureReadings() {
   }
 
   if (isLoading) {
-    return <p>Carregando leituras de equipamentos...</p>;
+    return (
+  <LoadingState
+    title="Carregando leituras de equipamentos..."
+    description="Buscando temperaturas manuais dos equipamentos."
+  />
+);
   }
 
   return (
@@ -616,9 +623,10 @@ export function EquipmentTemperatureReadings() {
         ) : null}
 
         {!error && filteredReadings.length === 0 ? (
-          <p className="equipment-temperature-readings-empty">
-            Nenhuma leitura encontrada para os filtros selecionados.
-          </p>
+          <EmptyState
+  title="Nenhuma leitura encontrada."
+  description="Ajuste os filtros ou registre uma nova temperatura de equipamento."
+/>
         ) : null}
 
         {!error && filteredReadings.length > 0 ? (

@@ -12,6 +12,8 @@ import type { Company } from '../../types/company';
 import type { Room } from '../../types/room';
 import type { Sensor, SensorStatus, SensorType } from '../../types/sensor';
 import './Sensors.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type SensorFormData = {
   companyId: string;
@@ -328,7 +330,12 @@ export function Sensors() {
   }
 
   if (isLoading) {
-    return <p>Carregando sensores...</p>;
+    return (
+  <LoadingState
+    title="Carregando sensores..."
+    description="Buscando sensores vinculados às salas."
+  />
+);
   }
 
   return (
@@ -543,7 +550,10 @@ export function Sensors() {
         ) : null}
 
         {!error && filteredSensors.length === 0 ? (
-          <p className="sensors-empty">Nenhum sensor encontrado.</p>
+          <EmptyState
+  title="Nenhum sensor encontrado."
+  description="Cadastre um sensor ou ajuste os filtros para visualizar resultados."
+/>
         ) : null}
 
         {!error && filteredSensors.length > 0 ? (

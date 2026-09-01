@@ -1,0 +1,75 @@
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 180px;
+  padding: 24px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(34, 193, 255, 0.12),
+      transparent 20rem
+    ),
+    var(--color-surface-soft);
+  color: var(--color-text);
+  text-align: left;
+}
+
+.empty-state.compact {
+  min-height: 120px;
+  padding: 18px;
+  border-radius: 18px;
+}
+
+.empty-state-icon {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(9, 109, 242, 0.12),
+      rgba(34, 193, 255, 0.18)
+    );
+  border: 1px solid var(--color-border-soft);
+}
+
+.empty-state-icon span {
+  position: absolute;
+  inset: 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(9, 109, 242, 0.14);
+}
+
+.empty-state strong {
+  display: block;
+  color: var(--color-primary-dark);
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.empty-state p {
+  margin: 5px 0 0;
+  color: var(--color-muted);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .empty-state {
+    flex-direction: column;
+    min-height: 150px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .empty-state.compact {
+    min-height: 110px;
+  }
+}

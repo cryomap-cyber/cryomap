@@ -12,6 +12,8 @@ import type { Room } from '../../types/room';
 import type { Sensor } from '../../types/sensor';
 import type { TemperatureReading } from '../../types/temperature-reading';
 import './TemperatureReadings.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type TemperatureReadingFormData = {
   companyId: string;
@@ -366,7 +368,12 @@ export function TemperatureReadings() {
   }
 
   if (isLoading) {
-    return <p>Carregando leituras de temperatura...</p>;
+    return (
+  <LoadingState
+    title="Carregando leituras de temperatura..."
+    description="Buscando histórico térmico das salas."
+  />
+);
   }
 
   return (
@@ -648,9 +655,10 @@ export function TemperatureReadings() {
         ) : null}
 
         {!error && filteredReadings.length === 0 ? (
-          <p className="temperature-readings-empty">
-            Nenhuma leitura encontrada para os filtros selecionados.
-          </p>
+         <EmptyState
+  title="Nenhuma leitura encontrada."
+  description="Ajuste os filtros ou registre uma nova leitura de temperatura."
+/>
         ) : null}
 
         {!error && filteredReadings.length > 0 ? (

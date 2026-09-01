@@ -8,6 +8,8 @@ import {
 } from '../../services/companies';
 import type { Company } from '../../types/company';
 import './Companies.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type CompanyFormData = {
   name: string;
@@ -217,7 +219,12 @@ export function Companies() {
   }
 
   if (isLoading) {
-    return <p>Carregando empresas...</p>;
+    return (
+  <LoadingState
+    title="Carregando empresas..."
+    description="Buscando empresas cadastradas."
+  />
+);
   }
 
   return (
@@ -386,7 +393,10 @@ export function Companies() {
         ) : null}
 
         {!error && filteredCompanies.length === 0 ? (
-          <p className="companies-empty">Nenhuma empresa encontrada.</p>
+          <EmptyState
+  title="Nenhuma empresa encontrada."
+  description="Cadastre uma empresa ou ajuste os filtros para visualizar resultados."
+/>
         ) : null}
 
         {!error && filteredCompanies.length > 0 ? (

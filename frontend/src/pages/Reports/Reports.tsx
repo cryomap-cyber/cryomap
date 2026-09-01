@@ -20,6 +20,8 @@ import type { Equipment } from '../../types/equipment';
 import type { Room } from '../../types/room';
 import type { User } from '../../types/user';
 import './Reports.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type ReportsState = {
   operationalSummary: ReportData | null;
@@ -266,7 +268,12 @@ export function Reports() {
   }
 
   if (isLoading) {
-    return <p>Carregando relatórios...</p>;
+    return (
+  <LoadingState
+    title="Carregando relatórios..."
+    description="Gerando resumos operacionais e indicadores."
+  />
+);
   }
 
   return (
@@ -498,7 +505,11 @@ function ReportPanel({ title, data }: ReportPanelProps) {
       </div>
 
       {entries.length === 0 ? (
-        <p className="report-empty">Nenhum dado carregado.</p>
+        <EmptyState
+  compact
+  title="Nenhum dado carregado."
+  description="Aplique os filtros para atualizar este painel."
+/>
       ) : (
         <div className="report-key-value-list">
           {entries.map(([key, value]) => (

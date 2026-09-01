@@ -17,6 +17,8 @@ import type { Room } from '../../types/room';
 import type { Task, TaskPriority, TaskStatus } from '../../types/task';
 import type { User } from '../../types/user';
 import './Tasks.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type TaskFormData = {
   companyId: string;
@@ -430,7 +432,12 @@ export function Tasks() {
   }
 
   if (isLoading) {
-    return <p>Carregando tarefas...</p>;
+    return (
+  <LoadingState
+    title="Carregando tarefas..."
+    description="Buscando chamados e pendências operacionais."
+  />
+);
   }
 
   return (
@@ -734,7 +741,10 @@ export function Tasks() {
         ) : null}
 
         {!error && filteredTasks.length === 0 ? (
-          <p className="tasks-empty">Nenhuma tarefa encontrada.</p>
+          <EmptyState
+  title="Nenhuma tarefa encontrada."
+  description="Cadastre uma tarefa ou ajuste os filtros para visualizar resultados."
+/>
         ) : null}
 
         {!error && filteredTasks.length > 0 ? (

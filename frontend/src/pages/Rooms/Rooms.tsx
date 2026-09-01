@@ -10,6 +10,8 @@ import {
 import type { Company } from '../../types/company';
 import type { Room, ThermalStatus } from '../../types/room';
 import './Rooms.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type RoomFormData = {
   name: string;
@@ -283,7 +285,12 @@ export function Rooms() {
   }
 
   if (isLoading) {
-    return <p>Carregando salas...</p>;
+    return (
+  <LoadingState
+    title="Carregando salas..."
+    description="Buscando salas e status térmico."
+  />
+);
   }
 
   return (
@@ -493,7 +500,10 @@ export function Rooms() {
         ) : null}
 
         {!error && filteredRooms.length === 0 ? (
-          <p className="rooms-empty">Nenhuma sala encontrada.</p>
+          <p className="rooms-empty">Nenhuma sala encontrad<EmptyState
+  title="Nenhuma sala encontrada."
+  description="Cadastre uma sala ou ajuste os filtros para visualizar resultados."
+/>a.</p>
         ) : null}
 
         {!error && filteredRooms.length > 0 ? (

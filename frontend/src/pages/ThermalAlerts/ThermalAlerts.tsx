@@ -21,6 +21,8 @@ import type {
   ThermalAlertType,
 } from '../../types/thermal-alert';
 import './ThermalAlerts.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 const alertTypeOptions: { value: ThermalAlertType; label: string }[] = [
   {
@@ -367,7 +369,12 @@ export function ThermalAlerts() {
   }
 
   if (isLoading) {
-    return <p>Carregando alertas térmicos...</p>;
+    return (
+  <LoadingState
+    title="Carregando alertas térmicos..."
+    description="Buscando ocorrências de temperatura fora dos limites."
+  />
+);
   }
 
   return (
@@ -539,9 +546,10 @@ export function ThermalAlerts() {
         ) : null}
 
         {!error && filteredAlerts.length === 0 ? (
-          <p className="thermal-alerts-empty">
-            Nenhum alerta térmico encontrado para os filtros selecionados.
-          </p>
+          <EmptyState
+  title="Nenhum alerta térmico encontrado."
+  description="Não há alertas para os filtros selecionados no momento."
+/>
         ) : null}
 
         {!error && filteredAlerts.length > 0 ? (

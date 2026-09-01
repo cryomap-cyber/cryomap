@@ -20,6 +20,8 @@ import type { Task } from '../../types/task';
 import type { User } from '../../types/user';
 import './ServiceRecords.css';
 import { useAuth } from '../../contexts/useAuth';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type ServiceRecordFormData = {
   taskId: string;
@@ -530,7 +532,12 @@ export function ServiceRecords() {
   }
 
   if (isLoading) {
-    return <p>Carregando atendimentos...</p>;
+    return (
+  <LoadingState
+    title="Carregando atendimentos..."
+    description="Buscando registros técnicos."
+  />
+);
   }
 
   return (
@@ -822,9 +829,10 @@ export function ServiceRecords() {
         ) : null}
 
         {!error && filteredServiceRecords.length === 0 ? (
-          <p className="service-records-empty">
-            Nenhum atendimento encontrado.
-          </p>
+          <EmptyState
+  title="Nenhum atendimento encontrado."
+  description="Registre um atendimento ou ajuste os filtros para visualizar resultados."
+/>
         ) : null}
 
         {!error && filteredServiceRecords.length > 0 ? (

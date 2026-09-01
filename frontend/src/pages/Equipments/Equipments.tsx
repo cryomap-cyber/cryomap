@@ -12,6 +12,8 @@ import type { Company } from '../../types/company';
 import type { Equipment, EquipmentStatus } from '../../types/equipment';
 import type { Room } from '../../types/room';
 import './Equipments.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type EquipmentFormData = {
   companyId: string;
@@ -364,7 +366,12 @@ const payload: CreateEquipmentPayload = {
   }
 
   if (isLoading) {
-    return <p>Carregando equipamentos...</p>;
+    return (
+  <LoadingState
+    title="Carregando equipamentos..."
+    description="Buscando equipamentos cadastrados."
+  />
+);
   }
 
   return (
@@ -642,7 +649,10 @@ const payload: CreateEquipmentPayload = {
         ) : null}
 
         {!error && filteredEquipments.length === 0 ? (
-          <p className="equipments-empty">Nenhum equipamento encontrado.</p>
+          <EmptyState
+  title="Nenhum equipamento encontrado."
+  description="Cadastre um equipamento ou ajuste os filtros para visualizar resultados."
+/>
         ) : null}
 
         {!error && filteredEquipments.length > 0 ? (

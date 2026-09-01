@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 import type { UserRole } from '../types/user';
+import { LoadingState } from '../components/Feedback/LoadingState';
 
 type ProtectedRouteProps = {
   allowedRoles?: UserRole[];
@@ -13,7 +14,10 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   if (isLoading) {
     return (
       <div className="page-center">
-        <p>Carregando CryoMap...</p>
+        <LoadingState
+  title="Carregando CryoMap..."
+  description="Validando sessão e permissões de acesso."
+/>
       </div>
     );
   }

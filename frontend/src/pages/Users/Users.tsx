@@ -12,6 +12,7 @@ import type { Company } from '../../types/company';
 import type { User, UserRole, UserStatus } from '../../types/user';
 import { useAuth } from '../../contexts/useAuth';
 import './Users.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
 
 const userRoleOptions: { value: UserRole; label: string }[] = [
   {
@@ -364,7 +365,12 @@ export function Users() {
   }
 
   if (isLoading) {
-    return <p>Carregando usuários...</p>;
+    return (
+  <LoadingState
+    title="Carregando usuários..."
+    description="Buscando usuários e permissões cadastradas."
+  />
+);
   }
 
   return (

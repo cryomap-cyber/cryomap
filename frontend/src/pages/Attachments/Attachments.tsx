@@ -17,6 +17,8 @@ import type { ServiceRecord } from '../../types/service-record';
 import type { Task } from '../../types/task';
 import type { User } from '../../types/user';
 import './Attachments.css';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { EmptyState } from '../../components/Feedback/EmptyState';
 
 const attachmentTypeOptions: { value: AttachmentType; label: string }[] = [
   {
@@ -474,7 +476,12 @@ export function Attachments() {
   }
 
   if (isLoading) {
-    return <p>Carregando anexos...</p>;
+    return (
+  <LoadingState
+    title="Carregando anexos..."
+    description="Buscando arquivos vinculados ao sistema."
+  />
+);
   }
 
   return (
@@ -742,9 +749,10 @@ export function Attachments() {
         ) : null}
 
         {!error && filteredAttachments.length === 0 ? (
-          <p className="attachments-empty">
-            Nenhum anexo encontrado para os filtros selecionados.
-          </p>
+          <EmptyState
+  title="Nenhum anexo encontrado."
+  description="Envie um anexo ou ajuste os filtros para visualizar arquivos."
+/>
         ) : null}
 
         {!error && filteredAttachments.length > 0 ? (
