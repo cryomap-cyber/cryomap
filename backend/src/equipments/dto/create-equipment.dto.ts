@@ -1,4 +1,5 @@
 import {
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
@@ -6,6 +7,8 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+
+import { RefrigerantFluid } from '../../generated/prisma/client.js';
 
 export class CreateEquipmentDto {
   @IsUUID()
@@ -39,6 +42,10 @@ export class CreateEquipmentDto {
   @IsString()
   @MaxLength(120)
   serialNumber?: string;
+
+  @IsOptional()
+  @IsEnum(RefrigerantFluid)
+  refrigerantFluid?: RefrigerantFluid;
 
   @IsOptional()
   @IsNumber()

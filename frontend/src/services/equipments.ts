@@ -1,5 +1,9 @@
+import type {
+  Equipment,
+  EquipmentStatus,
+  RefrigerantFluid,
+} from '../types/equipment';
 import { api } from './api';
-import type { Equipment, EquipmentStatus } from '../types/equipment';
 
 export type GetEquipmentsParams = {
   companyId?: string;
@@ -14,6 +18,7 @@ export type CreateEquipmentPayload = {
   model?: string;
   manufacturer?: string;
   serialNumber?: string;
+  refrigerantFluid?: RefrigerantFluid;
   setpoint?: number;
   delta?: number;
   notes?: string;

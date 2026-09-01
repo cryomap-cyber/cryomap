@@ -1,4 +1,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+
+import { EmptyState } from '../../components/Feedback/EmptyState';
+import { LoadingState } from '../../components/Feedback/LoadingState';
 import { getCompanies } from '../../services/companies';
 import {
   createEquipment,
@@ -9,11 +12,43 @@ import {
 } from '../../services/equipments';
 import { getRooms } from '../../services/rooms';
 import type { Company } from '../../types/company';
-import type { Equipment, EquipmentStatus } from '../../types/equipment';
+import type {
+  Equipment,
+  EquipmentStatus,
+  RefrigerantFluid,
+} from '../../types/equipment';
 import type { Room } from '../../types/room';
 import './Equipments.css';
-import { LoadingState } from '../../components/Feedback/LoadingState';
-import { EmptyState } from '../../components/Feedback/EmptyState';
+
+const refrigerantFluidOptions: {
+  value: RefrigerantFluid;
+  label: string;
+}[] = [
+  {
+    value: 'R22',
+    label: 'R22',
+  },
+  {
+    value: 'R32',
+    label: 'R32',
+  },
+  {
+    value: 'R410A',
+    label: 'R410A',
+  },
+  {
+    value: 'R134A',
+    label: 'R134A',
+  },
+  {
+    value: 'R404A',
+    label: 'R404A',
+  },
+  {
+    value: 'R407C',
+    label: 'R407C',
+  },
+];
 
 type EquipmentFormData = {
   companyId: string;
@@ -23,6 +58,7 @@ type EquipmentFormData = {
   manufacturer: string;
   model: string;
   serialNumber: string;
+  refrigerantFluid: RefrigerantFluid | '';
   setpoint: string;
   delta: string;
   status: EquipmentStatus;
@@ -37,6 +73,7 @@ const emptyFormData: EquipmentFormData = {
   manufacturer: '',
   model: '',
   serialNumber: '',
+  refrigerantFluid: '',
   setpoint: '',
   delta: '',
   status: 'ACTIVE',
@@ -58,8 +95,7 @@ export function Equipments() {
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(
     null,
   );
-  const [formData, setFormData] =
-    useState<EquipmentFormData>(emptyFormData);
+  const [formData, setFormData] = useState<EquipmentFormData>(emptyFormData);
 
   async function handleRefresh() {
     setError('');
@@ -186,19 +222,20 @@ export function Equipments() {
 
     return equipments.filter((equipment) => {
       return [
-  equipment.name,
-  equipment.code,
-  equipment.manufacturer ?? '',
-  equipment.model ?? '',
-  equipment.serialNumber ?? '',
-  equipment.company?.name ?? '',
-  equipment.room?.name ?? '',
-  equipment.status,
-  equipment.notes ?? '',
-  String(equipment.setpoint ?? ''),
-  String(equipment.delta ?? ''),
-  String(equipment.currentTemperature ?? ''),
-]
+        equipment.name,
+        equipment.code,
+        equipment.manufacturer ?? '',
+        equipment.model ?? '',
+        equipment.serialNumber ?? '',
+        equipment.refrigerantFluid ?? '',
+        equipment.company?.name ?? '',
+        equipment.room?.name ?? '',
+        equipment.status,
+        equipment.notes ?? '',
+        String(equipment.setpoint ?? ''),
+        String(equipment.delta ?? ''),
+        String(equipment.currentTemperature ?? ''),
+      ]
         .join(' ')
         .toLowerCase()
         .includes(normalizedSearch);
@@ -251,18 +288,19 @@ export function Equipments() {
   function openEditForm(equipment: Equipment) {
     setEditingEquipment(equipment);
     setFormData({
-  companyId: equipment.companyId,
-  roomId: equipment.roomId ?? '',
-  name: equipment.name,
-  code: equipment.code,
-  manufacturer: equipment.manufacturer ?? '',
-  model: equipment.model ?? '',
-  serialNumber: equipment.serialNumber ?? '',
-  setpoint: formatNumberForInput(equipment.setpoint),
-  delta: formatNumberForInput(equipment.delta),
-  status: equipment.status,
-  notes: equipment.notes ?? '',
-});
+      companyId: equipment.companyId,
+      roomId: equipment.roomId ?? '',
+      name: equipment.name,
+      code: equipment.code,
+      manufacturer: equipment.manufacturer ?? '',
+      model: equipment.model ?? '',
+      serialNumber: equipment.serialNumber ?? '',
+      refrigerantFluid: equipment.refrigerantFluid ?? '',
+      setpoint: formatNumberForInput(equipment.setpoint),
+      delta: formatNumberForInput(equipment.delta),
+      status: equipment.status,
+      notes: equipment.notes ?? '',
+    });
     setFormError('');
     setIsFormOpen(true);
   }
@@ -278,9 +316,9 @@ export function Equipments() {
     setFormError('');
   }
 
-  function updateFormField(
-    field: keyof EquipmentFormData,
-    value: string,
+  function updateFormField<K extends keyof EquipmentFormData>(
+    field: K,
+    value: EquipmentFormData[K],
   ) {
     setFormData((current) => ({
       ...current,
@@ -310,22 +348,23 @@ export function Equipments() {
     }
 
     const setpoint = optionalNumber(formData.setpoint);
-const delta = optionalNumber(formData.delta);
+    const delta = optionalNumber(formData.delta);
 
-const payload: CreateEquipmentPayload = {
-  companyId: formData.companyId,
-  roomId: editingEquipment
-    ? formData.roomId || null
-    : optionalValue(formData.roomId),
-  name: formData.name.trim(),
-  code: formData.code.trim().toUpperCase(),
-  manufacturer: optionalValue(formData.manufacturer),
-  model: optionalValue(formData.model),
-  serialNumber: optionalValue(formData.serialNumber),
-  setpoint,
-  delta,
-  notes: optionalValue(formData.notes),
-};
+    const payload: CreateEquipmentPayload = {
+      companyId: formData.companyId,
+      roomId: editingEquipment
+        ? formData.roomId || null
+        : optionalValue(formData.roomId),
+      name: formData.name.trim(),
+      code: formData.code.trim().toUpperCase(),
+      manufacturer: optionalValue(formData.manufacturer),
+      model: optionalValue(formData.model),
+      serialNumber: optionalValue(formData.serialNumber),
+      refrigerantFluid: optionalRefrigerantFluid(formData.refrigerantFluid),
+      setpoint,
+      delta,
+      notes: optionalValue(formData.notes),
+    };
 
     setIsSaving(true);
 
@@ -367,11 +406,11 @@ const payload: CreateEquipmentPayload = {
 
   if (isLoading) {
     return (
-  <LoadingState
-    title="Carregando equipamentos..."
-    description="Buscando equipamentos cadastrados."
-  />
-);
+      <LoadingState
+        title="Carregando equipamentos..."
+        description="Buscando equipamentos cadastrados."
+      />
+    );
   }
 
   return (
@@ -478,63 +517,83 @@ const payload: CreateEquipmentPayload = {
             </label>
 
             <label>
-  Fabricante
-  <input
-    value={formData.manufacturer}
-    onChange={(event) =>
-      updateFormField('manufacturer', event.target.value)
-    }
-    placeholder="Ex: Bitzer"
-  />
-</label>
+              Fabricante
+              <input
+                value={formData.manufacturer}
+                onChange={(event) =>
+                  updateFormField('manufacturer', event.target.value)
+                }
+                placeholder="Ex: Bitzer"
+              />
+            </label>
 
-<label>
-  Modelo
-  <input
-    value={formData.model}
-    onChange={(event) =>
-      updateFormField('model', event.target.value)
-    }
-    placeholder="Ex: 4NES-14Y"
-  />
-</label>
+            <label>
+              Modelo
+              <input
+                value={formData.model}
+                onChange={(event) =>
+                  updateFormField('model', event.target.value)
+                }
+                placeholder="Ex: 4NES-14Y"
+              />
+            </label>
 
-<label>
-  Número de série
-  <input
-    value={formData.serialNumber}
-    onChange={(event) =>
-      updateFormField('serialNumber', event.target.value)
-    }
-    placeholder="Ex: SN123456"
-  />
-</label>
+            <label>
+              Número de série
+              <input
+                value={formData.serialNumber}
+                onChange={(event) =>
+                  updateFormField('serialNumber', event.target.value)
+                }
+                placeholder="Ex: SN123456"
+              />
+            </label>
 
-<label>
-  Setpoint °C
-  <input
-    type="number"
-    step="0.1"
-    value={formData.setpoint}
-    onChange={(event) =>
-      updateFormField('setpoint', event.target.value)
-    }
-    placeholder="Ex: -18"
-  />
-</label>
+            <label>
+              Fluido refrigerante
+              <select
+                value={formData.refrigerantFluid}
+                onChange={(event) =>
+                  updateFormField(
+                    'refrigerantFluid',
+                    event.target.value as EquipmentFormData['refrigerantFluid'],
+                  )
+                }
+              >
+                <option value="">Não informado</option>
 
-<label>
-  Delta °C
-  <input
-    type="number"
-    step="0.1"
-    value={formData.delta}
-    onChange={(event) =>
-      updateFormField('delta', event.target.value)
-    }
-    placeholder="Ex: 2"
-  />
+                {refrigerantFluidOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
+            <label>
+              Setpoint °C
+              <input
+                type="number"
+                step="0.1"
+                value={formData.setpoint}
+                onChange={(event) =>
+                  updateFormField('setpoint', event.target.value)
+                }
+                placeholder="Ex: -18"
+              />
+            </label>
+
+            <label>
+              Delta °C
+              <input
+                type="number"
+                step="0.1"
+                value={formData.delta}
+                onChange={(event) =>
+                  updateFormField('delta', event.target.value)
+                }
+                placeholder="Ex: 2"
+              />
             </label>
 
             {editingEquipment ? (
@@ -627,7 +686,7 @@ const payload: CreateEquipmentPayload = {
 
             <input
               type="search"
-              placeholder="Buscar por nome, código, marca..."
+              placeholder="Buscar por nome, código, fluido..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -650,9 +709,9 @@ const payload: CreateEquipmentPayload = {
 
         {!error && filteredEquipments.length === 0 ? (
           <EmptyState
-  title="Nenhum equipamento encontrado."
-  description="Cadastre um equipamento ou ajuste os filtros para visualizar resultados."
-/>
+            title="Nenhum equipamento encontrado."
+            description="Cadastre um equipamento ou ajuste os filtros para visualizar resultados."
+          />
         ) : null}
 
         {!error && filteredEquipments.length > 0 ? (
@@ -666,6 +725,7 @@ const payload: CreateEquipmentPayload = {
                   <th>Sala</th>
                   <th>Fabricante / Modelo</th>
                   <th>Nº de série</th>
+                  <th>Fluido</th>
                   <th>Setpoint / Delta</th>
                   <th>Temperatura manual</th>
                   <th>Status</th>
@@ -689,15 +749,19 @@ const payload: CreateEquipmentPayload = {
                     <td>{equipment.room?.name ?? '-'}</td>
 
                     <td>
-                    <span>{equipment.manufacturer ?? '-'}</span>
-                    <small>{equipment.model ?? '-'}</small>
+                      <span>{equipment.manufacturer ?? '-'}</span>
+                      <small>{equipment.model ?? '-'}</small>
                     </td>
 
                     <td>{equipment.serialNumber ?? '-'}</td>
 
+                    <td>{formatRefrigerantFluid(equipment.refrigerantFluid)}</td>
+
                     <td>
-                    <span>Setpoint: {formatTemperature(equipment.setpoint)}</span>
-                    <small>Delta: {formatTemperature(equipment.delta)}</small>
+                      <span>
+                        Setpoint: {formatTemperature(equipment.setpoint)}
+                      </span>
+                      <small>Delta: {formatTemperature(equipment.delta)}</small>
                     </td>
 
                     <td>
@@ -725,7 +789,7 @@ const payload: CreateEquipmentPayload = {
                         <button
                           type="button"
                           disabled={equipment.status === 'INACTIVE'}
-                          onClick={() => handleInactivate(equipment)}
+                          onClick={() => void handleInactivate(equipment)}
                         >
                           Inativar
                         </button>
@@ -782,6 +846,14 @@ function EquipmentStatusBadge({ status }: EquipmentStatusBadgeProps) {
   );
 }
 
+function formatRefrigerantFluid(value?: RefrigerantFluid | null) {
+  if (!value) {
+    return '-';
+  }
+
+  return value;
+}
+
 function formatTemperature(value?: number | null) {
   if (value === null || value === undefined) {
     return '-';
@@ -826,6 +898,10 @@ function optionalNumber(value: string) {
   return normalized;
 }
 
+function optionalRefrigerantFluid(value: RefrigerantFluid | '') {
+  return value || undefined;
+}
+
 function getRequestErrorMessage(error: unknown) {
   if (
     typeof error === 'object' &&
@@ -837,11 +913,7 @@ function getRequestErrorMessage(error: unknown) {
   ) {
     const data = error.response.data;
 
-    if (
-      typeof data === 'object' &&
-      data !== null &&
-      'message' in data
-    ) {
+    if (typeof data === 'object' && data !== null && 'message' in data) {
       const message = data.message;
 
       if (typeof message === 'string') {

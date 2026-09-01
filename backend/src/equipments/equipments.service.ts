@@ -24,6 +24,7 @@ const equipmentSelect = {
   model: true,
   manufacturer: true,
   serialNumber: true,
+  refrigerantFluid: true,
   setpoint: true,
   delta: true,
   currentTemperature: true,
@@ -88,6 +89,7 @@ export class EquipmentsService {
       model: createEquipmentDto.model?.trim(),
       manufacturer: createEquipmentDto.manufacturer?.trim(),
       serialNumber: createEquipmentDto.serialNumber?.trim(),
+      refrigerantFluid: createEquipmentDto.refrigerantFluid,
       setpoint: createEquipmentDto.setpoint,
       delta: createEquipmentDto.delta,
       status: EquipmentStatus.ACTIVE,
@@ -259,6 +261,10 @@ export class EquipmentsService {
 
     if (updateEquipmentDto.serialNumber !== undefined) {
       data.serialNumber = updateEquipmentDto.serialNumber?.trim() || null;
+    }
+
+    if (updateEquipmentDto.refrigerantFluid !== undefined) {
+      data.refrigerantFluid = updateEquipmentDto.refrigerantFluid;
     }
 
     if (updateEquipmentDto.setpoint !== undefined) {

@@ -7,7 +7,11 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { EquipmentStatus } from '../../generated/prisma/client.js';
+
+import {
+  EquipmentStatus,
+  RefrigerantFluid,
+} from '../../generated/prisma/client.js';
 
 export class UpdateEquipmentDto {
   @IsOptional()
@@ -44,6 +48,10 @@ export class UpdateEquipmentDto {
   @IsString()
   @MaxLength(120)
   serialNumber?: string | null;
+
+  @IsOptional()
+  @IsEnum(RefrigerantFluid)
+  refrigerantFluid?: RefrigerantFluid | null;
 
   @IsOptional()
   @IsNumber()

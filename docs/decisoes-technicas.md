@@ -3718,3 +3718,74 @@ Resultado:
 - O controle de acesso segue preservado.
 - A base visual está padronizada.
 - O próximo passo recomendado é definir o escopo final da beta utilizável e iniciar as próximas funcionalidades prioritárias.
+
+## 63.1. Fluido refrigerante no cadastro de equipamentos
+
+Foi adicionado o campo de fluido refrigerante ao cadastro de equipamentos do CryoMap.
+
+Objetivo:
+
+- Permitir registrar o fluido refrigerante utilizado em cada equipamento.
+- Preparar a base para medições técnicas mais completas dos equipamentos.
+- Manter o fluido refrigerante como dado cadastral do equipamento.
+- Separar dados fixos do equipamento de medições variáveis que serão registradas em histórico próprio.
+
+Valores disponíveis:
+
+- R22
+- R32
+- R410A
+- R134A
+- R404A
+- R407C
+
+Alterações no backend:
+
+- Criado o enum `RefrigerantFluid` no Prisma.
+- Adicionado o campo opcional `refrigerantFluid` no model `Equipment`.
+- O campo foi mapeado no banco como `refrigerant_fluid`.
+- Criada e aplicada a migration `add_equipment_refrigerant_fluid`.
+- Atualizado o Prisma Client.
+- Atualizado `CreateEquipmentDto`.
+- Atualizado `UpdateEquipmentDto`.
+- Atualizado `EquipmentsService` para criar, atualizar e retornar o campo.
+
+Alterações no frontend:
+
+- Atualizado o type `Equipment`.
+- Criado o type `RefrigerantFluid`.
+- Atualizados os payloads de criação e edição de equipamentos.
+- Adicionado campo `Fluido refrigerante` no formulário de equipamentos.
+- Adicionado select com as opções de fluido refrigerante.
+- Adicionada exibição do fluido refrigerante na tabela de equipamentos.
+- Campo de busca passou a considerar o fluido refrigerante.
+
+Decisão técnica:
+
+- O fluido refrigerante foi salvo como campo cadastral do equipamento.
+- Pressões, temperaturas de linha, superaquecimento, subresfriamento e vazão de ar não foram adicionados diretamente ao equipamento.
+- Esses dados serão tratados em etapa própria como histórico técnico de medições do equipamento, pois variam ao longo do tempo.
+
+Regras mantidas:
+
+- Nenhuma permissão foi alterada.
+- Nenhuma regra de acesso por empresa foi alterada.
+- Nenhuma regra de vínculo entre equipamento e sala foi alterada.
+- Sensores continuam vinculados às salas, não aos equipamentos.
+- Temperatura do equipamento continua sendo informada manualmente.
+
+Testes realizados:
+
+- `npx prisma format` passou.
+- `npx prisma migrate dev --name add_equipment_refrigerant_fluid` passou.
+- `npx prisma generate` passou.
+- Backend `npm run lint` passou.
+- Backend `npm run build` passou.
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela de Equipamentos validada no navegador.
+- Criação de equipamento com fluido refrigerante validada.
+- Edição de equipamento com fluido refrigerante validada.
+- Exibição do fluido na tabela validada.
+- Busca por fluido refrigerante validada.
+- Filtros por empresa e sala continuaram funcionando.
