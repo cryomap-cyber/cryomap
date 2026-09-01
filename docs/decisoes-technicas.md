@@ -3553,3 +3553,168 @@ Testes realizados:
 - Navegação geral revisada.
 - Permissões por perfil revisadas.
 - Responsividade revisada.
+
+## 60.6. Ajuste visual do login e estados de interface
+
+Foi realizada uma etapa de acabamento visual da interface do CryoMap após a revisão visual geral da beta.
+
+Ajustes realizados:
+
+- A tela de login foi redesenhada para seguir a identidade visual atual do CryoMap.
+- O fundo da tela de login passou a usar a paleta azul/ciano da marca.
+- O painel lateral do login recebeu gradiente mais alinhado ao restante do sistema.
+- O card de login recebeu borda, sombra, raio, foco e espaçamento padronizados.
+- A logo do CryoMap foi mantida e recebeu tratamento visual mais consistente.
+- Campos de e-mail e senha foram padronizados.
+- O botão de login recebeu o padrão visual principal do sistema.
+- O estado de erro do login foi mantido funcional e visualmente coerente.
+
+Componentes criados:
+
+- `frontend/src/components/Feedback/LoadingState.tsx`
+- `frontend/src/components/Feedback/LoadingState.css`
+- `frontend/src/components/Feedback/EmptyState.tsx`
+- `frontend/src/components/Feedback/EmptyState.css`
+
+Estados de carregamento:
+
+- Estados simples de carregamento foram substituídos pelo componente `LoadingState`.
+- O componente passou a ser usado nas telas principais e na rota protegida.
+- O objetivo foi evitar textos simples soltos como `Carregando...` e melhorar a percepção visual durante carregamentos.
+
+Estados vazios:
+
+- Estados simples de lista vazia foram substituídos pelo componente `EmptyState`.
+- O componente passou a ser usado nas principais telas com listagens e painéis.
+- O Dashboard manteve estados próprios já existentes.
+
+Decisão técnica:
+
+- Os estados de erro das telas foram mapeados, mas não foram alterados nesta etapa.
+- A decisão foi manter os blocos de erro atuais por enquanto, evitando ampliar o escopo da etapa.
+- Erros de formulário, erro de login e mensagens específicas de backend também foram preservados.
+
+Arquivos principais alterados:
+
+- `frontend/src/pages/Login/Login.css`
+- `frontend/src/components/Feedback/LoadingState.tsx`
+- `frontend/src/components/Feedback/LoadingState.css`
+- `frontend/src/components/Feedback/EmptyState.tsx`
+- `frontend/src/components/Feedback/EmptyState.css`
+- Telas principais que passaram a importar `LoadingState`
+- Telas principais que passaram a importar `EmptyState`
+- `frontend/src/routes/ProtectedRoute.tsx`
+
+Regras mantidas:
+
+- Nenhuma regra de negócio foi alterada.
+- Nenhuma permissão foi alterada.
+- Nenhuma rota foi alterada.
+- Nenhum endpoint do backend foi alterado.
+- A autenticação permaneceu igual.
+- O controle de acesso por perfil permaneceu igual.
+
+Testes realizados:
+
+- `npm run lint` passou.
+- `npm run build` passou.
+- Execução em desenvolvimento validada com `npm run dev`.
+- Login validado.
+- Redirecionamento para o Dashboard validado.
+- Estados de carregamento validados.
+- Estados vazios validados.
+- Navegação entre telas validada.
+- Permissões por perfil preservadas.
+- Responsividade validada.
+
+## 61. Revisão de beta antes de novas funcionalidades
+
+Foi realizada uma revisão técnica e funcional da beta atual do CryoMap após a rodada de melhorias visuais.
+
+Objetivos:
+
+- Confirmar estabilidade do projeto antes de iniciar novas funcionalidades.
+- Validar frontend, backend, banco de dados e containers.
+- Corrigir pendências de lint.
+- Confirmar que os fluxos principais continuam funcionando.
+- Confirmar que as permissões por perfil continuam preservadas.
+- Confirmar que o projeto está pronto para planejamento das próximas etapas.
+
+Ajustes técnicos realizados:
+
+- Corrigidos problemas de lint no backend.
+- Removido `async` desnecessário em método de validação de usuários.
+- Removido `await` correspondente na chamada desse método.
+- Ajustado `void bootstrap()` no `main.ts` para evitar promise flutuante.
+- Corrigido teste e2e padrão para usar a resposta atual da API CryoMap.
+- Backend passou a rodar `npm run lint` sem erros e sem warnings.
+
+Validações de ambiente:
+
+- Git estava limpo.
+- Branch `main` estava sincronizada com `origin/main`.
+- PostgreSQL estava rodando via Docker.
+- Container do PostgreSQL estava saudável.
+- Banco `cryomap` estava acessível.
+- Tabelas principais estavam presentes no banco.
+
+Tabelas verificadas:
+
+- `companies`
+- `users`
+- `rooms`
+- `equipments`
+- `sensors`
+- `room_temperature_readings`
+- `equipment_temperature_readings`
+- `tasks`
+- `service_records`
+- `attachments`
+- `thermal_alerts`
+- `app_settings`
+- `_prisma_migrations`
+
+Validações do frontend:
+
+- `npm run lint` passou.
+- `npm run build` passou.
+- Frontend executado em desenvolvimento.
+- Login validado.
+- Dashboard validado.
+- Menu lateral validado.
+- Navegação entre telas validada.
+- Logout validado.
+- Rotas protegidas validadas.
+
+Validações do backend:
+
+- `npm run lint` passou sem erros e sem warnings.
+- `npm run build` passou.
+- Backend executado em desenvolvimento.
+- Endpoint raiz `/` validado.
+- Login em `/auth/login` validado.
+- Sessão em `/auth/me` validada.
+- Endpoints principais como `/companies`, `/rooms` e `/dashboard/overview` validados.
+
+Validação por perfil:
+
+- MASTER_ADMIN manteve acesso completo.
+- SUPERVISOR manteve acesso administrativo conforme regra atual.
+- SUPERVISOR continuou sem permissão indevida sobre o administrador master.
+- CLIENT_USER manteve acesso somente às telas permitidas.
+- CLIENT_USER continuou sem acesso a Empresas, Usuários, Chamados/Tarefas e Temperaturas dos equipamentos.
+- CLIENT_USER continuou em modo somente consulta onde aplicável.
+- CLIENT_USER continuou com dados escopados à própria empresa.
+- TECHNICIAN manteve acesso às telas operacionais permitidas.
+- TECHNICIAN continuou sem acesso a Empresas, Usuários, Sensores e Relatórios.
+- TECHNICIAN continuou com ações operacionais permitidas.
+- Hierarquia do administrador master permaneceu preservada.
+
+Resultado:
+
+- A beta atual está estável para seguir para as próximas etapas.
+- O projeto está com frontend e backend compilando corretamente.
+- O projeto está com lint limpo.
+- O controle de acesso segue preservado.
+- A base visual está padronizada.
+- O próximo passo recomendado é definir o escopo final da beta utilizável e iniciar as próximas funcionalidades prioritárias.
