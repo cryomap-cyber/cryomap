@@ -13,12 +13,14 @@ export type ServiceRecord = {
   startedAt: string;
   finishedAt?: string | null;
   downtimeMinutes?: number | null;
+  standardizedProblem?: string | null;
   problemFound?: string | null;
   servicePerformed?: string | null;
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
+
   task?: {
     id: string;
     title: string;
@@ -29,18 +31,21 @@ export type ServiceRecord = {
     finishedAt?: string | null;
     completedAt?: string | null;
   } | null;
+
   company?: {
     id: string;
     name: string;
     cnpj?: string | null;
     status?: string | null;
   } | null;
+
   room?: {
     id: string;
     name: string;
     thermalStatus?: ThermalStatus | null;
     currentTemperature?: number | null;
   } | null;
+
   equipment?: {
     id: string;
     name: string;
@@ -48,6 +53,7 @@ export type ServiceRecord = {
     status?: EquipmentStatus | null;
     currentTemperature?: number | null;
   } | null;
+
   technician?: {
     id: string;
     name: string;

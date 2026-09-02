@@ -1,7 +1,12 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+
+import { EmptyState } from '../../components/Feedback/EmptyState';
+import { LoadingState } from '../../components/Feedback/LoadingState';
+import { useAuth } from '../../contexts/useAuth';
 import { getCompanies } from '../../services/companies';
 import { getEquipments } from '../../services/equipments';
 import { getRooms } from '../../services/rooms';
+import { getServiceProblemSuggestions } from '../../services/service-problem-suggestions';
 import {
   createServiceRecord,
   getServiceRecords,
@@ -15,19 +20,18 @@ import { getUsers } from '../../services/users';
 import type { Company } from '../../types/company';
 import type { Equipment } from '../../types/equipment';
 import type { Room } from '../../types/room';
+import type { ServiceProblemSuggestion } from '../../types/service-problem-suggestion';
 import type { ServiceRecord } from '../../types/service-record';
 import type { Task } from '../../types/task';
 import type { User } from '../../types/user';
 import './ServiceRecords.css';
-import { useAuth } from '../../contexts/useAuth';
-import { LoadingState } from '../../components/Feedback/LoadingState';
-import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type ServiceRecordFormData = {
   taskId: string;
   technicianId: string;
   startedAt: string;
   finishedAt: string;
+  standardizedProblem: string;
   problemFound: string;
   servicePerformed: string;
   notes: string;
@@ -38,6 +42,7 @@ const emptyFormData: ServiceRecordFormData = {
   technicianId: '',
   startedAt: '',
   finishedAt: '',
+  standardizedProblem: '',
   problemFound: '',
   servicePerformed: '',
   notes: '',
@@ -54,6 +59,9 @@ export function ServiceRecords() {
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [problemSuggestions, setProblemSuggestions] = useState<
+    ServiceProblemSuggestion[]
+  >([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
@@ -67,6 +75,8 @@ export function ServiceRecords() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isProblemSuggestionsOpen, setIsProblemSuggestionsOpen] =
+    useState(false);
   const [editingRecord, setEditingRecord] = useState<ServiceRecord | null>(
     null,
   );
@@ -85,6 +95,7 @@ export function ServiceRecords() {
         tasksData,
         usersData,
         serviceRecordsData,
+        problemSuggestionsData,
       ] = await Promise.all([
         getCompanies(),
         getRooms(selectedCompanyId || undefined),
@@ -109,6 +120,7 @@ export function ServiceRecords() {
           startDate: optionalStartIsoDate(startDate),
           endDate: optionalEndIsoDate(endDate),
         }),
+        getServiceProblemSuggestions(),
       ]);
 
       setCompanies(companiesData);
@@ -117,6 +129,7 @@ export function ServiceRecords() {
       setTasks(tasksData);
       setUsers(usersData);
       setServiceRecords(serviceRecordsData);
+      setProblemSuggestions(problemSuggestionsData);
     } catch {
       setError('Não foi possível carregar os atendimentos.');
     } finally {
@@ -134,6 +147,7 @@ export function ServiceRecords() {
       getTasks(),
       getUsers(),
       getServiceRecords(),
+      getServiceProblemSuggestions(),
     ])
       .then(
         ([
@@ -143,6 +157,7 @@ export function ServiceRecords() {
           tasksData,
           usersData,
           serviceRecordsData,
+          problemSuggestionsData,
         ]) => {
           if (!isMounted) {
             return;
@@ -154,6 +169,7 @@ export function ServiceRecords() {
           setTasks(tasksData);
           setUsers(usersData);
           setServiceRecords(serviceRecordsData);
+          setProblemSuggestions(problemSuggestionsData);
         },
       )
       .catch(() => {
@@ -247,7 +263,7 @@ export function ServiceRecords() {
 
           if (
             selectedTechnicianId &&
-            !usersData.some((user) => user.id === selectedTechnicianId)
+            !usersData.some((item) => item.id === selectedTechnicianId)
           ) {
             setSelectedTechnicianId('');
           }
@@ -290,6 +306,7 @@ export function ServiceRecords() {
         serviceRecord.equipment?.code ?? '',
         serviceRecord.technician?.name ?? '',
         serviceRecord.technician?.email ?? '',
+        serviceRecord.standardizedProblem ?? '',
         serviceRecord.problemFound ?? '',
         serviceRecord.servicePerformed ?? '',
         serviceRecord.notes ?? '',
@@ -300,6 +317,31 @@ export function ServiceRecords() {
         .includes(normalizedSearch);
     });
   }, [serviceRecords, search]);
+
+  const filteredProblemSuggestions = useMemo(() => {
+    const normalizedSearch = normalizeSearchText(
+      formData.standardizedProblem,
+    );
+
+    if (!normalizedSearch) {
+      return problemSuggestions.slice(0, 6);
+    }
+
+    return problemSuggestions
+      .filter((suggestion) => {
+        return [
+          suggestion.title,
+          suggestion.normalizedTitle,
+          suggestion.description ?? '',
+        ]
+          .join(' ')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .includes(normalizedSearch);
+      })
+      .slice(0, 6);
+  }, [problemSuggestions, formData.standardizedProblem]);
 
   const formTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -322,8 +364,8 @@ export function ServiceRecords() {
   }, [tasks, formData.taskId]);
 
   const formTechnicians = useMemo(() => {
-    return users.filter((user) => {
-      if (user.status !== 'ACTIVE') {
+    return users.filter((item) => {
+      if (item.status !== 'ACTIVE') {
         return false;
       }
 
@@ -331,11 +373,11 @@ export function ServiceRecords() {
         return true;
       }
 
-      if (!user.companyId) {
+      if (!item.companyId) {
         return true;
       }
 
-      return user.companyId === selectedTaskForForm.companyId;
+      return item.companyId === selectedTaskForForm.companyId;
     });
   }, [users, selectedTaskForForm]);
 
@@ -360,8 +402,9 @@ export function ServiceRecords() {
 
   function openCreateForm() {
     if (!canManageServiceRecords) {
-       return;
-      }
+      return;
+    }
+
     setEditingRecord(null);
     setFormData({
       ...emptyFormData,
@@ -370,24 +413,28 @@ export function ServiceRecords() {
       startedAt: currentDateTimeInput(),
     });
     setFormError('');
+    setIsProblemSuggestionsOpen(false);
     setIsFormOpen(true);
   }
 
   function openEditForm(serviceRecord: ServiceRecord) {
     if (!canManageServiceRecords) {
-  return;
+      return;
     }
+
     setEditingRecord(serviceRecord);
     setFormData({
       taskId: serviceRecord.taskId,
       technicianId: serviceRecord.technicianId ?? '',
       startedAt: formatDateTimeInput(serviceRecord.startedAt),
       finishedAt: formatDateTimeInput(serviceRecord.finishedAt),
+      standardizedProblem: serviceRecord.standardizedProblem ?? '',
       problemFound: serviceRecord.problemFound ?? '',
       servicePerformed: serviceRecord.servicePerformed ?? '',
       notes: serviceRecord.notes ?? '',
     });
     setFormError('');
+    setIsProblemSuggestionsOpen(false);
     setIsFormOpen(true);
   }
 
@@ -400,6 +447,7 @@ export function ServiceRecords() {
     setEditingRecord(null);
     setFormData(emptyFormData);
     setFormError('');
+    setIsProblemSuggestionsOpen(false);
   }
 
   function updateFormField(field: keyof ServiceRecordFormData, value: string) {
@@ -409,8 +457,17 @@ export function ServiceRecords() {
     }));
   }
 
+  function handleProblemSuggestionSelect(title: string) {
+    updateFormField('standardizedProblem', title);
+    setIsProblemSuggestionsOpen(false);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!canManageServiceRecords) {
+      return;
+    }
 
     setFormError('');
 
@@ -436,6 +493,7 @@ export function ServiceRecords() {
           technicianId: formData.technicianId || null,
           startedAt: optionalIsoDateTime(formData.startedAt),
           finishedAt: nullableIsoDateTime(formData.finishedAt),
+          standardizedProblem: nullableValue(formData.standardizedProblem),
           problemFound: nullableValue(formData.problemFound),
           servicePerformed: nullableValue(formData.servicePerformed),
           notes: nullableValue(formData.notes),
@@ -448,6 +506,7 @@ export function ServiceRecords() {
           technicianId: optionalValue(formData.technicianId),
           startedAt: optionalIsoDateTime(formData.startedAt),
           finishedAt: optionalIsoDateTime(formData.finishedAt),
+          standardizedProblem: optionalValue(formData.standardizedProblem),
           problemFound: optionalValue(formData.problemFound),
           servicePerformed: optionalValue(formData.servicePerformed),
           notes: optionalValue(formData.notes),
@@ -467,8 +526,9 @@ export function ServiceRecords() {
 
   async function handleFinish(serviceRecord: ServiceRecord) {
     if (!canManageServiceRecords) {
-  return;
-  }
+      return;
+    }
+
     const confirmed = window.confirm(
       `Deseja finalizar o atendimento da tarefa "${serviceRecord.task?.title ?? serviceRecord.taskId}"?`,
     );
@@ -490,8 +550,9 @@ export function ServiceRecords() {
 
   async function handleReopen(serviceRecord: ServiceRecord) {
     if (!canManageServiceRecords) {
-  return;
-  }
+      return;
+    }
+
     const confirmed = window.confirm(
       `Deseja reabrir o atendimento da tarefa "${serviceRecord.task?.title ?? serviceRecord.taskId}"?`,
     );
@@ -513,8 +574,9 @@ export function ServiceRecords() {
 
   async function handleRemove(serviceRecord: ServiceRecord) {
     if (!canManageServiceRecords) {
-  return;
-  }
+      return;
+    }
+
     const confirmed = window.confirm(
       `Deseja realmente remover o atendimento da tarefa "${serviceRecord.task?.title ?? serviceRecord.taskId}"?`,
     );
@@ -533,11 +595,11 @@ export function ServiceRecords() {
 
   if (isLoading) {
     return (
-  <LoadingState
-    title="Carregando atendimentos..."
-    description="Buscando registros técnicos."
-  />
-);
+      <LoadingState
+        title="Carregando atendimentos..."
+        description="Buscando registros técnicos."
+      />
+    );
   }
 
   return (
@@ -548,14 +610,14 @@ export function ServiceRecords() {
           <h1>Atendimentos</h1>
           <p>
             Acompanhe registros de atendimento técnico, tempo parado,
-            equipamentos afetados e responsáveis.
+            equipamentos afetados, problema padronizado e responsáveis.
           </p>
         </div>
 
         {canManageServiceRecords ? (
-      <button type="button" onClick={openCreateForm}>
-         Novo atendimento
-       </button>
+          <button type="button" onClick={openCreateForm}>
+            Novo atendimento
+          </button>
         ) : null}
       </header>
 
@@ -616,9 +678,9 @@ export function ServiceRecords() {
               >
                 <option value="">Usar responsável da tarefa/usuário atual</option>
 
-                {formTechnicians.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
+                {formTechnicians.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
                   </option>
                 ))}
               </select>
@@ -645,6 +707,67 @@ export function ServiceRecords() {
                 }
               />
             </label>
+
+            <div className="service-record-form-wide service-record-problem-field">
+              <label htmlFor="standardizedProblem">
+                Problema/componente
+                <input
+                  id="standardizedProblem"
+                  value={formData.standardizedProblem}
+                  onChange={(event) => {
+                    updateFormField(
+                      'standardizedProblem',
+                      event.target.value,
+                    );
+                    setIsProblemSuggestionsOpen(true);
+                  }}
+                  onFocus={() => setIsProblemSuggestionsOpen(true)}
+                  onBlur={() => {
+                    window.setTimeout(() => {
+                      setIsProblemSuggestionsOpen(false);
+                    }, 120);
+                  }}
+                  placeholder="Digite ou selecione uma sugestão. Ex: Compressor travou"
+                  autoComplete="off"
+                />
+                <small className="service-record-problem-help">
+                  Você pode selecionar uma sugestão cadastrada ou escrever um
+                  problema novo livremente.
+                </small>
+              </label>
+
+              {isProblemSuggestionsOpen &&
+              filteredProblemSuggestions.length > 0 ? (
+                <div className="service-record-suggestions">
+                  {filteredProblemSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.id}
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() =>
+                        handleProblemSuggestionSelect(suggestion.title)
+                      }
+                    >
+                      <strong>{suggestion.title}</strong>
+                      {suggestion.description ? (
+                        <small>{suggestion.description}</small>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              {formData.standardizedProblem.trim() &&
+              !isExistingProblemSuggestion(
+                formData.standardizedProblem,
+                problemSuggestions,
+              ) ? (
+                <small className="service-record-free-text-hint">
+                  Este texto será salvo no atendimento mesmo não estando nas
+                  sugestões cadastradas.
+                </small>
+              ) : null}
+            </div>
 
             <label className="service-record-form-wide">
               Problema encontrado
@@ -784,9 +907,9 @@ export function ServiceRecords() {
             >
               <option value="">Todos os técnicos</option>
 
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
+              {users.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
                 </option>
               ))}
             </select>
@@ -807,12 +930,12 @@ export function ServiceRecords() {
 
             <input
               type="search"
-              placeholder="Buscar por tarefa, técnico, equipamento..."
+              placeholder="Buscar por tarefa, problema, técnico..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
 
-            <button type="button" onClick={handleRefresh}>
+            <button type="button" onClick={() => void handleRefresh()}>
               Atualizar
             </button>
           </div>
@@ -822,7 +945,7 @@ export function ServiceRecords() {
           <div className="service-records-error">
             <strong>{error}</strong>
 
-            <button type="button" onClick={handleRefresh}>
+            <button type="button" onClick={() => void handleRefresh()}>
               Tentar novamente
             </button>
           </div>
@@ -830,9 +953,9 @@ export function ServiceRecords() {
 
         {!error && filteredServiceRecords.length === 0 ? (
           <EmptyState
-  title="Nenhum atendimento encontrado."
-  description="Registre um atendimento ou ajuste os filtros para visualizar resultados."
-/>
+            title="Nenhum atendimento encontrado."
+            description="Registre um atendimento ou ajuste os filtros para visualizar resultados."
+          />
         ) : null}
 
         {!error && filteredServiceRecords.length > 0 ? (
@@ -850,7 +973,8 @@ export function ServiceRecords() {
                   <th>Início</th>
                   <th>Fim</th>
                   <th>Tempo parado</th>
-                  <th>Problema</th>
+                  <th>Problema padrão</th>
+                  <th>Problema detalhado</th>
                   <th>Serviço</th>
                   <th>Ações</th>
                 </tr>
@@ -907,46 +1031,59 @@ export function ServiceRecords() {
                       </strong>
                     </td>
 
+                    <td>
+                      {serviceRecord.standardizedProblem ? (
+                        <strong className="service-record-standardized-problem">
+                          {serviceRecord.standardizedProblem}
+                        </strong>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+
                     <td>{serviceRecord.problemFound || '-'}</td>
 
                     <td>{serviceRecord.servicePerformed || '-'}</td>
 
                     <td>
-  {canManageServiceRecords ? (
-    <div className="service-record-row-actions">
-      <button type="button" onClick={() => openEditForm(serviceRecord)}>
-        Editar
-      </button>
+                      {canManageServiceRecords ? (
+                        <div className="service-record-row-actions">
+                          <button
+                            type="button"
+                            onClick={() => openEditForm(serviceRecord)}
+                          >
+                            Editar
+                          </button>
 
-      {!serviceRecord.finishedAt ? (
-        <button
-          type="button"
-          onClick={() => void handleFinish(serviceRecord)}
-        >
-          Finalizar
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={() => void handleReopen(serviceRecord)}
-        >
-          Reabrir
-        </button>
-      )}
+                          {!serviceRecord.finishedAt ? (
+                            <button
+                              type="button"
+                              onClick={() => void handleFinish(serviceRecord)}
+                            >
+                              Finalizar
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => void handleReopen(serviceRecord)}
+                            >
+                              Reabrir
+                            </button>
+                          )}
 
-      <button
-        type="button"
-        onClick={() => void handleRemove(serviceRecord)}
-      >
-        Remover
-      </button>
-    </div>
-  ) : (
-    <span className="service-record-readonly-badge">
-      Somente consulta
-    </span>
-  )}
-</td>
+                          <button
+                            type="button"
+                            onClick={() => void handleRemove(serviceRecord)}
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="service-record-readonly-badge">
+                          Somente consulta
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -983,7 +1120,9 @@ type ServiceRecordStatusBadgeProps = {
   finishedAt?: string | null;
 };
 
-function ServiceRecordStatusBadge({ finishedAt }: ServiceRecordStatusBadgeProps) {
+function ServiceRecordStatusBadge({
+  finishedAt,
+}: ServiceRecordStatusBadgeProps) {
   if (finishedAt) {
     return <span className="service-record-status finished">Finalizado</span>;
   }
@@ -1095,6 +1234,29 @@ function formatMinutes(value?: number | null) {
   return `${hours}h ${minutes}min`;
 }
 
+function normalizeSearchText(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function isExistingProblemSuggestion(
+  value: string,
+  suggestions: ServiceProblemSuggestion[],
+) {
+  const normalizedValue = normalizeSearchText(value);
+
+  if (!normalizedValue) {
+    return true;
+  }
+
+  return suggestions.some((suggestion) => {
+    return normalizeSearchText(suggestion.title) === normalizedValue;
+  });
+}
+
 function getRequestErrorMessage(error: unknown) {
   if (
     typeof error === 'object' &&
@@ -1106,11 +1268,7 @@ function getRequestErrorMessage(error: unknown) {
   ) {
     const data = error.response.data;
 
-    if (
-      typeof data === 'object' &&
-      data !== null &&
-      'message' in data
-    ) {
+    if (typeof data === 'object' && data !== null && 'message' in data) {
       const message = data.message;
 
       if (typeof message === 'string') {

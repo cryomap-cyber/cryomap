@@ -238,7 +238,7 @@
 
 .service-records-table {
   width: 100%;
-  min-width: 1320px;
+  min-width: 1460px;
   border-collapse: collapse;
 }
 
@@ -287,6 +287,16 @@
   color: #8a9aaa;
   margin-top: 4px;
   max-width: 280px;
+}
+
+.service-record-standardized-problem {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(9, 109, 242, 0.08);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .service-record-status {
@@ -441,6 +451,76 @@
   grid-column: 1 / -1;
 }
 
+.service-record-problem-field {
+  position: relative;
+  display: grid;
+  gap: 8px;
+}
+
+.service-record-problem-help,
+.service-record-free-text-hint {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.service-record-free-text-hint {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.service-record-suggestions {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(237, 247, 255, 0.96)
+    );
+  box-shadow: 0 18px 44px rgba(3, 20, 63, 0.12);
+}
+
+.service-record-suggestions button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.service-record-suggestions button:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-soft);
+  transform: translateY(-1px);
+}
+
+.service-record-suggestions button strong {
+  color: var(--color-primary-dark);
+  font-size: 13px;
+}
+
+.service-record-suggestions button small {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .service-record-form-error {
   color: var(--color-danger-text);
   background: var(--color-danger-bg);
@@ -584,7 +664,7 @@
   }
 
   .service-records-table {
-    min-width: 1080px;
+    min-width: 1220px;
     font-size: 13px;
   }
 
@@ -662,7 +742,7 @@
   }
 
   .service-records-table {
-    min-width: 980px;
+    min-width: 1080px;
     font-size: 12px;
   }
 

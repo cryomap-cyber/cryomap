@@ -1,5 +1,5 @@
-import { api } from './api';
 import type { ServiceRecord } from '../types/service-record';
+import { api } from './api';
 
 export type GetServiceRecordsParams = {
   taskId?: string;
@@ -16,6 +16,7 @@ export type CreateServiceRecordPayload = {
   technicianId?: string;
   startedAt?: string;
   finishedAt?: string;
+  standardizedProblem?: string;
   problemFound?: string;
   servicePerformed?: string;
   notes?: string;
@@ -25,6 +26,7 @@ export type UpdateServiceRecordPayload = {
   technicianId?: string | null;
   startedAt?: string;
   finishedAt?: string | null;
+  standardizedProblem?: string | null;
   problemFound?: string | null;
   servicePerformed?: string | null;
   notes?: string | null;

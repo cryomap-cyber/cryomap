@@ -4094,3 +4094,47 @@ Testes realizados:
   - Curto na inversora;
   - Vazamento de fluido.
 - Busca por `compressor` retornou a sugestão `Compressor travou`.
+
+## 63.3.3. Autocomplete de problemas nos atendimentos
+
+Foi implementado no frontend o campo de problema/componente nos atendimentos técnicos com suporte a sugestões e texto livre.
+
+Objetivo:
+
+- Agilizar o preenchimento do atendimento pelo técnico.
+- Permitir seleção de problemas recorrentes cadastrados.
+- Permitir digitação livre quando o problema ainda não existir nas sugestões.
+- Exibir o problema padronizado na lista de atendimentos.
+- Manter o cliente em modo somente consulta.
+
+Alterações no frontend:
+
+- Criado type `ServiceProblemSuggestion`.
+- Criado service `service-problem-suggestions`.
+- Atualizado type `ServiceRecord` com `standardizedProblem`.
+- Atualizado service `service-records` para enviar e receber `standardizedProblem`.
+- Atualizada tela `Atendimentos` com o campo `Problema/componente`.
+- O campo permite digitar texto livre.
+- Enquanto o usuário digita, sugestões cadastradas compatíveis são exibidas.
+- Ao clicar em uma sugestão, o texto da sugestão é aplicado ao campo.
+- Caso o texto não exista nas sugestões, ele ainda pode ser salvo no atendimento.
+- A tabela de atendimentos passou a exibir a coluna `Problema padrão`.
+- A busca da tela passou a considerar `standardizedProblem`.
+
+Permissões mantidas:
+
+- `CLIENT_USER` continua somente leitura.
+- `CLIENT_USER` visualiza o problema padrão nos atendimentos da própria empresa.
+- `CLIENT_USER` não vê botão `Novo atendimento`.
+- `TECHNICIAN`, `MASTER_ADMIN` e `SUPERVISOR` continuam podendo criar e editar atendimentos conforme regras existentes.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Campo `Problema/componente` apareceu no formulário de atendimento.
+- Ao digitar `comp`, a sugestão `Compressor travou` apareceu.
+- Seleção de sugestão funcionou.
+- Texto livre não cadastrado também foi aceito.
+- Coluna `Problema padrão` apareceu na lista.
+- `CLIENT_USER` visualizou atendimentos em modo somente consulta.
