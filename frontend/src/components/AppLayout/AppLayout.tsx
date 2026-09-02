@@ -135,7 +135,7 @@ function Brand({ compact = false }: BrandProps) {
 
       <div>
         <strong>CryoMap</strong>
-        {!compact ? <span>Monitoramento térmico</span> : null}
+        {!compact ? <span>PCM & Monitoramento Térmico</span> : null}
       </div>
     </div>
   );

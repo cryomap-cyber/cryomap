@@ -4504,3 +4504,96 @@ Testes realizados:
 - Gráfico acompanhou os filtros aplicados.
 - Tabela acompanhou os filtros aplicados.
 - Ações de editar/remover continuaram restritas ao `MASTER_ADMIN`.
+
+## 63.5.4. Ajuste de subtítulo da sidebar
+
+Foi ajustado o subtítulo exibido abaixo da marca CryoMap na barra lateral.
+
+Alteração aplicada:
+
+- O texto anterior `Monitoramento térmico` foi substituído por `PCM & Monitoramento Térmico`.
+
+Motivo:
+
+- Alinhar a identidade do sistema ao posicionamento operacional do CryoMap.
+- Deixar explícito que o sistema envolve planejamento, controle de manutenção e monitoramento térmico.
+
+Impacto técnico:
+
+- Alteração apenas visual no frontend.
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Sidebar exibiu o novo subtítulo corretamente.
+
+## 63.6.1. Gráfico térmico na tela de salas
+
+Foi adicionado um gráfico térmico diretamente na tela de Salas.
+
+Objetivo:
+
+- Permitir visualizar a evolução térmica das salas sem depender apenas da tela de Leituras ou dos relatórios.
+- Facilitar o acompanhamento por sala para administradores, supervisores, técnicos e clientes.
+- Manter o mesmo padrão visual e operacional já aplicado na tela de Medições dos Equipamentos.
+
+Funcionalidades adicionadas:
+
+- Gráfico térmico por sala.
+- Seleção da sala exibida no gráfico.
+- Alternância entre indicadores:
+  - temperatura;
+  - umidade.
+- Alternância entre períodos:
+  - hoje;
+  - 7 dias;
+  - 30 dias;
+  - 12 meses.
+- Cards do gráfico:
+  - último ponto;
+  - média;
+  - mínimo;
+  - máximo.
+- Tooltip com:
+  - valor médio;
+  - mínimo;
+  - máximo;
+  - quantidade de leituras no ponto;
+  - último sensor, quando disponível;
+  - origem da leitura, quando disponível.
+- Linha de referência da média.
+- Painel de filtros ativos.
+- Botões:
+  - aplicar filtros;
+  - limpar filtros;
+  - atualizar.
+- Atualização automática silenciosa do gráfico a cada 1 hora.
+
+Regra operacional mantida:
+
+- Leituras de salas podem vir principalmente de sensores.
+- Leituras manuais de sala continuam disponíveis para teste, contingência e operação assistida.
+- Equipamentos continuam usando medições técnicas próprias, separadas das leituras de salas.
+
+Permissões mantidas:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem cadastrar, editar e inativar salas.
+- `CLIENT_USER` visualiza salas e gráfico em modo somente leitura.
+- `TECHNICIAN` visualiza salas e gráfico em modo somente leitura cadastral.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Salas carregou corretamente.
+- Gráfico térmico foi exibido.
+- Seleção de sala funcionou.
+- Alternância entre temperatura e umidade funcionou.
+- Alternância de período funcionou.
+- Filtros funcionaram.
+- Limpar filtros funcionou.
+- Atualização manual funcionou.
+- Permissões visuais por perfil foram preservadas.
