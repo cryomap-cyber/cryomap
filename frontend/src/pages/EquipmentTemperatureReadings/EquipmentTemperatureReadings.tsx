@@ -1,8 +1,10 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import {
-  Bar,
-  BarChart,
+  Area,
   CartesianGrid,
+  ComposedChart,
+  Line,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -15,8 +17,11 @@ import { useAuth } from '../../contexts/useAuth';
 import { getCompanies } from '../../services/companies';
 import {
   createEquipmentTemperatureReading,
+  deleteEquipmentTemperatureReading,
   getEquipmentTemperatureReadings,
+  updateEquipmentTemperatureReading,
   type CreateEquipmentTemperatureReadingPayload,
+  type UpdateEquipmentTemperatureReadingPayload,
 } from '../../services/equipment-temperature-readings';
 import { getEquipments } from '../../services/equipments';
 import { getRooms } from '../../services/rooms';
@@ -51,6 +56,8 @@ type ChartMetric =
   | 'temperature'
   | 'dischargePressure'
   | 'suctionPressure'
+  | 'liquidLineTemperature'
+  | 'evaporationTemperature'
   | 'superheating'
   | 'subcooling'
   | 'airFlow';
@@ -66,40 +73,92 @@ type LoadDataOptions = {
   endDateValue?: string;
 };
 
+type ChartMetricOption = {
+  value: ChartMetric;
+  label: string;
+  shortLabel: string;
+  unit: string;
+};
+
 type ChartDataItem = {
   label: string;
   value: number;
+  minimum: number;
+  maximum: number;
   count: number;
   timestamp: number;
 };
 
-const chartMetricOptions: {
-  value: ChartMetric;
-  label: string;
-}[] = [
+type ChartStats = {
+  latest: ChartDataItem;
+  previous: ChartDataItem | null;
+  average: number;
+  minimum: number;
+  maximum: number;
+  totalMeasurements: number;
+  totalPoints: number;
+};
+
+type ChartTooltipPayload = {
+  value?: number | string;
+  payload?: ChartDataItem;
+};
+
+type ChartTooltipProps = {
+  active?: boolean;
+  label?: string | number;
+  payload?: ChartTooltipPayload[];
+  metric: ChartMetric;
+};
+
+const chartMetricOptions: ChartMetricOption[] = [
   {
     value: 'temperature',
-    label: 'Temperatura',
+    label: 'Temperatura do equipamento',
+    shortLabel: 'Temperatura',
+    unit: '°C',
   },
   {
     value: 'dischargePressure',
     label: 'Pressão de descarga',
+    shortLabel: 'Descarga',
+    unit: 'psi',
   },
   {
     value: 'suctionPressure',
     label: 'Pressão de sucção',
+    shortLabel: 'Sucção',
+    unit: 'psi',
+  },
+  {
+    value: 'liquidLineTemperature',
+    label: 'Temperatura da linha de líquido',
+    shortLabel: 'Linha líquido',
+    unit: '°C',
+  },
+  {
+    value: 'evaporationTemperature',
+    label: 'Temperatura de evaporação',
+    shortLabel: 'Evaporação',
+    unit: '°C',
   },
   {
     value: 'superheating',
     label: 'Superaquecimento',
+    shortLabel: 'Super',
+    unit: '°C',
   },
   {
     value: 'subcooling',
     label: 'Subresfriamento',
+    shortLabel: 'Sub',
+    unit: '°C',
   },
   {
     value: 'airFlow',
     label: 'Vazão de ar',
+    shortLabel: 'Vazão',
+    unit: 'm³/h',
   },
 ];
 
@@ -165,10 +224,13 @@ export function EquipmentTemperatureReadings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingReading, setEditingReading] =
+    useState<EquipmentTemperatureReading | null>(null);
   const [formData, setFormData] =
     useState<EquipmentTemperatureReadingFormData>(emptyFormData);
 
   const canCreateMeasurement = user?.role !== 'CLIENT_USER';
+  const canManageMeasurement = user?.role === 'MASTER_ADMIN';
 
   async function loadData(options?: LoadDataOptions) {
     setError('');
@@ -393,7 +455,7 @@ export function EquipmentTemperatureReadings() {
     });
   }, [readings, search]);
 
-    const chartData = useMemo(() => {
+  const chartData = useMemo(() => {
     return buildChartData(
       readings,
       activeChartEquipmentId,
@@ -402,9 +464,13 @@ export function EquipmentTemperatureReadings() {
     );
   }, [readings, activeChartEquipmentId, chartMetric, chartPeriod]);
 
+  const chartStats = useMemo(() => getChartStats(chartData), [chartData]);
+
   const selectedChartEquipment = equipments.find(
     (equipment) => equipment.id === activeChartEquipmentId,
   );
+
+  const chartMetricConfig = getChartMetricConfig(chartMetric);
 
   const averageTemperature = getAverage(
     readings.map((reading) => reading.temperature),
@@ -431,6 +497,7 @@ export function EquipmentTemperatureReadings() {
       (equipment) => equipment.id === selectedEquipmentId,
     );
 
+    setEditingReading(null);
     setFormData({
       ...emptyFormData,
       companyId: selectedCompanyId || selectedEquipment?.companyId || '',
@@ -442,12 +509,51 @@ export function EquipmentTemperatureReadings() {
     setIsFormOpen(true);
   }
 
+  async function openEditForm(reading: EquipmentTemperatureReading) {
+    if (!canManageMeasurement) {
+      return;
+    }
+
+    setEditingReading(reading);
+    setFormData({
+      companyId: reading.companyId,
+      equipmentId: reading.equipmentId,
+      temperature: String(reading.temperature),
+      dischargePressure: numberInputValue(reading.dischargePressure),
+      suctionPressure: numberInputValue(reading.suctionPressure),
+      liquidLineTemperature: numberInputValue(reading.liquidLineTemperature),
+      evaporationTemperature: numberInputValue(reading.evaporationTemperature),
+      superheating: numberInputValue(reading.superheating),
+      subcooling: numberInputValue(reading.subcooling),
+      airFlow: numberInputValue(reading.airFlow),
+      source:
+        reading.source === 'IMPORT' || reading.source === 'MANUAL'
+          ? reading.source
+          : 'MANUAL',
+      notes: reading.notes ?? '',
+      measuredAt: formatDateTimeInput(reading.measuredAt),
+    });
+    setFormError('');
+    setIsFormOpen(true);
+
+    try {
+      const equipmentsData = await getEquipments({
+        companyId: reading.companyId,
+      });
+
+      setFormEquipments(equipmentsData);
+    } catch {
+      setFormError('Não foi possível carregar equipamentos da empresa.');
+    }
+  }
+
   function closeForm() {
     if (isSaving) {
       return;
     }
 
     setIsFormOpen(false);
+    setEditingReading(null);
     setFormData(emptyFormData);
     setFormError('');
   }
@@ -507,6 +613,11 @@ export function EquipmentTemperatureReadings() {
       return;
     }
 
+    if (editingReading && !canManageMeasurement) {
+      setFormError('Somente o administrador master pode editar medições.');
+      return;
+    }
+
     setFormError('');
 
     if (!formData.companyId) {
@@ -529,23 +640,51 @@ export function EquipmentTemperatureReadings() {
     setIsSaving(true);
 
     try {
-      const payload: CreateEquipmentTemperatureReadingPayload = {
-        companyId: formData.companyId,
-        equipmentId: formData.equipmentId,
-        temperature,
-        dischargePressure: optionalNumber(formData.dischargePressure),
-        suctionPressure: optionalNumber(formData.suctionPressure),
-        liquidLineTemperature: optionalNumber(formData.liquidLineTemperature),
-        evaporationTemperature: optionalNumber(formData.evaporationTemperature),
-        superheating: optionalNumber(formData.superheating),
-        subcooling: optionalNumber(formData.subcooling),
-        airFlow: optionalNumber(formData.airFlow),
-        source: formData.source,
-        notes: optionalValue(formData.notes),
-        measuredAt: optionalIsoDateTime(formData.measuredAt),
-      };
+      if (editingReading) {
+        const payload: UpdateEquipmentTemperatureReadingPayload = {
+          companyId: formData.companyId,
+          equipmentId: formData.equipmentId,
+          temperature,
+          dischargePressure: nullableNumber(formData.dischargePressure),
+          suctionPressure: nullableNumber(formData.suctionPressure),
+          liquidLineTemperature: nullableNumber(
+            formData.liquidLineTemperature,
+          ),
+          evaporationTemperature: nullableNumber(
+            formData.evaporationTemperature,
+          ),
+          superheating: nullableNumber(formData.superheating),
+          subcooling: nullableNumber(formData.subcooling),
+          airFlow: nullableNumber(formData.airFlow),
+          source: formData.source,
+          notes: nullableValue(formData.notes),
+          measuredAt: optionalIsoDateTime(formData.measuredAt),
+        };
 
-      await createEquipmentTemperatureReading(payload);
+        await updateEquipmentTemperatureReading(editingReading.id, payload);
+      } else {
+        const payload: CreateEquipmentTemperatureReadingPayload = {
+          companyId: formData.companyId,
+          equipmentId: formData.equipmentId,
+          temperature,
+          dischargePressure: optionalNumber(formData.dischargePressure),
+          suctionPressure: optionalNumber(formData.suctionPressure),
+          liquidLineTemperature: optionalNumber(
+            formData.liquidLineTemperature,
+          ),
+          evaporationTemperature: optionalNumber(
+            formData.evaporationTemperature,
+          ),
+          superheating: optionalNumber(formData.superheating),
+          subcooling: optionalNumber(formData.subcooling),
+          airFlow: optionalNumber(formData.airFlow),
+          source: formData.source,
+          notes: optionalValue(formData.notes),
+          measuredAt: optionalIsoDateTime(formData.measuredAt),
+        };
+
+        await createEquipmentTemperatureReading(payload);
+      }
 
       closeForm();
       await handleRefresh();
@@ -553,6 +692,33 @@ export function EquipmentTemperatureReadings() {
       setFormError(getRequestErrorMessage(requestError));
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleDeleteReading(reading: EquipmentTemperatureReading) {
+    if (!canManageMeasurement) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Deseja realmente remover a medição de ${formatTemperature(
+        reading.temperature,
+      )} do equipamento "${
+        reading.equipment?.name ?? reading.equipmentId
+      }"?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setError('');
+
+    try {
+      await deleteEquipmentTemperatureReading(reading.id);
+      await handleRefresh();
+    } catch {
+      setError('Não foi possível remover a medição do equipamento.');
     }
   }
 
@@ -581,6 +747,13 @@ export function EquipmentTemperatureReadings() {
             <p>
               Seu acesso é somente leitura. Você pode consultar as medições da
               sua empresa, mas não pode criar novos registros.
+            </p>
+          ) : null}
+
+          {canManageMeasurement ? (
+            <p>
+              Administrador master pode corrigir ou remover medições lançadas
+              incorretamente.
             </p>
           ) : null}
         </div>
@@ -613,88 +786,184 @@ export function EquipmentTemperatureReadings() {
         <div className="equipment-temperature-chart-header">
           <div>
             <span>Gráfico técnico</span>
-            <h2>Evolução por equipamento</h2>
+            <h2>{chartMetricConfig.label}</h2>
             <p>
-              Escolha o equipamento, o indicador e o período para acompanhar as
-              medições em gráfico de colunas.
+              Visualize a evolução técnica por equipamento. O gráfico agrupa
+              múltiplas medições por média no período selecionado.
             </p>
           </div>
 
           <div className="equipment-temperature-chart-actions">
-                       <select
-              value={activeChartEquipmentId}
-              onChange={(event) =>
-                void handleChartEquipmentChange(event.target.value)
-              }
-            >
-              <option value="">Selecione um equipamento</option>
+            <label>
+              Equipamento
+              <select
+                value={activeChartEquipmentId}
+                onChange={(event) =>
+                  void handleChartEquipmentChange(event.target.value)
+                }
+              >
+                <option value="">Selecione um equipamento</option>
 
-              {equipments.map((equipment) => (
-                <option key={equipment.id} value={equipment.id}>
-                  {equipment.name} — {equipment.code}
-                </option>
-              ))}
-            </select>
+                {equipments.map((equipment) => (
+                  <option key={equipment.id} value={equipment.id}>
+                    {equipment.name} — {equipment.code}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
 
-            <select
-              value={chartMetric}
-              onChange={(event) =>
-                setChartMetric(event.target.value as ChartMetric)
-              }
-            >
+        <div className="equipment-temperature-chart-controls">
+          <div>
+            <strong>Indicador</strong>
+
+            <div className="equipment-temperature-chart-tabs">
               {chartMetricOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
+                <button
+                  key={option.value}
+                  type="button"
+                  className={chartMetric === option.value ? 'active' : ''}
+                  onClick={() => setChartMetric(option.value)}
+                >
+                  {option.shortLabel}
+                </button>
               ))}
-            </select>
+            </div>
+          </div>
 
-            <select
-              value={chartPeriod}
-              onChange={(event) =>
-                void handleChartPeriodChange(event.target.value as ChartPeriod)
-              }
-            >
+          <div>
+            <strong>Período</strong>
+
+            <div className="equipment-temperature-chart-tabs compact">
               {chartPeriodOptions.map((option) => (
-                <option key={option.value} value={option.value}>
+                <button
+                  key={option.value}
+                  type="button"
+                  className={chartPeriod === option.value ? 'active' : ''}
+                  onClick={() => void handleChartPeriodChange(option.value)}
+                >
                   {option.label}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
         </div>
 
         {selectedChartEquipment ? (
-          <p className="equipment-temperature-chart-context">
-            Equipamento selecionado:{' '}
-            <strong>
-              {selectedChartEquipment.name} — {selectedChartEquipment.code}
-            </strong>
-            {selectedChartEquipment.refrigerantFluid
-              ? ` | Fluido: ${selectedChartEquipment.refrigerantFluid}`
-              : ''}
+          <div className="equipment-temperature-chart-context">
+            <div>
+              <span>Equipamento selecionado</span>
+              <strong>
+                {selectedChartEquipment.name} — {selectedChartEquipment.code}
+              </strong>
+            </div>
+
+            <div>
+              <span>Fluido</span>
+              <strong>
+                {selectedChartEquipment.refrigerantFluid ?? 'Não informado'}
+              </strong>
+            </div>
+
+            <div>
+              <span>Faixa exibida</span>
+              <strong>
+                {formatDate(startDate)} até {formatDate(endDate)}
+              </strong>
+            </div>
+
+            <div>
+              <span>Unidade</span>
+              <strong>{chartMetricConfig.unit}</strong>
+            </div>
+          </div>
+        ) : null}
+
+        {chartStats ? (
+          <section className="equipment-temperature-chart-summary">
+            <ChartSummaryCard
+              title="Último ponto"
+              value={formatMetricValue(chartStats.latest.value, chartMetric)}
+              description={chartStats.latest.label}
+            />
+            <ChartSummaryCard
+              title="Média"
+              value={formatMetricValue(chartStats.average, chartMetric)}
+              description={`${chartStats.totalMeasurements} medição(ões)`}
+            />
+            <ChartSummaryCard
+              title="Mínimo"
+              value={formatMetricValue(chartStats.minimum, chartMetric)}
+              description="Menor valor do período"
+            />
+            <ChartSummaryCard
+              title="Máximo"
+              value={formatMetricValue(chartStats.maximum, chartMetric)}
+              description="Maior valor do período"
+            />
+          </section>
+        ) : null}
+
+        {chartStats ? (
+          <p className="equipment-temperature-chart-insight">
+            {getChartTrendText(chartStats, chartMetric)}
           </p>
         ) : null}
 
-        {chartData.length > 0 ? (
+        {chartData.length > 0 && chartStats ? (
           <div className="equipment-temperature-chart-wrapper">
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis tickFormatter={(value) => compactNumber(Number(value))} />
-                <Tooltip
-                  formatter={(value) =>
-                    formatMetricValue(Number(value), chartMetric)
-                  }
-                  labelFormatter={(label) => `Período: ${label}`}
+            <ResponsiveContainer width="100%" height={360}>
+              <ComposedChart
+                data={chartData}
+                margin={{
+                  top: 18,
+                  right: 18,
+                  left: 2,
+                  bottom: 8,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="label" tickMargin={10} minTickGap={18} />
+                <YAxis
+                  domain={getYAxisDomain(chartData)}
+                  tickFormatter={(value) => compactNumber(Number(value))}
+                  width={54}
                 />
-                <Bar
+                <Tooltip content={<ChartTooltip metric={chartMetric} />} />
+                <ReferenceLine
+                  y={chartStats.average}
+                  stroke="var(--color-primary-medium)"
+                  strokeDasharray="4 4"
+                />
+                <Area
+                  type="monotone"
                   dataKey="value"
-                  name={getChartMetricLabel(chartMetric)}
-                  radius={[8, 8, 0, 0]}
+                  name={chartMetricConfig.label}
+                  stroke="none"
+                  fill="var(--color-primary-light)"
+                  fillOpacity={0.16}
                 />
-              </BarChart>
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  name={chartMetricConfig.label}
+                  stroke="var(--color-primary)"
+                  strokeWidth={3}
+                  dot={{
+                    r: 4,
+                    strokeWidth: 2,
+                    stroke: 'var(--color-primary)',
+                    fill: '#ffffff',
+                  }}
+                  activeDot={{
+                    r: 6,
+                    strokeWidth: 2,
+                    stroke: 'var(--color-primary-dark)',
+                    fill: 'var(--color-primary-light)',
+                  }}
+                />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         ) : (
@@ -710,7 +979,11 @@ export function EquipmentTemperatureReadings() {
           <div className="equipment-temperature-reading-form-header">
             <div>
               <span>Histórico técnico</span>
-              <h2>Nova medição de equipamento</h2>
+              <h2>
+                {editingReading
+                  ? 'Editar medição de equipamento'
+                  : 'Nova medição de equipamento'}
+              </h2>
             </div>
 
             <button type="button" onClick={closeForm}>
@@ -912,7 +1185,11 @@ export function EquipmentTemperatureReadings() {
               </button>
 
               <button type="submit" disabled={isSaving}>
-                {isSaving ? 'Salvando...' : 'Cadastrar medição'}
+                {isSaving
+                  ? 'Salvando...'
+                  : editingReading
+                    ? 'Salvar correção'
+                    : 'Cadastrar medição'}
               </button>
             </div>
           </form>
@@ -1055,6 +1332,7 @@ export function EquipmentTemperatureReadings() {
                   <th>Origem</th>
                   <th>Registrado por</th>
                   <th>Observações</th>
+                  {canManageMeasurement ? <th>Ações</th> : null}
                 </tr>
               </thead>
 
@@ -1078,7 +1356,9 @@ export function EquipmentTemperatureReadings() {
                         <small>{reading.equipment.code}</small>
                       ) : null}
                       {reading.equipment?.refrigerantFluid ? (
-                        <small>Fluido: {reading.equipment.refrigerantFluid}</small>
+                        <small>
+                          Fluido: {reading.equipment.refrigerantFluid}
+                        </small>
                       ) : null}
                     </td>
 
@@ -1127,6 +1407,26 @@ export function EquipmentTemperatureReadings() {
                     </td>
 
                     <td>{reading.notes || '-'}</td>
+
+                    {canManageMeasurement ? (
+                      <td>
+                        <div className="equipment-temperature-reading-row-actions">
+                          <button
+                            type="button"
+                            onClick={() => void openEditForm(reading)}
+                          >
+                            Editar
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteReading(reading)}
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>
@@ -1152,10 +1452,54 @@ function SummaryCard({ title, value }: SummaryCardProps) {
   );
 }
 
+type ChartSummaryCardProps = {
+  title: string;
+  value: string;
+  description: string;
+};
+
+function ChartSummaryCard({ title, value, description }: ChartSummaryCardProps) {
+  return (
+    <article className="equipment-temperature-chart-summary-card">
+      <span>{title}</span>
+      <strong>{value}</strong>
+      <small>{description}</small>
+    </article>
+  );
+}
+
+function ChartTooltip({ active, payload, label, metric }: ChartTooltipProps) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const item = payload[0]?.payload;
+
+  if (!item) {
+    return null;
+  }
+
+  return (
+    <div className="equipment-temperature-chart-tooltip">
+      <strong>{String(label)}</strong>
+      <span>Valor médio: {formatMetricValue(item.value, metric)}</span>
+      <span>Mínimo: {formatMetricValue(item.minimum, metric)}</span>
+      <span>Máximo: {formatMetricValue(item.maximum, metric)}</span>
+      <small>{item.count} medição(ões) no ponto</small>
+    </div>
+  );
+}
+
 function optionalValue(value: string) {
   const normalized = value.trim();
 
   return normalized || undefined;
+}
+
+function nullableValue(value: string) {
+  const normalized = value.trim();
+
+  return normalized || null;
 }
 
 function optionalNumber(value: string) {
@@ -1170,6 +1514,28 @@ function optionalNumber(value: string) {
   }
 
   return normalized;
+}
+
+function nullableNumber(value: string) {
+  if (!value.trim()) {
+    return null;
+  }
+
+  const normalized = Number(value.replace(',', '.'));
+
+  if (Number.isNaN(normalized)) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function numberInputValue(value?: number | null) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  return String(value);
 }
 
 function optionalIsoDateTime(value: string) {
@@ -1255,6 +1621,14 @@ function optionalEndIsoDate(value: string) {
 
 function shortId(value: string) {
   return value.slice(0, 8).toUpperCase();
+}
+
+function formatDate(value?: string | null) {
+  if (!value) {
+    return '-';
+  }
+
+  return new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR');
 }
 
 function formatDateTime(value?: string | null) {
@@ -1353,6 +1727,8 @@ function buildChartData(
         minute: '2-digit',
       }),
       value: roundDecimal(reading.value),
+      minimum: roundDecimal(reading.value),
+      maximum: roundDecimal(reading.value),
       count: 1,
       timestamp: reading.measuredAt.getTime(),
     }));
@@ -1363,6 +1739,8 @@ function buildChartData(
     {
       label: string;
       total: number;
+      minimum: number;
+      maximum: number;
       count: number;
       timestamp: number;
     }
@@ -1376,6 +1754,8 @@ function buildChartData(
       groupedReadings.set(bucket.key, {
         label: bucket.label,
         total: reading.value,
+        minimum: reading.value,
+        maximum: reading.value,
         count: 1,
         timestamp: bucket.timestamp,
       });
@@ -1384,6 +1764,8 @@ function buildChartData(
     }
 
     current.total += reading.value;
+    current.minimum = Math.min(current.minimum, reading.value);
+    current.maximum = Math.max(current.maximum, reading.value);
     current.count += 1;
   });
 
@@ -1392,6 +1774,8 @@ function buildChartData(
     .map((item) => ({
       label: item.label,
       value: roundDecimal(item.total / item.count),
+      minimum: roundDecimal(item.minimum),
+      maximum: roundDecimal(item.maximum),
       count: item.count,
       timestamp: item.timestamp,
     }));
@@ -1469,10 +1853,17 @@ function roundDecimal(value: number) {
   return Math.round(value * 10) / 10;
 }
 
-function getChartMetricLabel(metric: ChartMetric) {
+function getChartMetricConfig(metric: ChartMetric) {
   const option = chartMetricOptions.find((item) => item.value === metric);
 
-  return option?.label ?? metric;
+  return (
+    option ?? {
+      value: metric,
+      label: metric,
+      shortLabel: metric,
+      unit: '',
+    }
+  );
 }
 
 function formatMetricValue(value: number, metric: ChartMetric) {
@@ -1487,10 +1878,74 @@ function formatMetricValue(value: number, metric: ChartMetric) {
   return formatTemperature(value);
 }
 
+function formatSignedMetricValue(value: number, metric: ChartMetric) {
+  const prefix = value > 0 ? '+' : '';
+
+  return `${prefix}${formatMetricValue(value, metric)}`;
+}
+
 function compactNumber(value: number) {
   return new Intl.NumberFormat('pt-BR', {
     maximumFractionDigits: 1,
   }).format(value);
+}
+
+function getChartStats(data: ChartDataItem[]): ChartStats | null {
+  if (data.length === 0) {
+    return null;
+  }
+
+  const values = data.map((item) => item.value);
+  const total = values.reduce((sum, value) => sum + value, 0);
+  const latest = data[data.length - 1];
+  const previous = data.length > 1 ? data[data.length - 2] : null;
+
+  return {
+    latest,
+    previous,
+    average: roundDecimal(total / values.length),
+    minimum: roundDecimal(Math.min(...data.map((item) => item.minimum))),
+    maximum: roundDecimal(Math.max(...data.map((item) => item.maximum))),
+    totalMeasurements: data.reduce((sum, item) => sum + item.count, 0),
+    totalPoints: data.length,
+  };
+}
+
+function getYAxisDomain(data: ChartDataItem[]): [number, number] {
+  const minimum = Math.min(...data.map((item) => item.minimum));
+  const maximum = Math.max(...data.map((item) => item.maximum));
+  const spread = maximum - minimum;
+  const padding =
+    spread === 0 ? Math.max(Math.abs(maximum) * 0.1, 1) : spread * 0.16;
+
+  return [roundDecimal(minimum - padding), roundDecimal(maximum + padding)];
+}
+
+function getChartTrendText(stats: ChartStats, metric: ChartMetric) {
+  if (!stats.previous) {
+    return 'Ainda não há ponto anterior suficiente para comparar tendência neste período.';
+  }
+
+  const difference = roundDecimal(stats.latest.value - stats.previous.value);
+
+  if (Math.abs(difference) < 0.05) {
+    return `O último ponto ficou estável em relação ao ponto anterior: ${formatMetricValue(
+      stats.latest.value,
+      metric,
+    )}.`;
+  }
+
+  if (difference > 0) {
+    return `O último ponto subiu ${formatSignedMetricValue(
+      difference,
+      metric,
+    )} em relação ao ponto anterior.`;
+  }
+
+  return `O último ponto caiu ${formatSignedMetricValue(
+    difference,
+    metric,
+  )} em relação ao ponto anterior.`;
 }
 
 function getRequestErrorMessage(error: unknown) {
@@ -1517,5 +1972,5 @@ function getRequestErrorMessage(error: unknown) {
     }
   }
 
-  return 'Não foi possível cadastrar a medição do equipamento.';
+  return 'Não foi possível salvar a medição do equipamento.';
 }

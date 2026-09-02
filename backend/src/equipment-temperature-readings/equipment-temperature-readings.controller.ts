@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -16,6 +18,7 @@ import type { AuthenticatedRequest } from '../auth/types/authenticated-request.t
 import { UserRole } from '../generated/prisma/client.js';
 import { CreateEquipmentTemperatureReadingDto } from './dto/create-equipment-temperature-reading.dto.js';
 import { FindEquipmentTemperatureReadingsDto } from './dto/find-equipment-temperature-readings.dto.js';
+import { UpdateEquipmentTemperatureReadingDto } from './dto/update-equipment-temperature-reading.dto.js';
 import { EquipmentTemperatureReadingsService } from './equipment-temperature-readings.service.js';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -63,5 +66,25 @@ export class EquipmentTemperatureReadingsController {
   )
   findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     return this.equipmentTemperatureReadingsService.findOne(id, request.user!);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.MASTER_ADMIN)
+  update(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateEquipmentTemperatureReadingDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.equipmentTemperatureReadingsService.update(
+      id,
+      updateDto,
+      request.user!,
+    );
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.MASTER_ADMIN)
+  remove(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    return this.equipmentTemperatureReadingsService.remove(id, request.user!);
   }
 }

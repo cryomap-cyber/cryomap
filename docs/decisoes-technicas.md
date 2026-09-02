@@ -4354,3 +4354,121 @@ Motivo:
 - O tempo parado individual por atendimento já atende à necessidade atual da beta.
 - Separar downtime por origem não agrega valor suficiente neste momento.
 - A prioridade passa a ser melhorar visualização e usabilidade das medições técnicas de equipamentos.
+
+## 63.5.1. Polimento visual do gráfico técnico de medições dos equipamentos
+
+Foi melhorada a visualização técnica das medições de equipamentos.
+
+Alterações aplicadas:
+
+- O gráfico de colunas foi substituído por visualização em linha/área.
+- Foram adicionados cards específicos do gráfico:
+  - último ponto;
+  - média;
+  - mínimo;
+  - máximo.
+- O tooltip passou a mostrar:
+  - valor médio;
+  - mínimo;
+  - máximo;
+  - quantidade de medições no ponto.
+- O gráfico passou a ter linha de referência da média.
+- Foram adicionados indicadores técnicos no seletor:
+  - temperatura do equipamento;
+  - pressão de descarga;
+  - pressão de sucção;
+  - temperatura da linha de líquido;
+  - temperatura de evaporação;
+  - superaquecimento;
+  - subresfriamento;
+  - vazão de ar.
+- Foram mantidos os períodos:
+  - hoje;
+  - 7 dias;
+  - 30 dias;
+  - 12 meses.
+
+Regras mantidas:
+
+- Equipamentos não usam sensores.
+- Medições de equipamento continuam sendo registros manuais ou importados.
+- CLIENT_USER permanece com acesso somente leitura.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Gráfico carregou corretamente.
+- Troca de indicador funcionou.
+- Troca de período funcionou.
+- Tooltip exibiu dados técnicos.
+- Cards do gráfico foram exibidos corretamente.
+- CLIENT_USER continuou somente leitura.
+
+## 63.5.2. Edição e remoção de medições por administrador master
+
+Foi implementada a possibilidade de correção manual de medições técnicas de equipamentos.
+
+Objetivo:
+
+- Permitir corrigir medições lançadas incorretamente.
+- Permitir remover registros de teste ou registros lançados por erro.
+- Evitar que o histórico técnico fique poluído antes da beta.
+
+Regras de permissão:
+
+- Somente `MASTER_ADMIN` pode editar medições de equipamentos.
+- Somente `MASTER_ADMIN` pode remover medições de equipamentos.
+- `SUPERVISOR` não pode editar nem remover medições já registradas.
+- `TECHNICIAN` pode criar medições conforme regra existente, mas não pode editar/remover depois.
+- `CLIENT_USER` permanece somente leitura.
+
+Alterações no backend:
+
+- Criado DTO de atualização de medição de equipamento.
+- Criado endpoint `PATCH /equipment-temperature-readings/:id`.
+- Criado endpoint `DELETE /equipment-temperature-readings/:id`.
+- Ambos os endpoints são restritos a `MASTER_ADMIN`.
+- A edição permite corrigir:
+  - empresa;
+  - equipamento;
+  - temperatura;
+  - pressão de descarga;
+  - pressão de sucção;
+  - temperatura da linha de líquido;
+  - temperatura de evaporação;
+  - superaquecimento;
+  - subresfriamento;
+  - vazão de ar;
+  - origem;
+  - observações;
+  - data/hora da medição.
+- Ao editar uma medição, o backend recalcula `currentTemperature` do equipamento.
+- Ao remover uma medição, o backend recalcula `currentTemperature` do equipamento.
+- Se não sobrar nenhuma medição para o equipamento, `currentTemperature` passa a `null`.
+- Nenhuma migration foi necessária.
+
+Alterações no frontend:
+
+- Service de medições passou a suportar:
+  - atualização de medição;
+  - remoção de medição.
+- A tela de medições passou a exibir botões `Editar` e `Remover` somente para `MASTER_ADMIN`.
+- O formulário de medição foi reaproveitado para criação e edição.
+- Após edição ou remoção, lista e gráfico são recarregados.
+
+Testes realizados:
+
+- Backend `npm run lint` passou.
+- Backend `npm run build` passou.
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- `MASTER_ADMIN` conseguiu editar uma medição.
+- `MASTER_ADMIN` conseguiu remover uma medição.
+- A tabela foi atualizada após edição.
+- O gráfico foi atualizado após edição.
+- A tabela foi atualizada após remoção.
+- O gráfico foi atualizado após remoção.
+- `SUPERVISOR` não visualizou ações de editar/remover.
+- `TECHNICIAN` não visualizou ações de editar/remover.
+- `CLIENT_USER` permaneceu somente leitura.

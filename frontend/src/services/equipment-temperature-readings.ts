@@ -16,9 +16,7 @@ export type GetEquipmentTemperatureReadingsParams = {
 export type CreateEquipmentTemperatureReadingPayload = {
   companyId: string;
   equipmentId: string;
-
   temperature: number;
-
   dischargePressure?: number;
   suctionPressure?: number;
   liquidLineTemperature?: number;
@@ -26,9 +24,24 @@ export type CreateEquipmentTemperatureReadingPayload = {
   superheating?: number;
   subcooling?: number;
   airFlow?: number;
-
   source?: EquipmentTemperatureSource;
   notes?: string;
+  measuredAt?: string;
+};
+
+export type UpdateEquipmentTemperatureReadingPayload = {
+  companyId?: string;
+  equipmentId?: string;
+  temperature?: number;
+  dischargePressure?: number | null;
+  suctionPressure?: number | null;
+  liquidLineTemperature?: number | null;
+  evaporationTemperature?: number | null;
+  superheating?: number | null;
+  subcooling?: number | null;
+  airFlow?: number | null;
+  source?: EquipmentTemperatureSource;
+  notes?: string | null;
   measuredAt?: string;
 };
 
@@ -54,4 +67,20 @@ export async function createEquipmentTemperatureReading(
   );
 
   return response.data;
+}
+
+export async function updateEquipmentTemperatureReading(
+  readingId: string,
+  payload: UpdateEquipmentTemperatureReadingPayload,
+) {
+  const response = await api.patch<EquipmentTemperatureReading>(
+    `/equipment-temperature-readings/${readingId}`,
+    payload,
+  );
+
+  return response.data;
+}
+
+export async function deleteEquipmentTemperatureReading(readingId: string) {
+  await api.delete(`/equipment-temperature-readings/${readingId}`);
 }

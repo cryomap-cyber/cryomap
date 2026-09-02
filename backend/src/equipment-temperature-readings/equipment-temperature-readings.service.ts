@@ -14,6 +14,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateEquipmentTemperatureReadingDto } from './dto/create-equipment-temperature-reading.dto.js';
 import { FindEquipmentTemperatureReadingsDto } from './dto/find-equipment-temperature-readings.dto.js';
+import { UpdateEquipmentTemperatureReadingDto } from './dto/update-equipment-temperature-reading.dto.js';
 
 const equipmentTemperatureReadingSelect = {
   id: true,
@@ -109,20 +110,16 @@ export class EquipmentTemperatureReadingsService {
           subcooling: createDto.subcooling,
           airFlow: createDto.airFlow,
           source: createDto.source ?? EquipmentTemperatureSource.MANUAL,
-          notes: createDto.notes?.trim(),
+          notes: this.optionalText(createDto.notes),
           measuredAt,
         },
         select: equipmentTemperatureReadingSelect,
       });
 
-      await tx.equipment.update({
-        where: {
-          id: createDto.equipmentId,
-        },
-        data: {
-          currentTemperature: createDto.temperature,
-        },
-      });
+      await this.recalculateEquipmentCurrentTemperature(
+        tx,
+        createDto.equipmentId,
+      );
 
       return reading;
     });
@@ -200,6 +197,119 @@ export class EquipmentTemperatureReadingsService {
     return reading;
   }
 
+  async update(
+    id: string,
+    updateDto: UpdateEquipmentTemperatureReadingDto,
+    actor: AuthUser,
+  ) {
+    this.ensureCanManageMeasurements(actor);
+
+    const existingReading =
+      await this.prisma.equipmentTemperatureReading.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          id: true,
+          companyId: true,
+          equipmentId: true,
+        },
+      });
+
+    if (!existingReading) {
+      throw new NotFoundException('Leitura de equipamento não encontrada');
+    }
+
+    const targetCompanyId = updateDto.companyId ?? existingReading.companyId;
+    const targetEquipmentId =
+      updateDto.equipmentId ?? existingReading.equipmentId;
+
+    const equipment = await this.ensureEquipmentExists(
+      targetEquipmentId,
+      targetCompanyId,
+    );
+
+    const measuredAt = this.parseOptionalMeasuredAt(updateDto.measuredAt);
+
+    return this.prisma.$transaction(async (tx) => {
+      const reading = await tx.equipmentTemperatureReading.update({
+        where: {
+          id,
+        },
+        data: {
+          companyId: targetCompanyId,
+          roomId: equipment.roomId,
+          equipmentId: targetEquipmentId,
+          temperature: updateDto.temperature,
+          dischargePressure: updateDto.dischargePressure,
+          suctionPressure: updateDto.suctionPressure,
+          liquidLineTemperature: updateDto.liquidLineTemperature,
+          evaporationTemperature: updateDto.evaporationTemperature,
+          superheating: updateDto.superheating,
+          subcooling: updateDto.subcooling,
+          airFlow: updateDto.airFlow,
+          source: updateDto.source,
+          notes:
+            updateDto.notes === undefined
+              ? undefined
+              : this.optionalText(updateDto.notes),
+          measuredAt,
+        },
+        select: equipmentTemperatureReadingSelect,
+      });
+
+      await this.recalculateEquipmentCurrentTemperature(
+        tx,
+        existingReading.equipmentId,
+      );
+
+      if (existingReading.equipmentId !== targetEquipmentId) {
+        await this.recalculateEquipmentCurrentTemperature(
+          tx,
+          targetEquipmentId,
+        );
+      }
+
+      return reading;
+    });
+  }
+
+  async remove(id: string, actor: AuthUser) {
+    this.ensureCanManageMeasurements(actor);
+
+    const existingReading =
+      await this.prisma.equipmentTemperatureReading.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          id: true,
+          equipmentId: true,
+        },
+      });
+
+    if (!existingReading) {
+      throw new NotFoundException('Leitura de equipamento não encontrada');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.equipmentTemperatureReading.delete({
+        where: {
+          id,
+        },
+      });
+
+      await this.recalculateEquipmentCurrentTemperature(
+        tx,
+        existingReading.equipmentId,
+      );
+    });
+
+    return {
+      message: 'Medição de equipamento removida com sucesso',
+    };
+  }
+
   private resolveCreateCompanyId(
     createDto: CreateEquipmentTemperatureReadingDto,
     actor: AuthUser,
@@ -271,6 +381,14 @@ export class EquipmentTemperatureReadingsService {
     }
   }
 
+  private ensureCanManageMeasurements(actor: AuthUser) {
+    if (actor.role !== UserRole.MASTER_ADMIN) {
+      throw new ForbiddenException(
+        'Somente o administrador master pode editar ou remover medições de equipamentos',
+      );
+    }
+  }
+
   private async ensureEquipmentExists(equipmentId: string, companyId: string) {
     const equipment = await this.prisma.equipment.findFirst({
       where: {
@@ -290,5 +408,56 @@ export class EquipmentTemperatureReadingsService {
     }
 
     return equipment;
+  }
+
+  private parseOptionalMeasuredAt(value?: string) {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    const measuredAt = new Date(value);
+
+    if (Number.isNaN(measuredAt.getTime())) {
+      throw new BadRequestException('Data da medição inválida');
+    }
+
+    return measuredAt;
+  }
+
+  private optionalText(value?: string | null) {
+    const normalized = value?.trim();
+
+    return normalized || null;
+  }
+
+  private async recalculateEquipmentCurrentTemperature(
+    tx: Prisma.TransactionClient,
+    equipmentId: string,
+  ) {
+    const latestReading = await tx.equipmentTemperatureReading.findFirst({
+      where: {
+        equipmentId,
+      },
+      select: {
+        temperature: true,
+      },
+      orderBy: [
+        {
+          measuredAt: 'desc',
+        },
+        {
+          createdAt: 'desc',
+        },
+      ],
+    });
+
+    await tx.equipment.update({
+      where: {
+        id: equipmentId,
+      },
+      data: {
+        currentTemperature: latestReading?.temperature ?? null,
+      },
+    });
   }
 }
