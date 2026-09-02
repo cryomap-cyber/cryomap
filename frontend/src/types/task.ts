@@ -7,6 +7,8 @@ export type TaskStatus =
   | 'CANCELED'
   | 'OVERDUE';
 
+export type TaskOrigin = 'CRYOMAP' | 'AUVO' | 'OTHER';
+
 export type Task = {
   id: string;
   companyId: string;
@@ -17,24 +19,31 @@ export type Task = {
   description?: string | null;
   priority: TaskPriority;
   status: TaskStatus;
+  origin: TaskOrigin;
+  externalCode?: string | null;
+  externalUrl?: string | null;
   dueDate?: string | null;
   completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
+
   company?: {
     id: string;
     name: string;
   } | null;
+
   room?: {
     id: string;
     name: string;
   } | null;
+
   equipment?: {
     id: string;
     name: string;
     code?: string | null;
   } | null;
+
   assignedToUser?: {
     id: string;
     name: string;

@@ -4256,3 +4256,59 @@ Testes realizados:
 - Retorno da API exibiu `origin`, `externalCode` e `externalUrl`.
 - Filtro `GET /tasks?origin=AUVO` funcionou.
 - Filtro `GET /tasks?externalCode=12345` funcionou.
+
+## 63.4.1 e 63.4.2. Compatibilidade com chamados externos/Auvo no frontend
+
+Foi implementado no frontend o suporte visual para origem e referência externa dos chamados/tarefas.
+
+Objetivo:
+
+- Permitir identificar chamados criados diretamente no CryoMap.
+- Permitir registrar chamados vindos do Auvo.
+- Permitir registrar chamados de outra origem externa.
+- Exibir código e link externo do chamado.
+- Permitir filtro e busca por origem/referência externa.
+
+Alterações no frontend:
+
+- Atualizado type `Task` com:
+  - `origin`;
+  - `externalCode`;
+  - `externalUrl`.
+
+- Atualizado service `tasks` para enviar, receber e filtrar:
+  - `origin`;
+  - `externalCode`;
+  - `externalUrl`.
+
+- Atualizada tela `Chamados/Tarefas` com:
+  - campo `Origem`;
+  - campo `Código externo`;
+  - campo `Link externo`;
+  - filtro por origem;
+  - busca considerando origem, código externo e link externo;
+  - coluna `Origem`;
+  - coluna `Referência externa`;
+  - badge visual para origem;
+  - link `Abrir referência`.
+
+Regras aplicadas:
+
+- Origem padrão: `CryoMap`.
+- Quando a origem é `CryoMap`, código e link externos ficam desabilitados e são limpos.
+- Origem `Auvo` permite informar código e link externo.
+- Origem `Outro` permite informar código e link externo.
+- Técnicos continuam podendo criar e editar chamados da própria empresa conforme regra existente.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Criação de chamado com origem `Auvo` funcionou.
+- Código externo apareceu na tabela.
+- Link externo apareceu como `Abrir referência`.
+- Filtro por origem `Auvo` funcionou.
+- Busca por código externo funcionou.
+- Edição de origem para `Outro` funcionou.
+- Edição de origem para `CryoMap` limpou código e link externo.
+- Perfil `TECHNICIAN` continuou conseguindo criar/editar chamados da própria empresa.

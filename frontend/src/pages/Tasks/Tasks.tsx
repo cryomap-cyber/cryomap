@@ -1,4 +1,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+
+import { EmptyState } from '../../components/Feedback/EmptyState';
+import { LoadingState } from '../../components/Feedback/LoadingState';
 import { getCompanies } from '../../services/companies';
 import { getEquipments } from '../../services/equipments';
 import { getRooms } from '../../services/rooms';
@@ -14,11 +17,14 @@ import { getUsers } from '../../services/users';
 import type { Company } from '../../types/company';
 import type { Equipment } from '../../types/equipment';
 import type { Room } from '../../types/room';
-import type { Task, TaskPriority, TaskStatus } from '../../types/task';
+import type {
+  Task,
+  TaskOrigin,
+  TaskPriority,
+  TaskStatus,
+} from '../../types/task';
 import type { User } from '../../types/user';
 import './Tasks.css';
-import { LoadingState } from '../../components/Feedback/LoadingState';
-import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type TaskFormData = {
   companyId: string;
@@ -29,6 +35,9 @@ type TaskFormData = {
   description: string;
   priority: TaskPriority;
   status: TaskStatus;
+  origin: TaskOrigin;
+  externalCode: string;
+  externalUrl: string;
   dueDate: string;
 };
 
@@ -41,6 +50,9 @@ const emptyFormData: TaskFormData = {
   description: '',
   priority: 'MEDIUM',
   status: 'OPEN',
+  origin: 'CRYOMAP',
+  externalCode: '',
+  externalUrl: '',
   dueDate: '',
 };
 
@@ -55,6 +67,7 @@ export function Tasks() {
   const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedPriority, setSelectedPriority] = useState('');
+  const [selectedOrigin, setSelectedOrigin] = useState('');
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [formError, setFormError] = useState('');
@@ -88,6 +101,7 @@ export function Tasks() {
             priority: selectedPriority
               ? (selectedPriority as TaskPriority)
               : undefined,
+            origin: selectedOrigin ? (selectedOrigin as TaskOrigin) : undefined,
           }),
         ]);
 
@@ -169,7 +183,10 @@ export function Tasks() {
         roomId: selectedRoomId || undefined,
         equipmentId: selectedEquipmentId || undefined,
         status: selectedStatus ? (selectedStatus as TaskStatus) : undefined,
-        priority: selectedPriority ? (selectedPriority as TaskPriority) : undefined,
+        priority: selectedPriority
+          ? (selectedPriority as TaskPriority)
+          : undefined,
+        origin: selectedOrigin ? (selectedOrigin as TaskOrigin) : undefined,
       }),
     ])
       .then(([roomsData, equipmentsData, usersData, tasksData]) => {
@@ -216,6 +233,7 @@ export function Tasks() {
     selectedEquipmentId,
     selectedStatus,
     selectedPriority,
+    selectedOrigin,
   ]);
 
   const filteredTasks = useMemo(() => {
@@ -237,6 +255,10 @@ export function Tasks() {
         task.assignedToUser?.email ?? '',
         task.status,
         task.priority,
+        task.origin,
+        formatTaskOrigin(task.origin),
+        task.externalCode ?? '',
+        task.externalUrl ?? '',
       ]
         .join(' ')
         .toLowerCase()
@@ -296,6 +318,10 @@ export function Tasks() {
     (task) => task.status === 'OVERDUE',
   ).length;
 
+  const externalTasks = tasks.filter(
+    (task) => task.origin === 'AUVO' || task.origin === 'OTHER',
+  ).length;
+
   function openCreateForm() {
     setEditingTask(null);
     setFormData({
@@ -303,6 +329,7 @@ export function Tasks() {
       companyId: selectedCompanyId,
       roomId: selectedRoomId,
       equipmentId: selectedEquipmentId,
+      origin: selectedOrigin ? (selectedOrigin as TaskOrigin) : 'CRYOMAP',
     });
     setFormError('');
     setIsFormOpen(true);
@@ -319,6 +346,9 @@ export function Tasks() {
       description: task.description ?? '',
       priority: task.priority,
       status: task.status,
+      origin: task.origin ?? 'CRYOMAP',
+      externalCode: task.externalCode ?? '',
+      externalUrl: task.externalUrl ?? '',
       dueDate: formatDateTimeInput(task.dueDate),
     });
     setFormError('');
@@ -353,6 +383,11 @@ export function Tasks() {
         nextFormData.equipmentId = '';
       }
 
+      if (field === 'origin' && value === 'CRYOMAP') {
+        nextFormData.externalCode = '';
+        nextFormData.externalUrl = '';
+      }
+
       return nextFormData;
     });
   }
@@ -385,6 +420,9 @@ export function Tasks() {
           description: nullableValue(formData.description),
           priority: formData.priority,
           status: formData.status,
+          origin: formData.origin,
+          externalCode: nullableValue(formData.externalCode),
+          externalUrl: nullableValue(formData.externalUrl),
           dueDate: nullableIsoDateTime(formData.dueDate),
         };
 
@@ -399,6 +437,9 @@ export function Tasks() {
           description: optionalValue(formData.description),
           priority: formData.priority,
           status: formData.status,
+          origin: formData.origin,
+          externalCode: optionalValue(formData.externalCode),
+          externalUrl: optionalValue(formData.externalUrl),
           dueDate: optionalIsoDateTime(formData.dueDate),
         };
 
@@ -433,11 +474,11 @@ export function Tasks() {
 
   if (isLoading) {
     return (
-  <LoadingState
-    title="Carregando tarefas..."
-    description="Buscando chamados e pendências operacionais."
-  />
-);
+      <LoadingState
+        title="Carregando tarefas..."
+        description="Buscando chamados e pendências operacionais."
+      />
+    );
   }
 
   return (
@@ -447,8 +488,8 @@ export function Tasks() {
           <span>Operação</span>
           <h1>Tarefas</h1>
           <p>
-            Acompanhe tarefas técnicas por empresa, sala, equipamento, status e
-            prioridade.
+            Acompanhe tarefas técnicas por empresa, sala, equipamento, origem,
+            status e prioridade.
           </p>
         </div>
 
@@ -462,6 +503,7 @@ export function Tasks() {
         <SummaryCard title="Abertas" value={openTasks} />
         <SummaryCard title="Em andamento" value={inProgressTasks} />
         <SummaryCard title="Concluídas" value={doneTasks} />
+        <SummaryCard title="Externas" value={externalTasks} />
         <SummaryCard title="Atrasadas" value={overdueTasks} danger />
       </section>
 
@@ -597,6 +639,20 @@ export function Tasks() {
             </label>
 
             <label>
+              Origem
+              <select
+                value={formData.origin}
+                onChange={(event) =>
+                  updateFormField('origin', event.target.value as TaskOrigin)
+                }
+              >
+                <option value="CRYOMAP">CryoMap</option>
+                <option value="AUVO">Auvo</option>
+                <option value="OTHER">Outro</option>
+              </select>
+            </label>
+
+            <label>
               Vencimento
               <input
                 type="datetime-local"
@@ -604,6 +660,30 @@ export function Tasks() {
                 onChange={(event) =>
                   updateFormField('dueDate', event.target.value)
                 }
+              />
+            </label>
+
+            <label>
+              Código externo
+              <input
+                value={formData.externalCode}
+                disabled={formData.origin === 'CRYOMAP'}
+                onChange={(event) =>
+                  updateFormField('externalCode', event.target.value)
+                }
+                placeholder="Ex: AUVO-12345"
+              />
+            </label>
+
+            <label>
+              Link externo
+              <input
+                value={formData.externalUrl}
+                disabled={formData.origin === 'CRYOMAP'}
+                onChange={(event) =>
+                  updateFormField('externalUrl', event.target.value)
+                }
+                placeholder="Ex: link da OS no Auvo"
               />
             </label>
 
@@ -717,14 +797,24 @@ export function Tasks() {
               <option value="CRITICAL">Crítica</option>
             </select>
 
+            <select
+              value={selectedOrigin}
+              onChange={(event) => setSelectedOrigin(event.target.value)}
+            >
+              <option value="">Todas as origens</option>
+              <option value="CRYOMAP">CryoMap</option>
+              <option value="AUVO">Auvo</option>
+              <option value="OTHER">Outro</option>
+            </select>
+
             <input
               type="search"
-              placeholder="Buscar por título, sala, equipamento..."
+              placeholder="Buscar por título, origem, código externo..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
 
-            <button type="button" onClick={handleRefresh}>
+            <button type="button" onClick={() => void handleRefresh()}>
               Atualizar
             </button>
           </div>
@@ -734,7 +824,7 @@ export function Tasks() {
           <div className="tasks-error">
             <strong>{error}</strong>
 
-            <button type="button" onClick={handleRefresh}>
+            <button type="button" onClick={() => void handleRefresh()}>
               Tentar novamente
             </button>
           </div>
@@ -742,9 +832,9 @@ export function Tasks() {
 
         {!error && filteredTasks.length === 0 ? (
           <EmptyState
-  title="Nenhuma tarefa encontrada."
-  description="Cadastre uma tarefa ou ajuste os filtros para visualizar resultados."
-/>
+            title="Nenhuma tarefa encontrada."
+            description="Cadastre uma tarefa ou ajuste os filtros para visualizar resultados."
+          />
         ) : null}
 
         {!error && filteredTasks.length > 0 ? (
@@ -753,6 +843,8 @@ export function Tasks() {
               <thead>
                 <tr>
                   <th>Tarefa</th>
+                  <th>Origem</th>
+                  <th>Referência externa</th>
                   <th>Empresa</th>
                   <th>Sala</th>
                   <th>Equipamento</th>
@@ -772,6 +864,29 @@ export function Tasks() {
                     <td>
                       <strong>{task.title}</strong>
                       <small>{task.description || task.id}</small>
+                    </td>
+
+                    <td>
+                      <TaskOriginBadge origin={task.origin} />
+                    </td>
+
+                    <td>
+                      {task.externalCode ? (
+                        <strong>{task.externalCode}</strong>
+                      ) : (
+                        <span>-</span>
+                      )}
+
+                      {task.externalUrl ? (
+                        <a
+                          className="task-external-link"
+                          href={task.externalUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Abrir referência
+                        </a>
+                      ) : null}
                     </td>
 
                     <td>{task.company?.name ?? task.companyId}</td>
@@ -814,7 +929,7 @@ export function Tasks() {
 
                         <button
                           type="button"
-                          onClick={() => handleInactivate(task)}
+                          onClick={() => void handleInactivate(task)}
                         >
                           Remover
                         </button>
@@ -839,10 +954,24 @@ type SummaryCardProps = {
 
 function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
   return (
-    <article className={danger ? 'tasks-summary-card danger' : 'tasks-summary-card'}>
+    <article
+      className={danger ? 'tasks-summary-card danger' : 'tasks-summary-card'}
+    >
       <span>{title}</span>
       <strong>{value}</strong>
     </article>
+  );
+}
+
+type TaskOriginBadgeProps = {
+  origin: TaskOrigin;
+};
+
+function TaskOriginBadge({ origin }: TaskOriginBadgeProps) {
+  return (
+    <span className={`task-origin ${origin.toLowerCase()}`}>
+      {formatTaskOrigin(origin)}
+    </span>
   );
 }
 
@@ -883,6 +1012,16 @@ function TaskPriorityBadge({ priority }: TaskPriorityBadgeProps) {
       {labels[priority]}
     </span>
   );
+}
+
+function formatTaskOrigin(value: TaskOrigin) {
+  const labels: Record<TaskOrigin, string> = {
+    CRYOMAP: 'CryoMap',
+    AUVO: 'Auvo',
+    OTHER: 'Outro',
+  };
+
+  return labels[value];
 }
 
 function formatDate(value?: string | null) {
@@ -957,11 +1096,7 @@ function getRequestErrorMessage(error: unknown) {
   ) {
     const data = error.response.data;
 
-    if (
-      typeof data === 'object' &&
-      data !== null &&
-      'message' in data
-    ) {
+    if (typeof data === 'object' && data !== null && 'message' in data) {
       const message = data.message;
 
       if (typeof message === 'string') {

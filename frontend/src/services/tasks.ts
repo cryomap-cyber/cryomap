@@ -1,6 +1,11 @@
+import type {
+  Task,
+  TaskOrigin,
+  TaskPriority,
+  TaskStatus,
+} from '../types/task';
 import { api } from './api';
 import { getStoredAuthUser } from './auth-storage';
-import type { Task, TaskPriority, TaskStatus } from '../types/task';
 
 export type GetTasksParams = {
   companyId?: string;
@@ -9,6 +14,8 @@ export type GetTasksParams = {
   assignedToUserId?: string;
   status?: TaskStatus;
   priority?: TaskPriority;
+  origin?: TaskOrigin;
+  externalCode?: string;
   startDueDate?: string;
   endDueDate?: string;
 };
@@ -22,6 +29,9 @@ export type CreateTaskPayload = {
   description?: string;
   priority?: TaskPriority;
   status?: TaskStatus;
+  origin?: TaskOrigin;
+  externalCode?: string;
+  externalUrl?: string;
   dueDate?: string;
 };
 
@@ -34,6 +44,9 @@ export type UpdateTaskPayload = {
   description?: string | null;
   priority?: TaskPriority;
   status?: TaskStatus;
+  origin?: TaskOrigin;
+  externalCode?: string | null;
+  externalUrl?: string | null;
   dueDate?: string | null;
 };
 
