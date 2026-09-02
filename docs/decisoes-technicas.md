@@ -4336,3 +4336,21 @@ Impacto técnico:
 - Nenhuma alteração de frontend foi aplicada.
 - Nenhuma migration foi necessária.
 - O módulo de anexos permanece opcional.
+
+## 63.4.4. Decisão sobre downtime por origem
+
+Foi avaliada a possibilidade de separar o tempo parado dos atendimentos por origem do chamado.
+
+Decisão:
+
+- A funcionalidade de downtime por origem foi removida do escopo atual da beta.
+- O cálculo atual de tempo parado em Atendimentos permanece inalterado.
+- O sistema continua registrando `downtimeMinutes` no atendimento.
+- O sistema continua registrando a origem do chamado em `Task.origin`.
+- Não serão criados novos relatórios ou agrupamentos por origem neste momento.
+
+Motivo:
+
+- O tempo parado individual por atendimento já atende à necessidade atual da beta.
+- Separar downtime por origem não agrega valor suficiente neste momento.
+- A prioridade passa a ser melhorar visualização e usabilidade das medições técnicas de equipamentos.
