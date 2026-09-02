@@ -111,6 +111,25 @@ type ChartTooltipProps = {
   metric: ChartMetric;
 };
 
+type ActiveFilterItem = {
+  label: string;
+  value: string;
+};
+
+type ActiveFilterOptions = {
+  companyId: string;
+  companyName?: string;
+  roomId: string;
+  roomName?: string;
+  equipmentId: string;
+  equipmentName?: string;
+  userId: string;
+  userName?: string;
+  startDate: string;
+  endDate: string;
+  search: string;
+};
+
 const chartMetricOptions: ChartMetricOption[] = [
   {
     value: 'temperature',
@@ -281,6 +300,34 @@ export function EquipmentTemperatureReadings() {
 
   async function handleRefresh() {
     await loadData();
+  }
+
+  async function handleApplyFilters() {
+    await loadData();
+  }
+
+  async function handleClearFilters() {
+    const range = getChartDateRange('THIRTY_DAYS');
+
+    setSelectedCompanyId('');
+    setSelectedRoomId('');
+    setSelectedEquipmentId('');
+    setSelectedCreatedByUserId('');
+    setSelectedChartEquipmentId('');
+    setChartMetric('temperature');
+    setChartPeriod('THIRTY_DAYS');
+    setStartDate(range.startDate);
+    setEndDate(range.endDate);
+    setSearch('');
+
+    await loadData({
+      companyId: '',
+      roomId: '',
+      equipmentId: '',
+      createdByUserId: '',
+      startDateValue: range.startDate,
+      endDateValue: range.endDate,
+    });
   }
 
   useEffect(() => {
@@ -470,7 +517,61 @@ export function EquipmentTemperatureReadings() {
     (equipment) => equipment.id === activeChartEquipmentId,
   );
 
+  const selectedFilterCompany = companies.find(
+    (company) => company.id === selectedCompanyId,
+  );
+
+  const selectedFilterRoom = rooms.find((room) => room.id === selectedRoomId);
+
+  const selectedFilterEquipment = equipments.find(
+    (equipment) => equipment.id === selectedEquipmentId,
+  );
+
+  const selectedFilterUser = users.find(
+    (item) => item.id === selectedCreatedByUserId,
+  );
+
+  const selectedFilterEquipmentLabel = selectedFilterEquipment
+    ? `${selectedFilterEquipment.name} — ${selectedFilterEquipment.code}`
+    : undefined;
+
   const chartMetricConfig = getChartMetricConfig(chartMetric);
+
+  const activeFilters = useMemo(() => {
+    return buildActiveFilters({
+      companyId: selectedCompanyId,
+      companyName: selectedFilterCompany?.name,
+      roomId: selectedRoomId,
+      roomName: selectedFilterRoom?.name,
+      equipmentId: selectedEquipmentId,
+      equipmentName: selectedFilterEquipmentLabel,
+      userId: selectedCreatedByUserId,
+      userName: selectedFilterUser?.name,
+      startDate,
+      endDate,
+      search,
+    });
+  }, [
+    endDate,
+    search,
+    selectedCompanyId,
+    selectedCreatedByUserId,
+    selectedEquipmentId,
+    selectedFilterCompany?.name,
+    selectedFilterEquipmentLabel,
+    selectedFilterRoom?.name,
+    selectedFilterUser?.name,
+    selectedRoomId,
+    startDate,
+  ]);
+
+  const tableDateRangeLabel = `${formatDate(startDate)} até ${formatDate(
+    endDate,
+  )}`;
+
+  const chartEquipmentLabel = selectedChartEquipment
+    ? `${selectedChartEquipment.name} — ${selectedChartEquipment.code}`
+    : 'Nenhum equipamento selecionado';
 
   const averageTemperature = getAverage(
     readings.map((reading) => reading.temperature),
@@ -1292,10 +1393,57 @@ export function EquipmentTemperatureReadings() {
               onChange={(event) => setSearch(event.target.value)}
             />
 
-            <button type="button" onClick={() => void handleRefresh()}>
-              Atualizar
+            <button type="button" onClick={() => void handleApplyFilters()}>
+              Aplicar filtros
+            </button>
+
+            <button
+              type="button"
+              className="equipment-temperature-readings-secondary-button"
+              disabled={activeFilters.length === 0}
+              onClick={() => void handleClearFilters()}
+            >
+              Limpar filtros
             </button>
           </div>
+        </div>
+
+        <div className="equipment-temperature-readings-filter-status">
+          <article>
+            <span>Período selecionado</span>
+            <strong>{tableDateRangeLabel}</strong>
+          </article>
+
+          <article>
+            <span>Dados carregados</span>
+            <strong>{readings.length}</strong>
+          </article>
+
+          <article>
+            <span>Exibidos na tabela</span>
+            <strong>{filteredReadings.length}</strong>
+          </article>
+
+          <article>
+            <span>Equipamento do gráfico</span>
+            <strong>{chartEquipmentLabel}</strong>
+          </article>
+        </div>
+
+        <div className="equipment-temperature-readings-active-filters">
+          <strong>Filtros selecionados</strong>
+
+          {activeFilters.length > 0 ? (
+            <div className="equipment-temperature-readings-filter-chips">
+              {activeFilters.map((filter) => (
+                <span key={`${filter.label}-${filter.value}`}>
+                  {filter.label}: {filter.value}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span>Sem filtros adicionais. Exibindo o período padrão.</span>
+          )}
         </div>
 
         {error ? (
@@ -1948,6 +2096,63 @@ function getChartTrendText(stats: ChartStats, metric: ChartMetric) {
   )} em relação ao ponto anterior.`;
 }
 
+function buildActiveFilters(options: ActiveFilterOptions): ActiveFilterItem[] {
+  const filters: ActiveFilterItem[] = [];
+
+  if (options.companyId) {
+    filters.push({
+      label: 'Empresa',
+      value: options.companyName ?? options.companyId,
+    });
+  }
+
+  if (options.roomId) {
+    filters.push({
+      label: 'Sala',
+      value: options.roomName ?? options.roomId,
+    });
+  }
+
+  if (options.equipmentId) {
+    filters.push({
+      label: 'Equipamento',
+      value: options.equipmentName ?? options.equipmentId,
+    });
+  }
+
+  if (options.userId) {
+    filters.push({
+      label: 'Usuário',
+      value: options.userName ?? options.userId,
+    });
+  }
+
+  const normalizedSearch = options.search.trim();
+
+  if (normalizedSearch) {
+    filters.push({
+      label: 'Busca',
+      value: normalizedSearch,
+    });
+  }
+
+  const defaultRange = getChartDateRange('THIRTY_DAYS');
+
+  if (
+    options.startDate !== defaultRange.startDate ||
+    options.endDate !== defaultRange.endDate
+  ) {
+    filters.push({
+      label: 'Período',
+      value: `${formatDate(options.startDate)} até ${formatDate(
+        options.endDate,
+      )}`,
+    });
+  }
+
+  return filters;
+}
+
 function getRequestErrorMessage(error: unknown) {
   if (
     typeof error === 'object' &&
@@ -1974,3 +2179,4 @@ function getRequestErrorMessage(error: unknown) {
 
   return 'Não foi possível salvar a medição do equipamento.';
 }
+

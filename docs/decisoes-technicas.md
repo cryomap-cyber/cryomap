@@ -4472,3 +4472,35 @@ Testes realizados:
 - `SUPERVISOR` não visualizou ações de editar/remover.
 - `TECHNICIAN` não visualizou ações de editar/remover.
 - `CLIENT_USER` permaneceu somente leitura.
+
+## 63.5.3. Melhorias de filtros e usabilidade em medições de equipamentos
+
+Foi melhorada a usabilidade da tela de medições técnicas de equipamentos.
+
+Alterações aplicadas:
+
+- Adicionado botão para aplicar filtros.
+- Adicionado botão para limpar filtros.
+- Adicionado painel de status dos filtros.
+- Adicionados chips visuais com filtros ativos.
+- Melhorada a indicação do período selecionado.
+- Melhorada a indicação de registros carregados e registros exibidos.
+- Melhorada a integração visual entre filtros, tabela e gráfico.
+- Mantidas as ações administrativas de editar e remover medições somente para `MASTER_ADMIN`.
+
+Regras mantidas:
+
+- `MASTER_ADMIN` pode criar, editar e remover medições.
+- `SUPERVISOR` pode criar, mas não edita/remove medições já registradas.
+- `TECHNICIAN` pode criar medições conforme escopo da própria empresa, mas não edita/remove.
+- `CLIENT_USER` permanece somente leitura.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Filtros funcionaram corretamente.
+- Botão limpar filtros funcionou.
+- Gráfico acompanhou os filtros aplicados.
+- Tabela acompanhou os filtros aplicados.
+- Ações de editar/remover continuaram restritas ao `MASTER_ADMIN`.

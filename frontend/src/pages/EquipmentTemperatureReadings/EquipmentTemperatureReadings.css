@@ -427,6 +427,95 @@
   box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
 }
 
+.equipment-temperature-readings-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.equipment-temperature-readings-actions button.equipment-temperature-readings-secondary-button {
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
+.equipment-temperature-readings-filter-status {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.equipment-temperature-readings-filter-status article {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 18px;
+  padding: 13px 14px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.96),
+      rgba(245, 251, 255, 0.96)
+    );
+}
+
+.equipment-temperature-readings-filter-status span {
+  display: block;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.equipment-temperature-readings-filter-status strong {
+  display: block;
+  color: var(--color-primary-dark);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.equipment-temperature-readings-active-filters {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(34, 193, 255, 0.2);
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: rgba(237, 247, 255, 0.72);
+}
+
+.equipment-temperature-readings-active-filters > strong {
+  color: var(--color-primary-dark);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.equipment-temperature-readings-active-filters > span {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.equipment-temperature-readings-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.equipment-temperature-readings-filter-chips span {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border: 1px solid rgba(9, 109, 242, 0.16);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #ffffff;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .equipment-temperature-readings-error {
   display: flex;
   justify-content: space-between;
@@ -526,6 +615,7 @@
   font-weight: 900;
   white-space: nowrap;
 }
+
 .equipment-temperature-reading-row-actions {
   display: flex;
   flex-wrap: wrap;
@@ -689,7 +779,8 @@
   }
 
   .equipment-temperature-chart-context,
-  .equipment-temperature-chart-summary {
+  .equipment-temperature-chart-summary,
+  .equipment-temperature-readings-filter-status {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -801,6 +892,15 @@
     font-size: 13px;
   }
 
+  .equipment-temperature-readings-active-filters {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .equipment-temperature-readings-filter-chips {
+    justify-content: flex-start;
+  }
+
   .equipment-temperature-readings-table-wrapper {
     width: 100%;
     overflow-x: auto;
@@ -847,21 +947,24 @@
 
   .equipment-temperature-readings-summary,
   .equipment-temperature-chart-context,
-  .equipment-temperature-chart-summary {
+  .equipment-temperature-chart-summary,
+  .equipment-temperature-readings-filter-status {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 
   .equipment-temperature-readings-summary-card,
   .equipment-temperature-chart-summary-card,
-  .equipment-temperature-chart-context div {
+  .equipment-temperature-chart-context div,
+  .equipment-temperature-readings-filter-status article {
     padding: 10px;
     border-radius: 14px;
   }
 
   .equipment-temperature-readings-summary-card span,
   .equipment-temperature-chart-summary-card span,
-  .equipment-temperature-chart-context span {
+  .equipment-temperature-chart-context span,
+  .equipment-temperature-readings-filter-status span {
     font-size: 11px;
   }
 
@@ -869,7 +972,8 @@
     font-size: 19px;
   }
 
-  .equipment-temperature-chart-summary-card strong {
+  .equipment-temperature-chart-summary-card strong,
+  .equipment-temperature-readings-filter-status strong {
     font-size: 18px;
   }
 
@@ -940,7 +1044,8 @@
   .equipment-temperature-readings-actions,
   .equipment-temperature-readings-summary,
   .equipment-temperature-chart-context,
-  .equipment-temperature-chart-summary {
+  .equipment-temperature-chart-summary,
+  .equipment-temperature-readings-filter-status {
     grid-template-columns: 1fr;
   }
 }
