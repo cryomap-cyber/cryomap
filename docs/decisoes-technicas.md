@@ -4312,3 +4312,27 @@ Testes realizados:
 - Edição de origem para `Outro` funcionou.
 - Edição de origem para `CryoMap` limpou código e link externo.
 - Perfil `TECHNICIAN` continuou conseguindo criar/editar chamados da própria empresa.
+
+## 63.4.3. Decisão sobre anexos obrigatórios em atendimentos
+
+Foi avaliada a possibilidade de tornar obrigatório pelo menos um anexo/foto para finalizar atendimentos técnicos.
+
+Decisão:
+
+- A obrigatoriedade de anexo/foto foi removida do escopo atual.
+- Atendimentos poderão continuar sendo finalizados com ou sem anexos.
+- Fotos, relatórios e arquivos seguem disponíveis como recurso opcional.
+- O fluxo atual de anexos permanece inalterado.
+
+Motivo:
+
+- Evitar travar o fluxo operacional do técnico em campo.
+- Manter o encerramento de atendimentos mais flexível na beta.
+- Permitir que anexos sejam usados quando agregarem valor, sem bloquear o registro técnico.
+
+Impacto técnico:
+
+- Nenhuma alteração de backend foi aplicada.
+- Nenhuma alteração de frontend foi aplicada.
+- Nenhuma migration foi necessária.
+- O módulo de anexos permanece opcional.
