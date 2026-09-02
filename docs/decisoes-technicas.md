@@ -4032,3 +4032,65 @@ Observação:
 - A instalação do `recharts` gerou aviso de bundle/chunk grande no Vite.
 - O aviso não bloqueia a beta.
 - Otimização de bundle será tratada em etapa futura, se necessário.
+
+## 63.3.1 e 63.3.2. Problemas padronizados em atendimentos
+
+Foi iniciada a etapa de problemas padronizados nos atendimentos técnicos.
+
+Objetivo:
+
+- Permitir que o técnico registre rapidamente o problema/componente encontrado no atendimento.
+- Permitir uso de sugestões cadastradas.
+- Permitir texto livre quando a sugestão desejada ainda não existir.
+- Preparar o frontend para autocomplete: digitar, sugerir e aceitar texto livre.
+
+Decisão técnica:
+
+- O atendimento recebeu o campo `standardizedProblem`.
+- O campo é texto livre, não enum.
+- O técnico poderá selecionar uma sugestão ou digitar um novo texto manualmente.
+- As sugestões ficam em uma tabela separada para permitir cadastro e manutenção sem novas migrations.
+
+Alterações no banco:
+
+- Adicionado `standardizedProblem` no model `ServiceRecord`, mapeado para `standardized_problem`.
+- Criado model `ServiceProblemSuggestion`, mapeado para `service_problem_suggestions`.
+- A tabela de sugestões contém:
+  - título;
+  - título normalizado;
+  - descrição opcional;
+  - status ativo/inativo;
+  - timestamps;
+  - exclusão lógica.
+
+Alterações no backend:
+
+- DTOs de criação e edição de atendimentos passaram a aceitar `standardizedProblem`.
+- O service de atendimentos passou a salvar, editar e retornar `standardizedProblem`.
+- Criado módulo `ServiceProblemSuggestionsModule`.
+- Criados endpoints:
+  - `GET /service-problem-suggestions`;
+  - `GET /service-problem-suggestions/:id`;
+  - `POST /service-problem-suggestions`;
+  - `PATCH /service-problem-suggestions/:id`;
+  - `DELETE /service-problem-suggestions/:id`.
+
+Permissões:
+
+- `MASTER_ADMIN` e `SUPERVISOR` podem criar, editar e inativar sugestões.
+- `MASTER_ADMIN`, `SUPERVISOR`, `CLIENT_USER` e `TECHNICIAN` podem listar e consultar sugestões.
+- `TECHNICIAN` usará sugestões no atendimento, mas por enquanto não cadastra sugestões oficiais.
+- `CLIENT_USER` apenas visualiza.
+
+Testes realizados:
+
+- Migration aplicada com sucesso.
+- Prisma generate executado.
+- Backend `npm run lint` passou.
+- Backend `npm run build` passou.
+- Tabela `service_problem_suggestions` confirmada no PostgreSQL.
+- Criadas sugestões iniciais:
+  - Compressor travou;
+  - Curto na inversora;
+  - Vazamento de fluido.
+- Busca por `compressor` retornou a sugestão `Compressor travou`.

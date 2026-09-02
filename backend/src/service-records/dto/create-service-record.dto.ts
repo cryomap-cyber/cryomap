@@ -18,6 +18,10 @@ export class CreateServiceRecordDto {
 
   @IsOptional()
   @IsString()
+  standardizedProblem?: string;
+
+  @IsOptional()
+  @IsString()
   problemFound?: string;
 
   @IsOptional()

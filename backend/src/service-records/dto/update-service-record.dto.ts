@@ -15,6 +15,10 @@ export class UpdateServiceRecordDto {
 
   @IsOptional()
   @IsString()
+  standardizedProblem?: string | null;
+
+  @IsOptional()
+  @IsString()
   problemFound?: string | null;
 
   @IsOptional()

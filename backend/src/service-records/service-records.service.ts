@@ -28,6 +28,7 @@ const serviceRecordSelect = {
   startedAt: true,
   finishedAt: true,
   downtimeMinutes: true,
+  standardizedProblem: true,
   problemFound: true,
   servicePerformed: true,
   notes: true,
@@ -172,6 +173,7 @@ export class ServiceRecordsService {
           startedAt,
           finishedAt,
           downtimeMinutes,
+          standardizedProblem: createDto.standardizedProblem?.trim(),
           problemFound: createDto.problemFound?.trim(),
           servicePerformed: createDto.servicePerformed?.trim(),
           notes: createDto.notes?.trim(),
@@ -300,6 +302,10 @@ export class ServiceRecordsService {
           },
         };
       }
+    }
+
+    if (updateDto.standardizedProblem !== undefined) {
+      data.standardizedProblem = updateDto.standardizedProblem?.trim() || null;
     }
 
     if (updateDto.problemFound !== undefined) {

@@ -397,21 +397,22 @@ model ThermalAlert {
 }
 
 model ServiceRecord {
-  id               String    @id @default(uuid())
-  taskId           String    @unique @map("task_id")
-  companyId        String    @map("company_id")
-  roomId           String?   @map("room_id")
-  equipmentId      String?   @map("equipment_id")
-  technicianId     String?   @map("technician_id")
-  startedAt        DateTime  @map("started_at")
-  finishedAt       DateTime? @map("finished_at")
-  downtimeMinutes  Int?      @map("downtime_minutes")
-  problemFound     String?   @map("problem_found")
-  servicePerformed String?   @map("service_performed")
-  notes            String?
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
-  deletedAt        DateTime? @map("deleted_at")
+  id                  String    @id @default(uuid())
+  taskId              String    @unique @map("task_id")
+  companyId           String    @map("company_id")
+  roomId              String?   @map("room_id")
+  equipmentId         String?   @map("equipment_id")
+  technicianId        String?   @map("technician_id")
+  startedAt           DateTime  @map("started_at")
+  finishedAt          DateTime? @map("finished_at")
+  downtimeMinutes     Int?      @map("downtime_minutes")
+  standardizedProblem String?   @map("standardized_problem")
+  problemFound        String?   @map("problem_found")
+  servicePerformed    String?   @map("service_performed")
+  notes               String?
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  deletedAt           DateTime? @map("deleted_at")
 
   task        Task         @relation(fields: [taskId], references: [id], onDelete: Restrict)
   company     Company      @relation(fields: [companyId], references: [id], onDelete: Restrict)
@@ -425,6 +426,20 @@ model ServiceRecord {
   @@index([equipmentId])
   @@index([startedAt])
   @@map("service_records")
+}
+
+model ServiceProblemSuggestion {
+  id              String    @id @default(uuid())
+  title           String
+  normalizedTitle String    @unique @map("normalized_title")
+  description     String?
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  @@index([isActive])
+  @@map("service_problem_suggestions")
 }
 
 model Attachment {
