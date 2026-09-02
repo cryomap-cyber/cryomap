@@ -7,7 +7,12 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { TaskPriority, TaskStatus } from '../../generated/prisma/client.js';
+
+import {
+  TaskOrigin,
+  TaskPriority,
+  TaskStatus,
+} from '../../generated/prisma/client.js';
 
 export class CreateTaskDto {
   @IsUUID()
@@ -41,6 +46,20 @@ export class CreateTaskDto {
   @IsOptional()
   @IsEnum(TaskStatus)
   status?: TaskStatus;
+
+  @IsOptional()
+  @IsEnum(TaskOrigin)
+  origin?: TaskOrigin;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  externalCode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  externalUrl?: string;
 
   @IsOptional()
   @IsDateString()

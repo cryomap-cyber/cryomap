@@ -4185,3 +4185,74 @@ Testes realizados:
 - `SUPERVISOR` acessou a tela.
 - `CLIENT_USER` e `TECHNICIAN` não visualizaram o menu.
 - Autocomplete em Atendimentos continuou funcionando com sugestões ativas.
+
+## 63.4.1 e 63.4.2. Compatibilidade com chamados externos/Auvo no backend
+
+Foi iniciada a etapa de compatibilidade com chamados externos, especialmente Auvo.
+
+Objetivo:
+
+- Identificar a origem do chamado/tarefa.
+- Permitir diferenciar chamados criados diretamente no CryoMap de chamados vindos do Auvo ou de outra origem externa.
+- Guardar código externo do chamado.
+- Guardar link externo do chamado.
+- Preparar o sistema para anexos, relatórios e downtime considerando origem interna ou externa.
+
+Alterações no banco:
+
+- Criado enum `TaskOrigin`:
+  - `CRYOMAP`;
+  - `AUVO`;
+  - `OTHER`.
+
+- Adicionados campos no model `Task`:
+  - `origin`, com padrão `CRYOMAP`;
+  - `externalCode`, mapeado para `external_code`;
+  - `externalUrl`, mapeado para `external_url`.
+
+- Adicionados índices:
+  - `origin`;
+  - `externalCode`.
+
+Alterações no backend:
+
+- DTO de criação de tarefas passou a aceitar:
+  - `origin`;
+  - `externalCode`;
+  - `externalUrl`.
+
+- DTO de edição de tarefas passou a aceitar:
+  - `origin`;
+  - `externalCode`;
+  - `externalUrl`.
+
+- DTO de filtros de tarefas passou a aceitar:
+  - `origin`;
+  - `externalCode`.
+
+- Service de tarefas passou a:
+  - salvar origem do chamado;
+  - salvar código externo;
+  - salvar link externo;
+  - retornar os novos campos na listagem e detalhe;
+  - filtrar tarefas por origem;
+  - filtrar tarefas por código externo parcial.
+
+Regras:
+
+- Chamados sem origem informada são tratados como `CRYOMAP`.
+- Chamados vindos do Auvo podem usar `origin: "AUVO"`.
+- Chamados externos genéricos podem usar `origin: "OTHER"`.
+- `externalCode` e `externalUrl` são opcionais.
+
+Testes realizados:
+
+- Migration aplicada com sucesso.
+- Prisma format executado.
+- Prisma generate executado.
+- Backend `npm run lint` passou.
+- Backend `npm run build` passou.
+- Criação de tarefa com `origin: "AUVO"` funcionou.
+- Retorno da API exibiu `origin`, `externalCode` e `externalUrl`.
+- Filtro `GET /tasks?origin=AUVO` funcionou.
+- Filtro `GET /tasks?externalCode=12345` funcionou.

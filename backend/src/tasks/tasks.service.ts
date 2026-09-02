@@ -8,6 +8,7 @@ import {
 import type { AuthUser } from '../auth/types/auth-user.type.js';
 import {
   Prisma,
+  TaskOrigin,
   TaskPriority,
   TaskStatus,
   UserRole,
@@ -28,6 +29,9 @@ const taskSelect = {
   description: true,
   priority: true,
   status: true,
+  origin: true,
+  externalCode: true,
+  externalUrl: true,
   dueDate: true,
   completedAt: true,
   createdAt: true,
@@ -108,6 +112,9 @@ export class TasksService {
         description: createTaskDto.description?.trim(),
         priority: createTaskDto.priority ?? TaskPriority.MEDIUM,
         status: createTaskDto.status ?? TaskStatus.OPEN,
+        origin: createTaskDto.origin ?? TaskOrigin.CRYOMAP,
+        externalCode: this.optionalText(createTaskDto.externalCode),
+        externalUrl: this.optionalText(createTaskDto.externalUrl),
         dueDate,
         completedAt:
           createTaskDto.status === TaskStatus.DONE ? new Date() : undefined,
@@ -145,6 +152,17 @@ export class TasksService {
 
     if (filters.priority) {
       where.priority = filters.priority;
+    }
+
+    if (filters.origin) {
+      where.origin = filters.origin;
+    }
+
+    if (filters.externalCode?.trim()) {
+      where.externalCode = {
+        contains: filters.externalCode.trim(),
+        mode: 'insensitive',
+      };
     }
 
     if (filters.startDueDate || filters.endDueDate) {
@@ -325,6 +343,18 @@ export class TasksService {
       }
     }
 
+    if (updateTaskDto.origin !== undefined) {
+      data.origin = updateTaskDto.origin;
+    }
+
+    if (updateTaskDto.externalCode !== undefined) {
+      data.externalCode = this.optionalText(updateTaskDto.externalCode);
+    }
+
+    if (updateTaskDto.externalUrl !== undefined) {
+      data.externalUrl = this.optionalText(updateTaskDto.externalUrl);
+    }
+
     if (updateTaskDto.dueDate !== undefined) {
       data.dueDate = updateTaskDto.dueDate
         ? this.parseDate(updateTaskDto.dueDate, 'Prazo inválido')
@@ -457,6 +487,12 @@ export class TasksService {
     }
 
     return date;
+  }
+
+  private optionalText(value?: string | null) {
+    const normalized = value?.trim();
+
+    return normalized || null;
   }
 
   private async ensureCompanyExists(companyId: string) {

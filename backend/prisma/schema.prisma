@@ -90,6 +90,12 @@ enum TaskStatus {
   OVERDUE
 }
 
+enum TaskOrigin {
+  CRYOMAP
+  AUVO
+  OTHER
+}
+
 enum AttachmentType {
   SERVICE_PHOTO
   AUVO_REPORT
@@ -332,6 +338,9 @@ model Task {
   description      String?
   priority         TaskPriority @default(MEDIUM)
   status           TaskStatus   @default(OPEN)
+  origin           TaskOrigin   @default(CRYOMAP)
+  externalCode     String?      @map("external_code")
+  externalUrl      String?      @map("external_url")
   dueDate          DateTime?    @map("due_date")
   completedAt      DateTime?    @map("completed_at")
   scheduledDate    DateTime?    @map("scheduled_date")
@@ -353,6 +362,8 @@ model Task {
 
   @@index([companyId])
   @@index([status])
+  @@index([origin])
+  @@index([externalCode])
   @@index([scheduledDate])
   @@index([assignedToUserId])
   @@index([equipmentId])
