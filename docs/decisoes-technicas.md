@@ -4138,3 +4138,50 @@ Testes realizados:
 - Texto livre não cadastrado também foi aceito.
 - Coluna `Problema padrão` apareceu na lista.
 - `CLIENT_USER` visualizou atendimentos em modo somente consulta.
+
+## 63.3.4. Cadastro visual de sugestões de problemas
+
+Foi criada uma tela administrativa para cadastro visual de sugestões de problemas usadas nos atendimentos técnicos.
+
+Objetivo:
+
+- Permitir que administradores e supervisores cadastrem sugestões sem usar terminal ou curl.
+- Centralizar a manutenção de problemas/componentes recorrentes.
+- Alimentar o autocomplete da tela de Atendimentos.
+- Evitar enum fechado, mantendo o técnico com liberdade para digitar texto livre no atendimento.
+
+Alterações no frontend:
+
+- Criada página `ServiceProblemSuggestions`.
+- Criado CSS específico para a tela.
+- Adicionada rota `/service-problem-suggestions`.
+- Adicionado item de menu `Sugestões`.
+- A tela permite:
+  - listar sugestões;
+  - buscar por título, normalização, descrição e status;
+  - filtrar por ativas/inativas;
+  - criar nova sugestão;
+  - editar título, descrição e status;
+  - inativar sugestão;
+  - reativar sugestão.
+
+Permissões:
+
+- `MASTER_ADMIN` e `SUPERVISOR` acessam a tela `Sugestões`.
+- `CLIENT_USER` e `TECHNICIAN` não visualizam o menu e não acessam a rota.
+- As sugestões ativas continuam disponíveis no autocomplete dos atendimentos.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Menu `Sugestões` apareceu para `MASTER_ADMIN`.
+- Sugestões criadas via API apareceram na tela.
+- Criação visual de sugestão funcionou.
+- Edição de descrição funcionou.
+- Inativação funcionou.
+- Reativação funcionou.
+- Busca por `compressor` retornou `Compressor travou`.
+- `SUPERVISOR` acessou a tela.
+- `CLIENT_USER` e `TECHNICIAN` não visualizaram o menu.
+- Autocomplete em Atendimentos continuou funcionando com sugestões ativas.

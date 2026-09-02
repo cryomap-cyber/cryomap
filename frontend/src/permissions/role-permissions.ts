@@ -84,6 +84,11 @@ export const navigationItems: NavigationItem[] = [
     allowedRoles: allRoles,
   },
   {
+    label: 'Sugestões',
+    to: '/service-problem-suggestions',
+    allowedRoles: managementRoles,
+  },
+  {
     label: 'Anexos',
     to: '/attachments',
     allowedRoles: allRoles,

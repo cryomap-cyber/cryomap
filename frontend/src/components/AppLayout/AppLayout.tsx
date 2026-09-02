@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+
 import cryomapLogo from '../../assets/cryomap-logo.png';
 import { useAuth } from '../../contexts/useAuth';
 import { getAllowedNavigationItems } from '../../permissions/role-permissions';

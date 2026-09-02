@@ -16,6 +16,7 @@ import { Login } from './pages/Login/Login';
 import { Reports } from './pages/Reports/Reports';
 import { Rooms } from './pages/Rooms/Rooms';
 import { Sensors } from './pages/Sensors/Sensors';
+import { ServiceProblemSuggestions } from './pages/ServiceProblemSuggestions/ServiceProblemSuggestions';
 import { ServiceRecords } from './pages/ServiceRecords/ServiceRecords';
 import { Tasks } from './pages/Tasks/Tasks';
 import { TemperatureReadings } from './pages/TemperatureReadings/TemperatureReadings';
@@ -50,12 +51,14 @@ export function App() {
           <Route element={<ProtectedRoute allowedRoles={managementRoles} />}>
             <Route path="/companies" element={<Companies />} />
             <Route path="/users" element={<Users />} />
+            <Route
+              path="/service-problem-suggestions"
+              element={<ServiceProblemSuggestions />}
+            />
           </Route>
 
           <Route
-            element={
-              <ProtectedRoute allowedRoles={[...clientAndAdminRoles]} />
-            }
+            element={<ProtectedRoute allowedRoles={[...clientAndAdminRoles]} />}
           >
             <Route path="/sensors" element={<Sensors />} />
             <Route path="/reports" element={<Reports />} />
