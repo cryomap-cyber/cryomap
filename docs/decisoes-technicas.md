@@ -5325,3 +5325,45 @@ Testes realizados:
 - Perfil técnico conseguiu visualizar chamados da própria empresa.
 - Perfis administrativos continuaram com gestão completa de chamados.
 - Atendimentos continuaram podendo ser criados a partir de chamados.
+
+## 65. Backup automático
+
+Foi implementado backup automático local do banco PostgreSQL do CryoMap.
+
+Objetivo:
+
+- Proteger os dados do beta contra perda acidental.
+- Permitir recuperação do banco em caso de erro operacional, problema local ou alteração indevida.
+- Criar uma rotina simples e confiável antes do deploy.
+- Evitar dependência inicial de solução externa de backup para o beta local.
+
+Decisão técnica:
+
+- O backup inicial será local.
+- O backup será feito com `pg_dump` executado dentro do container Docker do PostgreSQL.
+- Os arquivos serão compactados em `.sql.gz`.
+- O agendamento será feito via `cron` do Linux.
+- A retenção local padrão será de 14 dias.
+- Backups externos serão tratados posteriormente na etapa de deploy/produção.
+
+Arquivos criados:
+
+- `scripts/backup-postgres.sh`
+- `scripts/restore-postgres.sh`
+- `backups/.gitkeep`
+- `backups/postgres/.gitkeep`
+
+Alterações aplicadas:
+
+- Criado script de backup do PostgreSQL.
+- Criado script de restore com confirmação manual.
+- Criada pasta local `backups/postgres`.
+- Configurado `.gitignore` para não versionar arquivos reais de backup.
+- Mantidos no Git apenas os arquivos `.gitkeep`.
+- Configurado cron diário às 02:00.
+- O resultado do cron será registrado em `backups/postgres/backup.log`.
+
+Comando agendado no cron:
+
+```cron
+0 2 * * * cd /home/artechdev/Projetos/cryomap && /home/artechdev/Projetos/cryomap/scripts/backup-postgres.sh >> /home/artechdev/Projetos/cryomap/backups/postgres/backup.log 2>&1

@@ -40,6 +40,13 @@ coverage/
 uploads/*
 !uploads/.gitkeep
 
+# Backups locais
+backups/*
+!backups/.gitkeep
+!backups/postgres/
+backups/postgres/*
+!backups/postgres/.gitkeep
+
 # Banco local / Docker
 docker/postgres/data/
 postgres-data/
