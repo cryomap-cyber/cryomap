@@ -1092,6 +1092,16 @@ export function EquipmentTemperatureReadings() {
             </button>
           </div>
 
+          <div className="equipment-temperature-reading-form-tip">
+            <strong>Medição técnica manual</strong>
+            <p>
+              Registre a temperatura do equipamento e, quando disponível,
+              complete pressões, superaquecimento, subresfriamento e vazão de
+              ar. Esses dados alimentam o histórico técnico e o gráfico desta
+              tela.
+            </p>
+          </div>
+
           <form
             className="equipment-temperature-reading-form"
             onSubmit={handleSubmit}
@@ -1305,106 +1315,127 @@ export function EquipmentTemperatureReadings() {
           </div>
 
           <div className="equipment-temperature-readings-actions">
-            <select
-              value={selectedCompanyId}
-              onChange={(event) => {
-                setSelectedCompanyId(event.target.value);
-                setSelectedRoomId('');
-                setSelectedEquipmentId('');
-                setSelectedCreatedByUserId('');
-                setSelectedChartEquipmentId('');
-              }}
-            >
-              <option value="">Todas as empresas</option>
+            <label className="equipment-temperature-readings-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => {
+                  setSelectedCompanyId(event.target.value);
+                  setSelectedRoomId('');
+                  setSelectedEquipmentId('');
+                  setSelectedCreatedByUserId('');
+                  setSelectedChartEquipmentId('');
+                }}
+              >
+                <option value="">Todas as empresas</option>
 
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedRoomId}
-              onChange={(event) => {
-                setSelectedRoomId(event.target.value);
-                setSelectedEquipmentId('');
-                setSelectedChartEquipmentId('');
-              }}
-            >
-              <option value="">Todas as salas</option>
+            <label className="equipment-temperature-readings-filter-field">
+              <span>Sala</span>
+              <select
+                value={selectedRoomId}
+                onChange={(event) => {
+                  setSelectedRoomId(event.target.value);
+                  setSelectedEquipmentId('');
+                  setSelectedChartEquipmentId('');
+                }}
+              >
+                <option value="">Todas as salas</option>
 
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedEquipmentId}
-              onChange={(event) => {
-                setSelectedEquipmentId(event.target.value);
-                setSelectedChartEquipmentId(event.target.value);
-              }}
-            >
-              <option value="">Todos os equipamentos</option>
+            <label className="equipment-temperature-readings-filter-field">
+              <span>Equipamento</span>
+              <select
+                value={selectedEquipmentId}
+                onChange={(event) => {
+                  setSelectedEquipmentId(event.target.value);
+                  setSelectedChartEquipmentId(event.target.value);
+                }}
+              >
+                <option value="">Todos os equipamentos</option>
 
-              {equipments.map((equipment) => (
-                <option key={equipment.id} value={equipment.id}>
-                  {equipment.name} — {equipment.code}
-                </option>
-              ))}
-            </select>
+                {equipments.map((equipment) => (
+                  <option key={equipment.id} value={equipment.id}>
+                    {equipment.name} — {equipment.code}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedCreatedByUserId}
-              onChange={(event) =>
-                setSelectedCreatedByUserId(event.target.value)
-              }
-            >
-              <option value="">Todos os usuários</option>
+            <label className="equipment-temperature-readings-filter-field">
+              <span>Registrado por</span>
+              <select
+                value={selectedCreatedByUserId}
+                onChange={(event) =>
+                  setSelectedCreatedByUserId(event.target.value)
+                }
+              >
+                <option value="">Todos os usuários</option>
 
-              {users.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
+                {users.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <input
-              type="date"
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-              title="Data inicial"
-            />
+            <label className="equipment-temperature-readings-filter-field">
+              <span>Início</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            </label>
 
-            <input
-              type="date"
-              value={endDate}
-              onChange={(event) => setEndDate(event.target.value)}
-              title="Data final"
-            />
+            <label className="equipment-temperature-readings-filter-field">
+              <span>Fim</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(event) => setEndDate(event.target.value)}
+              />
+            </label>
 
-            <input
-              type="search"
-              placeholder="Buscar por equipamento, fluido, pressão..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
+            <label className="equipment-temperature-readings-filter-field equipment-temperature-readings-search-field">
+              <span>Busca</span>
+              <input
+                type="search"
+                placeholder="Buscar por equipamento, fluido, pressão..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
 
-            <button type="button" onClick={() => void handleApplyFilters()}>
-              Aplicar filtros
-            </button>
+            <div className="equipment-temperature-readings-action-buttons">
+              <button type="button" onClick={() => void handleApplyFilters()}>
+                Aplicar filtros
+              </button>
 
-            <button
-              type="button"
-              className="equipment-temperature-readings-secondary-button"
-              disabled={activeFilters.length === 0}
-              onClick={() => void handleClearFilters()}
-            >
-              Limpar filtros
-            </button>
+              <button
+                type="button"
+                className="equipment-temperature-readings-secondary-button"
+                disabled={activeFilters.length === 0}
+                onClick={() => void handleClearFilters()}
+              >
+                Limpar filtros
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1437,7 +1468,7 @@ export function EquipmentTemperatureReadings() {
             <div className="equipment-temperature-readings-filter-chips">
               {activeFilters.map((filter) => (
                 <span key={`${filter.label}-${filter.value}`}>
-                  {filter.label}: {filter.value}
+                  {filter.label}: <strong>{filter.value}</strong>
                 </span>
               ))}
             </div>

@@ -167,6 +167,7 @@
 .equipment-temperature-chart-actions select,
 .equipment-temperature-readings-actions input,
 .equipment-temperature-readings-actions select {
+  width: 100%;
   min-height: 42px;
   border: 1px solid var(--color-border);
   border-radius: 14px;
@@ -395,21 +396,40 @@
 }
 
 .equipment-temperature-readings-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
   gap: 10px;
-  justify-content: flex-end;
+  width: min(100%, 980px);
 }
 
-.equipment-temperature-readings-actions input[type='search'] {
-  min-width: 290px;
+.equipment-temperature-readings-filter-field {
+  display: grid;
+  gap: 6px;
+}
+
+.equipment-temperature-readings-filter-field span {
+  color: var(--color-text-soft);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.equipment-temperature-readings-search-field {
+  grid-column: span 2;
+}
+
+.equipment-temperature-readings-action-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: end;
 }
 
 .equipment-temperature-readings-actions input::placeholder {
   color: #8a9aaa;
 }
 
-.equipment-temperature-readings-actions button,
+.equipment-temperature-readings-action-buttons button,
 .equipment-temperature-readings-error button {
   border: 0;
   border-radius: 14px;
@@ -427,13 +447,17 @@
   box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
 }
 
-.equipment-temperature-readings-actions button:disabled {
+.equipment-temperature-readings-action-buttons button {
+  flex: 1;
+}
+
+.equipment-temperature-readings-action-buttons button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   box-shadow: none;
 }
 
-.equipment-temperature-readings-actions button.equipment-temperature-readings-secondary-button {
+.equipment-temperature-readings-action-buttons button.equipment-temperature-readings-secondary-button {
   border: 1px solid var(--color-border-soft);
   background: var(--color-surface-soft);
   color: var(--color-primary);
@@ -516,6 +540,11 @@
   font-weight: 900;
 }
 
+.equipment-temperature-readings-filter-chips strong {
+  color: var(--color-primary-dark);
+  font-size: 12px;
+}
+
 .equipment-temperature-readings-error {
   display: flex;
   justify-content: space-between;
@@ -548,6 +577,18 @@
   border: 1px solid var(--color-border-soft);
   border-radius: 22px;
   background: #ffffff;
+  scrollbar-width: thin;
+}
+
+.equipment-temperature-readings-table-wrapper::before {
+  content: 'Deslize a tabela para ver todas as colunas';
+  display: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border-soft);
+  background: var(--color-surface-soft);
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .equipment-temperature-readings-table {
@@ -685,6 +726,29 @@
   cursor: pointer;
 }
 
+.equipment-temperature-reading-form-tip {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(34, 193, 255, 0.2);
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: rgba(237, 247, 255, 0.72);
+}
+
+.equipment-temperature-reading-form-tip strong {
+  color: var(--color-primary-dark);
+  font-size: 13px;
+}
+
+.equipment-temperature-reading-form-tip p {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .equipment-temperature-reading-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -783,6 +847,16 @@
   .equipment-temperature-readings-filter-status {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .equipment-temperature-chart-header,
+  .equipment-temperature-readings-panel-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .equipment-temperature-readings-actions {
+    width: 100%;
+  }
 }
 
 @media (max-width: 1000px) {
@@ -870,10 +944,8 @@
   }
 
   .equipment-temperature-readings-actions {
-    display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 8px;
-    align-items: center;
   }
 
   .equipment-temperature-readings-actions input,
@@ -885,7 +957,11 @@
     font-size: 13px;
   }
 
-  .equipment-temperature-readings-actions button {
+  .equipment-temperature-readings-action-buttons {
+    align-items: end;
+  }
+
+  .equipment-temperature-readings-action-buttons button {
     min-height: 38px;
     padding: 8px 12px;
     border-radius: 12px;
@@ -926,12 +1002,16 @@
   .equipment-temperature-readings-header,
   .equipment-temperature-chart-header {
     flex-direction: column;
-    padding: 22px;
-    border-radius: 24px;
+    padding: 18px;
+    border-radius: 22px;
   }
 
   .equipment-temperature-chart-header {
     padding: 0;
+  }
+
+  .equipment-temperature-readings-header p {
+    font-size: 13px;
   }
 
   .equipment-temperature-readings-header h1 {
@@ -940,8 +1020,8 @@
 
   .equipment-temperature-readings-header button {
     width: 100%;
-    min-height: 38px;
-    padding: 9px 12px;
+    min-height: 42px;
+    padding: 10px 12px;
     font-size: 13px;
   }
 
@@ -983,10 +1063,13 @@
   }
 
   .equipment-temperature-chart-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
   }
 
   .equipment-temperature-chart-tabs button {
+    width: 100%;
     padding: 8px 10px;
     font-size: 11px;
   }
@@ -1006,12 +1089,23 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .equipment-temperature-readings-actions input[type='search'] {
+  .equipment-temperature-readings-search-field,
+  .equipment-temperature-readings-action-buttons {
     grid-column: 1 / -1;
   }
 
-  .equipment-temperature-readings-actions button {
+  .equipment-temperature-readings-action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .equipment-temperature-readings-action-buttons button {
     width: 100%;
+  }
+
+  .equipment-temperature-readings-table-wrapper::before {
+    display: block;
   }
 
   .equipment-temperature-readings-table {
@@ -1019,12 +1113,42 @@
     font-size: 12px;
   }
 
+  .equipment-temperature-reading-row-actions {
+    flex-direction: column;
+  }
+
+  .equipment-temperature-reading-row-actions button {
+    width: 100%;
+    min-height: 36px;
+  }
+
+
   .equipment-temperature-reading-form-panel {
     inset: 10px;
     width: calc(100vw - 20px);
     max-height: calc(100vh - 20px);
     border-radius: 22px;
     padding: 16px;
+  }
+
+  .equipment-temperature-reading-form-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .equipment-temperature-reading-form-header h2 {
+    font-size: 20px;
+  }
+
+  .equipment-temperature-reading-form-header button {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  .equipment-temperature-reading-form-tip {
+    border-radius: 15px;
+    padding: 10px 12px;
   }
 
   .equipment-temperature-reading-form {
@@ -1037,16 +1161,34 @@
 
   .equipment-temperature-reading-form-actions button {
     width: 100%;
+    min-height: 42px;
+  }
+
+  .equipment-temperature-readings-error {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .equipment-temperature-readings-error button {
+    width: 100%;
   }
 }
 
 @media (max-width: 430px) {
   .equipment-temperature-readings-actions,
+  .equipment-temperature-readings-action-buttons,
   .equipment-temperature-readings-summary,
+  .equipment-temperature-chart-tabs,
   .equipment-temperature-chart-context,
   .equipment-temperature-chart-summary,
   .equipment-temperature-readings-filter-status {
     grid-template-columns: 1fr;
+  }
+
+  .equipment-temperature-readings-table {
+    min-width: 980px;
   }
 }
 

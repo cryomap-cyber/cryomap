@@ -4889,3 +4889,79 @@ Testes realizados:
 - Formulário ficou usável em celular.
 - Tabela manteve rolagem horizontal no mobile.
 - Perfil `CLIENT_USER` permaneceu somente consulta.
+
+## 63.6.6. Revisão mobile da tela Medições de Equipamentos
+
+Foi realizada uma revisão visual e operacional da tela de Medições de Equipamentos para melhorar o uso em dispositivos móveis.
+
+Objetivo:
+
+- Facilitar o registro técnico manual em campo.
+- Melhorar a leitura dos indicadores técnicos no celular.
+- Preservar o gráfico técnico de equipamentos.
+- Preservar os filtros, cards, histórico e tabela.
+- Preservar edição e remoção de medições pelo `MASTER_ADMIN`.
+- Preservar acesso somente consulta para `CLIENT_USER`.
+
+Alterações aplicadas:
+
+- Header da tela ficou mais compacto no mobile.
+- Cards de resumo foram ajustados para telas pequenas.
+- Gráfico técnico recebeu ajustes de layout no mobile.
+- Botões de indicadores do gráfico foram reorganizados para toque em celular.
+- Botões de período foram ajustados para melhor uso em telas pequenas.
+- Contexto do gráfico foi ajustado para leitura mobile.
+- Cards do gráfico foram compactados.
+- Formulário de nova medição foi ajustado para uma coluna no mobile.
+- Adicionado aviso operacional sobre medição técnica manual.
+- Campos técnicos foram preservados:
+  - temperatura do equipamento;
+  - pressão de descarga;
+  - pressão de sucção;
+  - temperatura da linha de líquido;
+  - temperatura de evaporação;
+  - superaquecimento;
+  - subresfriamento;
+  - vazão de ar.
+- Filtros receberam rótulos visíveis.
+- Botões `Aplicar filtros` e `Limpar filtros` foram ajustados para uso mobile.
+- Painel de filtros e contexto de dados foi preservado.
+- Tabela recebeu aviso para deslizar horizontalmente no mobile.
+- Botões de editar e remover foram ajustados para toque em celular.
+
+Regras preservadas:
+
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+- Equipamentos continuam sem sensores.
+- Medições de equipamentos continuam sendo manuais.
+- `CLIENT_USER` continua somente consulta.
+- `TECHNICIAN`, `SUPERVISOR` e `MASTER_ADMIN` continuam podendo criar medições.
+- Apenas `MASTER_ADMIN` continua podendo editar ou remover medições.
+- O gráfico técnico continua usando o histórico de medições carregado.
+- As unidades técnicas foram preservadas:
+  - temperatura em °C;
+  - pressões em psi;
+  - superaquecimento/subresfriamento em °C;
+  - vazão de ar em m³/h.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Medições de Equipamentos carregou corretamente.
+- Cards de resumo funcionaram.
+- Gráfico técnico funcionou.
+- Troca de equipamento do gráfico funcionou.
+- Troca de indicador funcionou.
+- Troca de período funcionou.
+- Nova medição manual foi criada.
+- Medição apareceu na tabela.
+- Medição alimentou o gráfico.
+- Filtros de empresa, sala, equipamento, usuário, início, fim e busca funcionaram.
+- Botão limpar filtros funcionou.
+- Layout mobile ficou adequado.
+- Formulário ficou usável em celular.
+- Tabela manteve rolagem horizontal no mobile.
+- Perfil `CLIENT_USER` permaneceu somente consulta.
+- Perfil `MASTER_ADMIN` manteve ações de editar e remover.
