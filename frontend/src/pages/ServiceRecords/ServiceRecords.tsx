@@ -22,7 +22,7 @@ import type { Equipment } from '../../types/equipment';
 import type { Room } from '../../types/room';
 import type { ServiceProblemSuggestion } from '../../types/service-problem-suggestion';
 import type { ServiceRecord } from '../../types/service-record';
-import type { Task } from '../../types/task';
+import type { Task, TaskPriority } from '../../types/task';
 import type { User } from '../../types/user';
 import './ServiceRecords.css';
 
@@ -35,6 +35,11 @@ type ServiceRecordFormData = {
   problemFound: string;
   servicePerformed: string;
   notes: string;
+};
+
+type ActiveFilter = {
+  label: string;
+  value: string;
 };
 
 const emptyFormData: ServiceRecordFormData = {
@@ -135,6 +140,18 @@ export function ServiceRecords() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleClearFilters() {
+    setSelectedCompanyId('');
+    setSelectedRoomId('');
+    setSelectedEquipmentId('');
+    setSelectedTechnicianId('');
+    setSelectedTaskId('');
+    setStartDate('');
+    setEndDate('');
+    setSearch('');
+    setError('');
   }
 
   useEffect(() => {
@@ -317,6 +334,87 @@ export function ServiceRecords() {
         .includes(normalizedSearch);
     });
   }, [serviceRecords, search]);
+
+  const activeFilters = useMemo(() => {
+    const filters: ActiveFilter[] = [];
+
+    const selectedCompany = companies.find(
+      (company) => company.id === selectedCompanyId,
+    );
+    const selectedRoom = rooms.find((room) => room.id === selectedRoomId);
+    const selectedEquipment = equipments.find(
+      (equipment) => equipment.id === selectedEquipmentId,
+    );
+    const selectedTask = tasks.find((task) => task.id === selectedTaskId);
+    const selectedTechnician = users.find(
+      (item) => item.id === selectedTechnicianId,
+    );
+
+    if (selectedCompany) {
+      filters.push({
+        label: 'Empresa',
+        value: selectedCompany.name,
+      });
+    }
+
+    if (selectedRoom) {
+      filters.push({
+        label: 'Sala',
+        value: selectedRoom.name,
+      });
+    }
+
+    if (selectedEquipment) {
+      filters.push({
+        label: 'Equipamento',
+        value: selectedEquipment.name,
+      });
+    }
+
+    if (selectedTask) {
+      filters.push({
+        label: 'Tarefa',
+        value: selectedTask.title,
+      });
+    }
+
+    if (selectedTechnician) {
+      filters.push({
+        label: 'Técnico',
+        value: selectedTechnician.name,
+      });
+    }
+
+    if (startDate || endDate) {
+      filters.push({
+        label: 'Período',
+        value: `${formatDate(startDate) || '-'} até ${formatDate(endDate) || '-'}`,
+      });
+    }
+
+    if (search.trim()) {
+      filters.push({
+        label: 'Busca',
+        value: search.trim(),
+      });
+    }
+
+    return filters;
+  }, [
+    companies,
+    endDate,
+    equipments,
+    rooms,
+    search,
+    selectedCompanyId,
+    selectedEquipmentId,
+    selectedRoomId,
+    selectedTaskId,
+    selectedTechnicianId,
+    startDate,
+    tasks,
+    users,
+  ]);
 
   const filteredProblemSuggestions = useMemo(() => {
     const normalizedSearch = normalizeSearchText(
@@ -612,6 +710,13 @@ export function ServiceRecords() {
             Acompanhe registros de atendimento técnico, tempo parado,
             equipamentos afetados, problema padronizado e responsáveis.
           </p>
+
+          {!canManageServiceRecords ? (
+            <p>
+              Seu acesso é somente consulta. Registros e finalizações ficam
+              restritos à equipe técnica.
+            </p>
+          ) : null}
         </div>
 
         {canManageServiceRecords ? (
@@ -646,6 +751,15 @@ export function ServiceRecords() {
             <button type="button" onClick={closeForm}>
               Fechar
             </button>
+          </div>
+
+          <div className="service-record-form-tip">
+            <strong>Registro técnico em campo</strong>
+            <p>
+              Selecione a tarefa vinculada, registre o problema encontrado, o
+              serviço realizado e preencha o fim quando o atendimento estiver
+              encerrado. O tempo parado é calculado a partir do início e fim.
+            </p>
           </div>
 
           <form className="service-record-form" onSubmit={handleSubmit}>
@@ -832,112 +946,169 @@ export function ServiceRecords() {
         <div className="service-records-panel-header">
           <div>
             <h2>Lista de atendimentos</h2>
-            <p>{filteredServiceRecords.length} registro(s) encontrado(s)</p>
+            <p>
+              {filteredServiceRecords.length} registro(s) exibido(s) de{' '}
+              {serviceRecords.length} carregado(s)
+            </p>
           </div>
 
           <div className="service-records-actions">
-            <select
-              value={selectedCompanyId}
-              onChange={(event) => {
-                setSelectedCompanyId(event.target.value);
-                setSelectedRoomId('');
-                setSelectedEquipmentId('');
-                setSelectedTaskId('');
-                setSelectedTechnicianId('');
-              }}
-            >
-              <option value="">Todas as empresas</option>
+            <label className="service-records-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => {
+                  setSelectedCompanyId(event.target.value);
+                  setSelectedRoomId('');
+                  setSelectedEquipmentId('');
+                  setSelectedTaskId('');
+                  setSelectedTechnicianId('');
+                }}
+              >
+                <option value="">Todas as empresas</option>
 
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedRoomId}
-              onChange={(event) => {
-                setSelectedRoomId(event.target.value);
-                setSelectedEquipmentId('');
-                setSelectedTaskId('');
-              }}
-            >
-              <option value="">Todas as salas</option>
+            <label className="service-records-filter-field">
+              <span>Sala</span>
+              <select
+                value={selectedRoomId}
+                onChange={(event) => {
+                  setSelectedRoomId(event.target.value);
+                  setSelectedEquipmentId('');
+                  setSelectedTaskId('');
+                }}
+              >
+                <option value="">Todas as salas</option>
 
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedEquipmentId}
-              onChange={(event) => {
-                setSelectedEquipmentId(event.target.value);
-                setSelectedTaskId('');
-              }}
-            >
-              <option value="">Todos os equipamentos</option>
+            <label className="service-records-filter-field">
+              <span>Equipamento</span>
+              <select
+                value={selectedEquipmentId}
+                onChange={(event) => {
+                  setSelectedEquipmentId(event.target.value);
+                  setSelectedTaskId('');
+                }}
+              >
+                <option value="">Todos os equipamentos</option>
 
-              {equipments.map((equipment) => (
-                <option key={equipment.id} value={equipment.id}>
-                  {equipment.name}
-                </option>
-              ))}
-            </select>
+                {equipments.map((equipment) => (
+                  <option key={equipment.id} value={equipment.id}>
+                    {equipment.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedTaskId}
-              onChange={(event) => setSelectedTaskId(event.target.value)}
-            >
-              <option value="">Todas as tarefas</option>
+            <label className="service-records-filter-field">
+              <span>Tarefa</span>
+              <select
+                value={selectedTaskId}
+                onChange={(event) => setSelectedTaskId(event.target.value)}
+              >
+                <option value="">Todas as tarefas</option>
 
-              {tasks.map((task) => (
-                <option key={task.id} value={task.id}>
-                  {task.title}
-                </option>
-              ))}
-            </select>
+                {tasks.map((task) => (
+                  <option key={task.id} value={task.id}>
+                    {task.title}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedTechnicianId}
-              onChange={(event) => setSelectedTechnicianId(event.target.value)}
-            >
-              <option value="">Todos os técnicos</option>
+            <label className="service-records-filter-field">
+              <span>Técnico</span>
+              <select
+                value={selectedTechnicianId}
+                onChange={(event) => setSelectedTechnicianId(event.target.value)}
+              >
+                <option value="">Todos os técnicos</option>
 
-              {users.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
+                {users.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <input
-              type="date"
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-              title="Data inicial"
-            />
+            <label className="service-records-filter-field">
+              <span>Início</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            </label>
 
-            <input
-              type="date"
-              value={endDate}
-              onChange={(event) => setEndDate(event.target.value)}
-              title="Data final"
-            />
+            <label className="service-records-filter-field">
+              <span>Fim</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(event) => setEndDate(event.target.value)}
+              />
+            </label>
 
-            <input
-              type="search"
-              placeholder="Buscar por tarefa, problema, técnico..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
+            <label className="service-records-filter-field service-records-search-field">
+              <span>Busca</span>
+              <input
+                type="search"
+                placeholder="Buscar por tarefa, problema, técnico..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
 
-            <button type="button" onClick={() => void handleRefresh()}>
-              Atualizar
-            </button>
+            <div className="service-records-action-buttons">
+              <button type="button" onClick={() => void handleRefresh()}>
+                Aplicar filtros
+              </button>
+
+              <button
+                type="button"
+                className="service-records-secondary-action"
+                onClick={handleClearFilters}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="service-records-filter-status">
+          <div>
+            <strong>Filtros selecionados</strong>
+            <span>
+              Os filtros principais recarregam a lista. A busca textual filtra
+              os registros já carregados.
+            </span>
+          </div>
+
+          <div className="service-records-filter-chips">
+            {activeFilters.length > 0 ? (
+              activeFilters.map((filter) => (
+                <span key={`${filter.label}-${filter.value}`}>
+                  {filter.label}: <strong>{filter.value}</strong>
+                </span>
+              ))
+            ) : (
+              <span>Sem filtros específicos</span>
+            )}
           </div>
         </div>
 
@@ -990,8 +1161,12 @@ export function ServiceRecords() {
 
                     <td>
                       <strong>{serviceRecord.task?.title ?? '-'}</strong>
+
                       {serviceRecord.task?.priority ? (
-                        <small>{serviceRecord.task.priority}</small>
+                        <small>
+                          Prioridade:{' '}
+                          {formatTaskPriority(serviceRecord.task.priority)}
+                        </small>
                       ) : null}
                     </td>
 
@@ -1003,6 +1178,7 @@ export function ServiceRecords() {
 
                     <td>
                       <span>{serviceRecord.equipment?.name ?? '-'}</span>
+
                       {serviceRecord.equipment?.code ? (
                         <small>{serviceRecord.equipment.code}</small>
                       ) : null}
@@ -1010,6 +1186,7 @@ export function ServiceRecords() {
 
                     <td>
                       <span>{serviceRecord.technician?.name ?? '-'}</span>
+
                       {serviceRecord.technician?.email ? (
                         <small>{serviceRecord.technician.email}</small>
                       ) : null}
@@ -1201,10 +1378,10 @@ function shortId(value: string) {
 
 function formatDate(value?: string | null) {
   if (!value) {
-    return '-';
+    return '';
   }
 
-  return new Date(value).toLocaleDateString('pt-BR');
+  return new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR');
 }
 
 function formatDateTime(value?: string | null) {
@@ -1232,6 +1409,17 @@ function formatMinutes(value?: number | null) {
   }
 
   return `${hours}h ${minutes}min`;
+}
+
+function formatTaskPriority(value: TaskPriority) {
+  const labels: Record<TaskPriority, string> = {
+    LOW: 'Baixa',
+    MEDIUM: 'Média',
+    HIGH: 'Alta',
+    CRITICAL: 'Crítica',
+  };
+
+  return labels[value];
 }
 
 function normalizeSearchText(value: string) {

@@ -4828,3 +4828,64 @@ Testes realizados:
 - Layout mobile ficou adequado.
 - Formulário ficou usável em celular.
 - Tabela manteve rolagem horizontal no mobile.
+
+## 63.6.5. Revisão mobile da tela Atendimentos
+
+Foi realizada uma revisão visual e operacional da tela de Atendimentos para melhorar o uso em dispositivos móveis.
+
+Objetivo:
+
+- Facilitar o registro técnico em campo.
+- Melhorar criação, edição, finalização e reabertura de atendimentos no celular.
+- Melhorar filtros e leitura da lista no mobile.
+- Preservar o uso de problema padronizado com autocomplete.
+- Preservar texto livre para problemas não cadastrados.
+- Preservar cálculo de tempo parado.
+- Preservar permissões por perfil.
+
+Alterações aplicadas:
+
+- Header da tela Atendimentos ficou mais compacto no mobile.
+- Cards de resumo foram ajustados para telas pequenas.
+- Adicionada mensagem de somente consulta para `CLIENT_USER`.
+- Formulário de criação/edição foi ajustado para uma coluna no mobile.
+- Adicionado aviso operacional sobre registro técnico em campo.
+- Mantido autocomplete de problema/componente.
+- Mantido aviso para texto livre quando o problema digitado não existe nas sugestões.
+- Filtros receberam rótulos visíveis.
+- Botão `Atualizar` foi renomeado para `Aplicar filtros`.
+- Adicionado botão `Limpar filtros`.
+- Adicionado painel de filtros selecionados.
+- Adicionados chips visuais de filtros ativos.
+- Tabela recebeu aviso para deslizar horizontalmente no mobile.
+- Botões de editar, finalizar, reabrir e remover foram ajustados para toque em celular.
+- Botões do formulário ficaram com largura total no celular.
+
+Regras preservadas:
+
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+- `CLIENT_USER` permanece somente consulta.
+- Perfis técnicos e administrativos continuam podendo registrar atendimentos.
+- Problema padronizado continua aceitando sugestão cadastrada ou texto livre.
+- Tempo parado continua sendo calculado com base em início e fim.
+- Finalização e reabertura continuam usando o fluxo atual de atendimento.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Atendimentos carregou corretamente.
+- Novo atendimento foi criado.
+- Edição de atendimento funcionou.
+- Autocomplete de problema/componente funcionou.
+- Problema livre fora das sugestões foi aceito.
+- Finalização de atendimento funcionou.
+- Reabertura de atendimento funcionou.
+- Filtros de empresa, sala, equipamento, tarefa, técnico e período funcionaram.
+- Busca textual funcionou.
+- Botão limpar filtros funcionou.
+- Layout mobile ficou adequado.
+- Formulário ficou usável em celular.
+- Tabela manteve rolagem horizontal no mobile.
+- Perfil `CLIENT_USER` permaneceu somente consulta.
