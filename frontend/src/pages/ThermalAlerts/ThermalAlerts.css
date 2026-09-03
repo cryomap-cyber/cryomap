@@ -44,6 +44,10 @@
   line-height: 1.55;
 }
 
+.thermal-alerts-header p + p {
+  margin-top: 10px;
+}
+
 .thermal-alerts-header button {
   border: 0;
   border-radius: 14px;
@@ -122,6 +126,8 @@
 }
 
 .thermal-alerts-panel {
+  display: grid;
+  gap: 16px;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid var(--color-border-soft);
   border-radius: 28px;
@@ -134,7 +140,6 @@
   justify-content: space-between;
   gap: 18px;
   align-items: flex-start;
-  margin-bottom: 18px;
 }
 
 .thermal-alerts-panel-header h2 {
@@ -151,14 +156,28 @@
 }
 
 .thermal-alerts-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
   gap: 10px;
-  justify-content: flex-end;
+  width: min(100%, 980px);
+}
+
+.thermal-alerts-filter-field {
+  display: grid;
+  gap: 6px;
+}
+
+.thermal-alerts-filter-field span {
+  color: var(--color-text-soft);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .thermal-alerts-actions input,
 .thermal-alerts-actions select {
+  width: 100%;
   min-height: 42px;
   border: 1px solid var(--color-border);
   border-radius: 14px;
@@ -167,10 +186,6 @@
   background: #ffffff;
   outline: none;
   box-shadow: inset 0 1px 0 rgba(3, 20, 63, 0.03);
-}
-
-.thermal-alerts-actions input[type='search'] {
-  min-width: 280px;
 }
 
 .thermal-alerts-actions input::placeholder {
@@ -183,7 +198,17 @@
   box-shadow: 0 0 0 4px rgba(34, 193, 255, 0.18);
 }
 
-.thermal-alerts-actions button,
+.thermal-alerts-search-field {
+  grid-column: span 2;
+}
+
+.thermal-alerts-action-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+
+.thermal-alerts-action-buttons button,
 .thermal-alerts-error button {
   border: 0;
   border-radius: 14px;
@@ -201,6 +226,72 @@
   box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
 }
 
+.thermal-alerts-action-buttons button {
+  flex: 1;
+}
+
+.thermal-alerts-action-buttons .thermal-alerts-secondary-action {
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
+.thermal-alerts-filter-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 20px;
+  padding: 14px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(237, 247, 255, 0.76),
+      rgba(255, 255, 255, 0.9)
+    );
+}
+
+.thermal-alerts-filter-status strong {
+  display: block;
+  color: var(--color-primary-dark);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.thermal-alerts-filter-status span {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.thermal-alerts-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 780px;
+}
+
+.thermal-alerts-filter-chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(9, 109, 242, 0.12);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #ffffff;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.thermal-alerts-filter-chips strong {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 12px;
+}
+
 .thermal-alerts-error {
   display: flex;
   justify-content: space-between;
@@ -211,7 +302,6 @@
   color: var(--color-danger-text);
   padding: 16px;
   border-radius: 20px;
-  margin-bottom: 16px;
 }
 
 .thermal-alerts-error button {
@@ -233,6 +323,18 @@
   border: 1px solid var(--color-border-soft);
   border-radius: 22px;
   background: #ffffff;
+  scrollbar-width: thin;
+}
+
+.thermal-alerts-table-wrapper::before {
+  content: 'Deslize a tabela para ver todas as colunas';
+  display: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border-soft);
+  background: var(--color-surface-soft);
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .thermal-alerts-table {
@@ -343,7 +445,7 @@
   gap: 8px;
 }
 
-.thermal-alert-row-actions button {
+.thermal-alert-row-action {
   border: 0;
   border-radius: 14px;
   padding: 9px 11px;
@@ -353,17 +455,22 @@
   cursor: pointer;
 }
 
-.thermal-alert-row-actions button:nth-last-child(2) {
+.thermal-alert-row-action.resolve {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.thermal-alert-row-action.dismiss {
   background: var(--color-warning-bg);
   color: var(--color-warning-text);
 }
 
-.thermal-alert-row-actions button:last-child {
+.thermal-alert-row-action.remove {
   background: var(--color-danger-bg);
   color: var(--color-danger-text);
 }
 
-.thermal-alert-row-actions button:disabled {
+.thermal-alert-row-action:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   box-shadow: none;
@@ -372,6 +479,21 @@
 @media (max-width: 1200px) {
   .thermal-alerts-summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .thermal-alerts-panel-header,
+  .thermal-alerts-filter-status {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .thermal-alerts-actions {
+    width: 100%;
+  }
+
+  .thermal-alerts-filter-chips {
+    justify-content: flex-start;
+    max-width: none;
   }
 }
 
@@ -444,22 +566,23 @@
   }
 
   .thermal-alerts-actions {
-    display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 8px;
-    align-items: center;
   }
 
   .thermal-alerts-actions input,
   .thermal-alerts-actions select {
-    width: 100%;
     min-height: 38px;
     padding: 8px 10px;
     border-radius: 12px;
     font-size: 13px;
   }
 
-  .thermal-alerts-actions button {
+  .thermal-alerts-action-buttons {
+    align-items: end;
+  }
+
+  .thermal-alerts-action-buttons button {
     min-height: 38px;
     padding: 8px 12px;
     border-radius: 12px;
@@ -486,7 +609,7 @@
     gap: 6px;
   }
 
-  .thermal-alert-row-actions button {
+  .thermal-alert-row-action {
     min-height: 34px;
     padding: 7px 10px;
     border-radius: 10px;
@@ -501,18 +624,22 @@
 
   .thermal-alerts-header {
     flex-direction: column;
-    padding: 22px;
-    border-radius: 24px;
+    padding: 18px;
+    border-radius: 22px;
   }
 
   .thermal-alerts-header h1 {
     font-size: 24px;
   }
 
+  .thermal-alerts-header p {
+    font-size: 13px;
+  }
+
   .thermal-alerts-header button {
     width: 100%;
-    min-height: 38px;
-    padding: 9px 12px;
+    min-height: 42px;
+    padding: 10px 12px;
     font-size: 13px;
   }
 
@@ -522,7 +649,7 @@
   }
 
   .thermal-alerts-summary-card {
-    padding: 10px;
+    padding: 10px 11px;
     border-radius: 14px;
   }
 
@@ -531,7 +658,7 @@
   }
 
   .thermal-alerts-summary-card strong {
-    font-size: 21px;
+    font-size: 20px;
   }
 
   .thermal-alerts-panel {
@@ -543,26 +670,93 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .thermal-alerts-actions input[type='search'] {
+  .thermal-alerts-search-field,
+  .thermal-alerts-action-buttons {
     grid-column: 1 / -1;
   }
 
-  .thermal-alerts-actions button {
+  .thermal-alerts-action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .thermal-alerts-action-buttons button {
     width: 100%;
+  }
+
+  .thermal-alerts-filter-status {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .thermal-alerts-filter-status strong {
+    font-size: 13px;
+  }
+
+  .thermal-alerts-filter-status span {
+    font-size: 12px;
+  }
+
+  .thermal-alerts-filter-chips {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .thermal-alerts-filter-chips span {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 12px;
+  }
+
+  .thermal-alerts-table-wrapper {
+    border-radius: 16px;
+  }
+
+  .thermal-alerts-table-wrapper::before {
+    display: block;
   }
 
   .thermal-alerts-table {
     min-width: 1050px;
     font-size: 12px;
   }
+
+  .thermal-alerts-table th,
+  .thermal-alerts-table td {
+    padding: 10px 12px;
+  }
+
+  .thermal-alert-row-actions {
+    flex-direction: column;
+  }
+
+  .thermal-alert-row-action {
+    width: 100%;
+    min-height: 36px;
+  }
+
+  .thermal-alerts-error {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .thermal-alerts-error button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 430px) {
-  .thermal-alerts-actions {
+  .thermal-alerts-summary,
+  .thermal-alerts-actions,
+  .thermal-alerts-action-buttons {
     grid-template-columns: 1fr;
   }
 
-  .thermal-alerts-summary {
-    grid-template-columns: 1fr;
+  .thermal-alerts-table {
+    min-width: 980px;
   }
 }

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { EmptyState } from '../../components/Feedback/EmptyState';
+import { LoadingState } from '../../components/Feedback/LoadingState';
 import { useAuth } from '../../contexts/useAuth';
 import { getCompanies } from '../../services/companies';
 import { getRooms } from '../../services/rooms';
@@ -21,8 +23,22 @@ import type {
   ThermalAlertType,
 } from '../../types/thermal-alert';
 import './ThermalAlerts.css';
-import { LoadingState } from '../../components/Feedback/LoadingState';
-import { EmptyState } from '../../components/Feedback/EmptyState';
+
+type LoadDataOptions = {
+  companyId?: string;
+  roomId?: string;
+  sensorId?: string;
+  type?: string;
+  severity?: string;
+  status?: string;
+  startDateValue?: string;
+  endDateValue?: string;
+};
+
+type ActiveFilter = {
+  label: string;
+  value: string;
+};
 
 const alertTypeOptions: { value: ThermalAlertType; label: string }[] = [
   {
@@ -96,28 +112,41 @@ export function ThermalAlerts() {
   const [actionAlertId, setActionAlertId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  async function handleRefresh() {
+  async function loadData(options?: LoadDataOptions) {
     setError('');
     setIsLoading(true);
+
+    const nextCompanyId = options?.companyId ?? selectedCompanyId;
+    const nextRoomId = options?.roomId ?? selectedRoomId;
+    const nextSensorId = options?.sensorId ?? selectedSensorId;
+    const nextType = options?.type ?? selectedType;
+    const nextSeverity = options?.severity ?? selectedSeverity;
+    const nextStatus = options?.status ?? selectedStatus;
+    const nextStartDate = options?.startDateValue ?? startDate;
+    const nextEndDate = options?.endDateValue ?? endDate;
 
     try {
       const [companiesData, roomsData, sensorsData, alertsData] =
         await Promise.all([
           getCompanies(),
-          getRooms(selectedCompanyId || undefined),
+          getRooms(nextCompanyId || undefined),
           getSensors({
-            companyId: selectedCompanyId || undefined,
-            roomId: selectedRoomId || undefined,
+            companyId: nextCompanyId || undefined,
+            roomId: nextRoomId || undefined,
           }),
           getThermalAlerts({
-            companyId: selectedCompanyId || undefined,
-            roomId: selectedRoomId || undefined,
-            sensorId: selectedSensorId || undefined,
-            type: selectedType || undefined,
-            severity: selectedSeverity || undefined,
-            status: selectedStatus || undefined,
-            startDate: optionalStartIsoDate(startDate),
-            endDate: optionalEndIsoDate(endDate),
+            companyId: nextCompanyId || undefined,
+            roomId: nextRoomId || undefined,
+            sensorId: nextSensorId || undefined,
+            type: nextType ? (nextType as ThermalAlertType) : undefined,
+            severity: nextSeverity
+              ? (nextSeverity as ThermalAlertSeverity)
+              : undefined,
+            status: nextStatus
+              ? (nextStatus as ThermalAlertStatus)
+              : undefined,
+            startDate: optionalStartIsoDate(nextStartDate),
+            endDate: optionalEndIsoDate(nextEndDate),
           }),
         ]);
 
@@ -130,6 +159,37 @@ export function ThermalAlerts() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function handleRefresh() {
+    await loadData();
+  }
+
+  async function handleClearFilters() {
+    const nextStartDate = defaultStartDate();
+    const nextEndDate = defaultEndDate();
+
+    setSelectedCompanyId('');
+    setSelectedRoomId('');
+    setSelectedSensorId('');
+    setSelectedType('');
+    setSelectedSeverity('');
+    setSelectedStatus('');
+    setStartDate(nextStartDate);
+    setEndDate(nextEndDate);
+    setSearch('');
+    setError('');
+
+    await loadData({
+      companyId: '',
+      roomId: '',
+      sensorId: '',
+      type: '',
+      severity: '',
+      status: '',
+      startDateValue: nextStartDate,
+      endDateValue: nextEndDate,
+    });
   }
 
   useEffect(() => {
@@ -234,8 +294,11 @@ export function ThermalAlerts() {
         alert.room?.name ?? '',
         alert.sensor?.code ?? '',
         alert.type ?? '',
+        formatAlertType(alert.type),
         alert.severity ?? '',
+        formatSeverity(alert.severity),
         alert.status ?? '',
+        formatStatus(alert.status),
         alert.message ?? '',
         alert.acknowledgedByUser?.name ?? '',
         String(alert.temperature),
@@ -245,6 +308,92 @@ export function ThermalAlerts() {
         .includes(normalizedSearch);
     });
   }, [alerts, search]);
+
+  const activeFilters = useMemo(() => {
+    const filters: ActiveFilter[] = [];
+
+    const selectedCompany = companies.find(
+      (company) => company.id === selectedCompanyId,
+    );
+    const selectedRoom = rooms.find((room) => room.id === selectedRoomId);
+    const selectedSensor = sensors.find(
+      (sensor) => sensor.id === selectedSensorId,
+    );
+
+    if (selectedCompany) {
+      filters.push({
+        label: 'Empresa',
+        value: selectedCompany.name,
+      });
+    }
+
+    if (selectedRoom) {
+      filters.push({
+        label: 'Sala',
+        value: selectedRoom.name,
+      });
+    }
+
+    if (selectedSensor) {
+      filters.push({
+        label: 'Sensor',
+        value: selectedSensor.code,
+      });
+    }
+
+    if (selectedType) {
+      filters.push({
+        label: 'Tipo',
+        value: formatAlertType(selectedType),
+      });
+    }
+
+    if (selectedSeverity) {
+      filters.push({
+        label: 'Severidade',
+        value: formatSeverity(selectedSeverity),
+      });
+    }
+
+    if (selectedStatus) {
+      filters.push({
+        label: 'Status',
+        value: formatStatus(selectedStatus),
+      });
+    }
+
+    if (
+      startDate !== defaultStartDate() ||
+      endDate !== defaultEndDate()
+    ) {
+      filters.push({
+        label: 'Período',
+        value: `${formatDate(startDate)} até ${formatDate(endDate)}`,
+      });
+    }
+
+    if (search.trim()) {
+      filters.push({
+        label: 'Busca',
+        value: search.trim(),
+      });
+    }
+
+    return filters;
+  }, [
+    companies,
+    endDate,
+    rooms,
+    search,
+    selectedCompanyId,
+    selectedRoomId,
+    selectedSensorId,
+    selectedSeverity,
+    selectedStatus,
+    selectedType,
+    sensors,
+    startDate,
+  ]);
 
   const openAlerts = alerts.filter((alert) => alert.status === 'OPEN').length;
 
@@ -263,6 +412,8 @@ export function ThermalAlerts() {
   const resolvedAlerts = alerts.filter(
     (alert) => alert.status === 'RESOLVED',
   ).length;
+
+  const periodLabel = `${formatDate(startDate)} até ${formatDate(endDate)}`;
 
   async function handleAcknowledge(alert: ThermalAlert) {
     if (!canManageThermalAlerts) {
@@ -370,11 +521,11 @@ export function ThermalAlerts() {
 
   if (isLoading) {
     return (
-  <LoadingState
-    title="Carregando alertas térmicos..."
-    description="Buscando ocorrências de temperatura fora dos limites."
-  />
-);
+      <LoadingState
+        title="Carregando alertas térmicos..."
+        description="Buscando ocorrências de temperatura fora dos limites."
+      />
+    );
   }
 
   return (
@@ -387,9 +538,16 @@ export function ThermalAlerts() {
             Acompanhe ocorrências de temperatura fora dos limites das salas,
             reconheça alertas e marque resoluções operacionais.
           </p>
+
+          {!canManageThermalAlerts ? (
+            <p>
+              Seu acesso é somente consulta. Ações de alerta ficam restritas à
+              equipe técnica e administrativa.
+            </p>
+          ) : null}
         </div>
 
-        <button type="button" onClick={handleRefresh}>
+        <button type="button" onClick={() => void handleRefresh()}>
           Atualizar alertas
         </button>
       </header>
@@ -419,119 +577,179 @@ export function ThermalAlerts() {
         <div className="thermal-alerts-panel-header">
           <div>
             <h2>Histórico de alertas</h2>
-            <p>{filteredAlerts.length} alerta(s) encontrado(s)</p>
+            <p>
+              {filteredAlerts.length} alerta(s) exibido(s) de {alerts.length}{' '}
+              carregado(s)
+            </p>
           </div>
 
           <div className="thermal-alerts-actions">
-            <select
-              value={selectedCompanyId}
-              onChange={(event) => {
-                setSelectedCompanyId(event.target.value);
-                setSelectedRoomId('');
-                setSelectedSensorId('');
-              }}
-            >
-              <option value="">Todas as empresas</option>
+            <label className="thermal-alerts-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => {
+                  setSelectedCompanyId(event.target.value);
+                  setSelectedRoomId('');
+                  setSelectedSensorId('');
+                }}
+              >
+                <option value="">Todas as empresas</option>
 
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedRoomId}
-              onChange={(event) => {
-                setSelectedRoomId(event.target.value);
-                setSelectedSensorId('');
-              }}
-            >
-              <option value="">Todas as salas</option>
+            <label className="thermal-alerts-filter-field">
+              <span>Sala</span>
+              <select
+                value={selectedRoomId}
+                onChange={(event) => {
+                  setSelectedRoomId(event.target.value);
+                  setSelectedSensorId('');
+                }}
+              >
+                <option value="">Todas as salas</option>
 
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedSensorId}
-              onChange={(event) => setSelectedSensorId(event.target.value)}
-            >
-              <option value="">Todos os sensores</option>
+            <label className="thermal-alerts-filter-field">
+              <span>Sensor</span>
+              <select
+                value={selectedSensorId}
+                onChange={(event) => setSelectedSensorId(event.target.value)}
+              >
+                <option value="">Todos os sensores</option>
 
-              {sensors.map((sensor) => (
-                <option key={sensor.id} value={sensor.id}>
-                  {sensor.code}
-                </option>
-              ))}
-            </select>
+                {sensors.map((sensor) => (
+                  <option key={sensor.id} value={sensor.id}>
+                    {sensor.code}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedType}
-              onChange={(event) => setSelectedType(event.target.value)}
-            >
-              <option value="">Todos os tipos</option>
+            <label className="thermal-alerts-filter-field">
+              <span>Tipo</span>
+              <select
+                value={selectedType}
+                onChange={(event) => setSelectedType(event.target.value)}
+              >
+                <option value="">Todos os tipos</option>
 
-              {alertTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+                {alertTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedSeverity}
-              onChange={(event) => setSelectedSeverity(event.target.value)}
-            >
-              <option value="">Todas as severidades</option>
+            <label className="thermal-alerts-filter-field">
+              <span>Severidade</span>
+              <select
+                value={selectedSeverity}
+                onChange={(event) => setSelectedSeverity(event.target.value)}
+              >
+                <option value="">Todas as severidades</option>
 
-              {alertSeverityOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+                {alertSeverityOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedStatus}
-              onChange={(event) => setSelectedStatus(event.target.value)}
-            >
-              <option value="">Todos os status</option>
+            <label className="thermal-alerts-filter-field">
+              <span>Status</span>
+              <select
+                value={selectedStatus}
+                onChange={(event) => setSelectedStatus(event.target.value)}
+              >
+                <option value="">Todos os status</option>
 
-              {alertStatusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+                {alertStatusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <input
-              type="date"
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-              title="Data inicial"
-            />
+            <label className="thermal-alerts-filter-field">
+              <span>Início</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            </label>
 
-            <input
-              type="date"
-              value={endDate}
-              onChange={(event) => setEndDate(event.target.value)}
-              title="Data final"
-            />
+            <label className="thermal-alerts-filter-field">
+              <span>Fim</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(event) => setEndDate(event.target.value)}
+              />
+            </label>
 
-            <input
-              type="search"
-              placeholder="Buscar por sala, sensor, mensagem..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
+            <label className="thermal-alerts-filter-field thermal-alerts-search-field">
+              <span>Busca</span>
+              <input
+                type="search"
+                placeholder="Buscar por sala, sensor, mensagem..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
 
-            <button type="button" onClick={handleRefresh}>
-              Atualizar
-            </button>
+            <div className="thermal-alerts-action-buttons">
+              <button type="button" onClick={() => void handleRefresh()}>
+                Aplicar filtros
+              </button>
+
+              <button
+                type="button"
+                className="thermal-alerts-secondary-action"
+                onClick={() => void handleClearFilters()}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="thermal-alerts-filter-status">
+          <div>
+            <strong>Filtros selecionados</strong>
+            <span>
+              Período carregado: {periodLabel}. A busca textual filtra os
+              alertas já carregados.
+            </span>
+          </div>
+
+          <div className="thermal-alerts-filter-chips">
+            {activeFilters.length > 0 ? (
+              activeFilters.map((filter) => (
+                <span key={`${filter.label}-${filter.value}`}>
+                  {filter.label}: <strong>{filter.value}</strong>
+                </span>
+              ))
+            ) : (
+              <span>Sem filtros específicos</span>
+            )}
           </div>
         </div>
 
@@ -539,7 +757,7 @@ export function ThermalAlerts() {
           <div className="thermal-alerts-error">
             <strong>{error}</strong>
 
-            <button type="button" onClick={handleRefresh}>
+            <button type="button" onClick={() => void handleRefresh()}>
               Tentar novamente
             </button>
           </div>
@@ -547,9 +765,9 @@ export function ThermalAlerts() {
 
         {!error && filteredAlerts.length === 0 ? (
           <EmptyState
-  title="Nenhum alerta térmico encontrado."
-  description="Não há alertas para os filtros selecionados no momento."
-/>
+            title="Nenhum alerta térmico encontrado."
+            description="Não há alertas para os filtros selecionados no momento."
+          />
         ) : null}
 
         {!error && filteredAlerts.length > 0 ? (
@@ -584,6 +802,7 @@ export function ThermalAlerts() {
 
                     <td>
                       <strong>{alert.room?.name ?? alert.roomId}</strong>
+
                       {alert.room?.thermalStatus ? (
                         <small>
                           {formatThermalStatus(alert.room.thermalStatus)}
@@ -593,6 +812,7 @@ export function ThermalAlerts() {
 
                     <td>
                       <span>{alert.sensor?.code ?? '-'}</span>
+
                       {alert.sensor?.lastSeenAt ? (
                         <small>
                           Última comunicação:{' '}
@@ -630,6 +850,7 @@ export function ThermalAlerts() {
 
                     <td>
                       <span>{alert.acknowledgedByUser?.name ?? '-'}</span>
+
                       {alert.acknowledgedAt ? (
                         <small>{formatDateTime(alert.acknowledgedAt)}</small>
                       ) : null}
@@ -641,6 +862,7 @@ export function ThermalAlerts() {
                           {alert.status === 'OPEN' ? (
                             <button
                               type="button"
+                              className="thermal-alert-row-action acknowledge"
                               disabled={actionAlertId === alert.id}
                               onClick={() => void handleAcknowledge(alert)}
                             >
@@ -652,6 +874,7 @@ export function ThermalAlerts() {
                             <>
                               <button
                                 type="button"
+                                className="thermal-alert-row-action resolve"
                                 disabled={actionAlertId === alert.id}
                                 onClick={() => void handleResolve(alert)}
                               >
@@ -660,6 +883,7 @@ export function ThermalAlerts() {
 
                               <button
                                 type="button"
+                                className="thermal-alert-row-action dismiss"
                                 disabled={actionAlertId === alert.id}
                                 onClick={() => void handleDismiss(alert)}
                               >
@@ -670,6 +894,7 @@ export function ThermalAlerts() {
 
                           <button
                             type="button"
+                            className="thermal-alert-row-action remove"
                             disabled={actionAlertId === alert.id}
                             onClick={() => void handleRemove(alert)}
                           >
@@ -715,7 +940,7 @@ function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
 }
 
 type SeverityBadgeProps = {
-  severity: string;
+  severity: ThermalAlertSeverity;
 };
 
 function SeverityBadge({ severity }: SeverityBadgeProps) {
@@ -727,7 +952,7 @@ function SeverityBadge({ severity }: SeverityBadgeProps) {
 }
 
 type StatusBadgeProps = {
-  status: string;
+  status: ThermalAlertStatus;
 };
 
 function StatusBadge({ status }: StatusBadgeProps) {
@@ -771,6 +996,7 @@ function formatThermalStatus(value: string) {
   const labels: Record<string, string> = {
     NORMAL: 'Normal',
     WARNING: 'Atenção',
+    ALERT: 'Alerta',
     CRITICAL: 'Crítico',
     OFFLINE: 'Offline',
   };
@@ -782,11 +1008,17 @@ function defaultStartDate() {
   const date = new Date();
   date.setDate(date.getDate() - 30);
 
-  return date.toISOString().slice(0, 10);
+  return toDateInputValue(date);
 }
 
 function defaultEndDate() {
-  return new Date().toISOString().slice(0, 10);
+  return toDateInputValue(new Date());
+}
+
+function toDateInputValue(date: Date) {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+
+  return localDate.toISOString().slice(0, 10);
 }
 
 function optionalStartIsoDate(value: string) {
@@ -807,6 +1039,14 @@ function optionalEndIsoDate(value: string) {
 
 function shortId(value: string) {
   return value.slice(0, 8).toUpperCase();
+}
+
+function formatDate(value?: string | null) {
+  if (!value) {
+    return '-';
+  }
+
+  return new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR');
 }
 
 function formatDateTime(value?: string | null) {
