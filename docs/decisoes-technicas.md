@@ -5030,3 +5030,63 @@ Testes realizados:
 - Botões de ação ficaram usáveis no celular.
 - Tabela manteve rolagem horizontal no mobile.
 - Perfil `CLIENT_USER` permaneceu somente consulta.
+
+## 63.6.8. Revisão mobile da tela Relatórios
+
+Foi realizada uma revisão visual e operacional da tela de Relatórios para melhorar o uso em dispositivos móveis.
+
+Objetivo:
+
+- Facilitar a leitura dos relatórios operacionais no celular.
+- Melhorar filtros, painéis e exportações no mobile.
+- Preservar exportações em Excel e PDF já existentes.
+- Preservar filtros operacionais atuais.
+- Manter o fluxo de relatórios sem alteração de backend.
+
+Alterações aplicadas:
+
+- Header da tela Relatórios ficou mais compacto no mobile.
+- Painel de filtros recebeu rótulos visíveis.
+- Filtros de empresa, sala, equipamento, técnico e período foram reorganizados.
+- Adicionado botão `Limpar filtros`.
+- Adicionado painel de filtros selecionados.
+- Adicionados chips visuais de filtros ativos.
+- Período carregado passou a aparecer no painel de filtros.
+- Exportações passaram a indicar estado de exportação em andamento.
+- Cards de exportação foram ajustados para uma coluna no mobile.
+- Botões de exportação Excel/PDF ficaram mais adequados para toque em celular.
+- Painéis de relatório foram ajustados para melhor leitura em telas pequenas.
+- Valores aninhados dos relatórios foram preservados e mantidos legíveis.
+- Layout mobile foi ajustado para larguras próximas de 390px e 430px.
+
+Regras preservadas:
+
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+- Relatórios continuam sendo carregados pelos endpoints atuais.
+- Exportações Excel continuam disponíveis.
+- Exportações PDF continuam disponíveis.
+- Filtros de empresa, sala, equipamento, técnico e período foram preservados.
+- As exportações continuam usando os mesmos filtros aplicados nos painéis.
+- A estrutura dos dados retornados pelo backend não foi alterada.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Relatórios carregou corretamente.
+- Painéis de relatório carregaram corretamente.
+- Filtros de empresa, sala, equipamento, técnico, início e fim funcionaram.
+- Botão aplicar filtros funcionou.
+- Botão limpar filtros funcionou.
+- Painel de filtros selecionados apareceu corretamente.
+- Chips de filtros ativos apareceram corretamente.
+- Exportação de Tarefas em Excel funcionou.
+- Exportação de Tarefas em PDF funcionou.
+- Exportação de Atendimentos em Excel/PDF funcionou.
+- Exportação de Tempo parado em Excel/PDF funcionou.
+- Exportação de Leituras térmicas em Excel/PDF funcionou.
+- Layout mobile ficou adequado.
+- Filtros ficaram usáveis no celular.
+- Cards de exportação ficaram adequados em uma coluna.
+- Painéis de relatório ficaram legíveis no mobile.
