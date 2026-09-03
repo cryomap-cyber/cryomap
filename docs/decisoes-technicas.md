@@ -4965,3 +4965,68 @@ Testes realizados:
 - Tabela manteve rolagem horizontal no mobile.
 - Perfil `CLIENT_USER` permaneceu somente consulta.
 - Perfil `MASTER_ADMIN` manteve ações de editar e remover.
+
+## 63.6.7. Revisão mobile da tela Alertas
+
+Foi realizada uma revisão visual e operacional da tela de Alertas para melhorar o uso em dispositivos móveis.
+
+Objetivo:
+
+- Facilitar a leitura de alertas térmicos em campo.
+- Melhorar filtros, cards, status e ações no celular.
+- Preservar ações de reconhecer, resolver, dispensar e remover.
+- Preservar permissões atuais.
+- Manter o fluxo de alertas térmicos sem alteração de backend.
+
+Alterações aplicadas:
+
+- Header da tela Alertas ficou mais compacto no mobile.
+- Cards de resumo foram ajustados para telas pequenas.
+- Adicionada mensagem de somente consulta para perfis sem permissão de ação.
+- Filtros receberam rótulos visíveis.
+- Botão `Atualizar` foi ajustado para `Aplicar filtros` dentro do painel.
+- Adicionado botão `Limpar filtros`.
+- Adicionado painel de filtros selecionados.
+- Adicionados chips visuais de filtros ativos.
+- Período carregado passou a aparecer no painel de filtros.
+- Busca textual continuou filtrando os alertas já carregados.
+- Tabela recebeu aviso para deslizar horizontalmente no mobile.
+- Botões de ação foram separados por classe:
+  - reconhecer;
+  - resolver;
+  - dispensar;
+  - remover.
+- Botões de ação ficaram empilhados no mobile para facilitar toque em celular.
+- A tabela manteve rolagem horizontal para preservar todas as colunas.
+
+Regras preservadas:
+
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+- Alertas continuam sendo carregados por `/thermal-alerts`.
+- Ações de reconhecer, resolver, dispensar e remover foram preservadas.
+- `MASTER_ADMIN`, `SUPERVISOR` e `TECHNICIAN` continuam podendo agir em alertas.
+- `CLIENT_USER` continua somente consulta.
+- Filtros de empresa, sala, sensor, tipo, severidade, status e período foram preservados.
+- Temperaturas continuam sendo exibidas em °C.
+- Alertas continuam vinculados a salas e sensores.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Alertas carregou corretamente.
+- Cards de resumo funcionaram.
+- Filtros de empresa, sala, sensor, tipo, severidade, status, início, fim e busca funcionaram.
+- Botão aplicar filtros funcionou.
+- Botão limpar filtros funcionou.
+- Painel de filtros selecionados apareceu corretamente.
+- Chips de filtros ativos apareceram corretamente.
+- Ação reconhecer funcionou em alerta aberto.
+- Ação resolver funcionou em alerta aberto ou reconhecido.
+- Ação dispensar funcionou em alerta aberto ou reconhecido.
+- Ação remover funcionou.
+- Layout mobile ficou adequado.
+- Botões de ação ficaram usáveis no celular.
+- Tabela manteve rolagem horizontal no mobile.
+- Perfil `CLIENT_USER` permaneceu somente consulta.
