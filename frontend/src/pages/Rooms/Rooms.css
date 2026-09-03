@@ -502,6 +502,18 @@
   border: 1px solid var(--color-border-soft);
   border-radius: 22px;
   background: #ffffff;
+  scrollbar-width: thin;
+}
+
+.rooms-table-wrapper::before {
+  content: 'Deslize a tabela para ver todas as colunas';
+  display: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border-soft);
+  background: var(--color-surface-soft);
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .rooms-table {
@@ -798,22 +810,32 @@
   }
 
   .rooms-header {
-    padding: 22px;
-    border-radius: 24px;
+    padding: 18px;
+    border-radius: 22px;
   }
 
   .rooms-header h1 {
     font-size: 24px;
+    line-height: 1.1;
+  }
+
+  .rooms-header p {
+    font-size: 13px;
+    line-height: 1.45;
   }
 
   .rooms-header button {
     width: 100%;
-    min-height: 38px;
-    padding: 9px 12px;
+    min-height: 42px;
+    padding: 10px 12px;
     font-size: 13px;
   }
 
-  .rooms-summary,
+  .rooms-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
   .rooms-temperature-chart-context,
   .rooms-temperature-chart-summary {
     grid-template-columns: 1fr;
@@ -823,18 +845,44 @@
   .rooms-summary-card,
   .rooms-temperature-chart-summary-card,
   .rooms-temperature-chart-context div {
-    padding: 12px;
+    padding: 11px 12px;
     border-radius: 16px;
   }
 
+  .rooms-summary-card span,
+  .rooms-temperature-chart-summary-card span,
+  .rooms-temperature-chart-context span {
+    font-size: 11px;
+  }
+
   .rooms-summary-card strong {
-    font-size: 22px;
+    font-size: 21px;
+    line-height: 1;
+    margin-top: 7px;
+  }
+
+  .rooms-temperature-chart-summary-card strong {
+    font-size: 18px;
   }
 
   .rooms-temperature-chart-panel,
   .rooms-panel {
-    padding: 14px;
-    border-radius: 20px;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .rooms-temperature-chart-header {
+    gap: 12px;
+  }
+
+  .rooms-temperature-chart-header h2,
+  .rooms-panel-header h2 {
+    font-size: 20px;
+  }
+
+  .rooms-temperature-chart-header p,
+  .rooms-panel-header p {
+    font-size: 13px;
   }
 
   .rooms-temperature-chart-actions {
@@ -842,39 +890,109 @@
     width: 100%;
   }
 
-  .rooms-temperature-chart-actions select {
+  .rooms-temperature-chart-actions select,
+  .rooms-actions input,
+  .rooms-actions select {
     width: 100%;
+    min-height: 40px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .rooms-temperature-chart-controls {
+    padding: 10px;
+    border-radius: 16px;
   }
 
   .rooms-temperature-chart-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
   }
 
   .rooms-temperature-chart-tabs button {
+    min-height: 38px;
     padding: 8px 10px;
     font-size: 11px;
   }
 
+  .rooms-temperature-chart-tabs.compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rooms-temperature-chart-tabs.compact button {
+    padding-inline: 10px;
+  }
+
+  .rooms-temperature-chart-insight {
+    padding: 10px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+  }
+
   .rooms-temperature-chart-wrapper {
-    min-height: 330px;
-    padding: 12px 4px 6px;
-    border-radius: 18px;
+    min-height: 320px;
+    padding: 10px 0 4px;
+    border-radius: 16px;
+  }
+
+  .rooms-temperature-chart-tooltip {
+    min-width: 160px;
+    max-width: 230px;
+    padding: 10px;
   }
 
   .rooms-actions {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .rooms-actions input[type='search'] {
     min-width: 0;
   }
 
+  .rooms-actions button {
+    width: 100%;
+    min-height: 40px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .rooms-filter-status {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .rooms-filter-status strong {
+    font-size: 13px;
+  }
+
+  .rooms-filter-status span {
+    font-size: 12px;
+  }
+
+  .rooms-filter-chips {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .rooms-filter-chips span {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 12px;
+  }
+
   .rooms-table-wrapper {
     border-radius: 16px;
   }
 
+  .rooms-table-wrapper::before {
+    display: block;
+  }
+
   .rooms-table {
-    min-width: 980px;
+    min-width: 940px;
     font-size: 12px;
   }
 
@@ -883,12 +1001,86 @@
     padding: 10px 12px;
   }
 
+  .rooms-table td small {
+    max-width: 180px;
+  }
+
+  .room-row-actions button {
+    width: 100%;
+    min-height: 36px;
+    border-radius: 12px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
   .room-form-panel {
-    border-radius: 22px;
-    padding: 16px;
+    border-radius: 20px;
+    padding: 14px;
+  }
+
+  .room-form-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .room-form-header h2 {
+    font-size: 20px;
+  }
+
+  .room-form-header button {
+    width: 100%;
+  }
+
+  .room-form {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .room-form label {
+    font-size: 13px;
+  }
+
+  .room-form input,
+  .room-form select {
+    min-height: 42px;
+    border-radius: 13px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .room-form-actions {
+    flex-direction: column;
   }
 
   .room-form-actions button {
     width: 100%;
+    min-height: 42px;
+  }
+
+  .rooms-error {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .rooms-error button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .rooms-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .rooms-temperature-chart-tabs,
+  .rooms-temperature-chart-tabs.compact {
+    grid-template-columns: 1fr;
+  }
+
+  .rooms-table {
+    min-width: 900px;
   }
 }

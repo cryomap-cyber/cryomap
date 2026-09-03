@@ -4597,3 +4597,129 @@ Testes realizados:
 - Limpar filtros funcionou.
 - Atualização manual funcionou.
 - Permissões visuais por perfil foram preservadas.
+
+## 63.5.4. Ajuste de subtítulo da sidebar
+
+Foi ajustado o subtítulo exibido abaixo da marca CryoMap na barra lateral.
+
+Alteração aplicada:
+
+- O texto anterior `Monitoramento térmico` foi substituído por `PCM & Monitoramento Térmico`.
+
+Motivo:
+
+- Alinhar a identidade do sistema ao posicionamento operacional do CryoMap.
+- Deixar explícito que o sistema envolve planejamento, controle de manutenção e monitoramento térmico.
+
+Impacto técnico:
+
+- Alteração apenas visual no frontend.
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Sidebar exibiu o novo subtítulo corretamente.
+
+## 63.6.1. Gráfico térmico na tela de salas
+
+Foi adicionado um gráfico térmico diretamente na tela de Salas.
+
+Objetivo:
+
+- Permitir visualizar a evolução térmica das salas sem depender apenas da tela de Leituras ou dos relatórios.
+- Facilitar o acompanhamento por sala para administradores, supervisores, técnicos e clientes.
+- Manter padrão visual semelhante ao gráfico técnico da tela de Medições dos Equipamentos.
+
+Funcionalidades adicionadas:
+
+- Gráfico térmico por sala.
+- Seleção da sala exibida no gráfico.
+- Alternância entre indicadores:
+  - temperatura;
+  - umidade.
+- Alternância entre períodos:
+  - hoje;
+  - 7 dias;
+  - 30 dias;
+  - 12 meses.
+- Cards do gráfico:
+  - último ponto;
+  - média;
+  - mínimo;
+  - máximo.
+- Tooltip com:
+  - valor médio;
+  - mínimo;
+  - máximo;
+  - quantidade de leituras no ponto;
+  - último sensor, quando disponível;
+  - origem da leitura, quando disponível.
+- Linha de referência da média.
+- Painel de filtros ativos.
+- Botões:
+  - aplicar filtros;
+  - limpar filtros;
+  - atualizar.
+- Atualização automática silenciosa do gráfico a cada 1 hora.
+
+Regra operacional confirmada:
+
+- As leituras de salas virão principalmente de sensores.
+- Leituras manuais de sala continuam disponíveis para teste, contingência e operação assistida.
+- Equipamentos continuam usando medições técnicas próprias, separadas das leituras de salas.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Salas carregou corretamente.
+- Gráfico térmico foi exibido.
+- Seleção de sala funcionou.
+- Alternância entre temperatura e umidade funcionou.
+- Alternância de período funcionou.
+- Filtros funcionaram.
+- Limpar filtros funcionou.
+- Atualização manual funcionou.
+- Leitura manual criada na tela Leituras apareceu no gráfico de Salas.
+- Permissões visuais por perfil foram preservadas.
+
+## 63.6.2. Revisão mobile da tela Salas
+
+Foi realizada uma revisão visual da tela de Salas para melhorar o uso em dispositivos móveis.
+
+Alterações aplicadas:
+
+- Header da tela Salas ficou mais compacto no mobile.
+- Cards de resumo foram ajustados para ocupar melhor telas pequenas.
+- Gráfico térmico recebeu ajustes de espaçamento, altura e leitura no mobile.
+- Botões de indicador e período foram reorganizados para facilitar toque em celular.
+- Filtros foram ajustados para coluna única em telas pequenas.
+- Chips de filtros ativos foram melhorados para leitura mobile.
+- Tabela recebeu aviso visual para o usuário deslizar horizontalmente.
+- Tabela manteve rolagem horizontal para preservar todas as colunas.
+- Formulário de criação/edição de sala foi ajustado para uma coluna no mobile.
+- Botões do formulário e ações ficaram com largura total no celular.
+
+Regras preservadas:
+
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+- Gráfico térmico permanece alimentado por leituras de sala.
+- Leituras manuais continuam disponíveis pela tela Leituras.
+- `MASTER_ADMIN` e `SUPERVISOR` continuam podendo gerenciar salas.
+- `CLIENT_USER` e `TECHNICIAN` continuam em modo somente leitura cadastral.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Salas funcionou no desktop.
+- Tela Salas funcionou em simulação mobile.
+- Cards ficaram legíveis no mobile.
+- Gráfico ficou legível no mobile.
+- Filtros ficaram usáveis em coluna única.
+- Tabela rolou horizontalmente no mobile.
+- Formulário de sala ficou adequado em uma coluna.
