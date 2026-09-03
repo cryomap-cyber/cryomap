@@ -1,4 +1,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+
+import { EmptyState } from '../../components/Feedback/EmptyState';
+import { LoadingState } from '../../components/Feedback/LoadingState';
 import { getCompanies } from '../../services/companies';
 import { getRooms } from '../../services/rooms';
 import { getSensors } from '../../services/sensors';
@@ -12,8 +15,6 @@ import type { Room } from '../../types/room';
 import type { Sensor } from '../../types/sensor';
 import type { TemperatureReading } from '../../types/temperature-reading';
 import './TemperatureReadings.css';
-import { LoadingState } from '../../components/Feedback/LoadingState';
-import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type TemperatureReadingFormData = {
   companyId: string;
@@ -23,6 +24,11 @@ type TemperatureReadingFormData = {
   humidity: string;
   readAt: string;
   source: string;
+};
+
+type ActiveFilter = {
+  label: string;
+  value: string;
 };
 
 const emptyFormData: TemperatureReadingFormData = {
@@ -86,6 +92,42 @@ export function TemperatureReadings() {
       setTemperatureReadings(readingsData);
     } catch {
       setError('Não foi possível carregar as leituras de temperatura.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleClearFilters() {
+    const nextStartDate = defaultStartDate();
+    const nextEndDate = defaultEndDate();
+
+    setSelectedCompanyId('');
+    setSelectedRoomId('');
+    setSelectedSensorId('');
+    setStartDate(nextStartDate);
+    setEndDate(nextEndDate);
+    setSearch('');
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const [companiesData, roomsData, sensorsData, readingsData] =
+        await Promise.all([
+          getCompanies(),
+          getRooms(),
+          getSensors(),
+          getTemperatureReadings({
+            startDate: optionalStartIsoDate(nextStartDate),
+            endDate: optionalEndIsoDate(nextEndDate),
+          }),
+        ]);
+
+      setCompanies(companiesData);
+      setRooms(roomsData);
+      setSensors(sensorsData);
+      setTemperatureReadings(readingsData);
+    } catch {
+      setError('Não foi possível limpar os filtros de leitura.');
     } finally {
       setIsLoading(false);
     }
@@ -204,18 +246,20 @@ export function TemperatureReadings() {
         setFormRooms(roomsData);
         setFormSensors(sensorsData);
 
-        if (
+        const shouldResetRoom =
           formData.roomId &&
-          !roomsData.some((room) => room.id === formData.roomId)
-        ) {
-          updateFormField('roomId', '');
-        }
+          !roomsData.some((room) => room.id === formData.roomId);
 
-        if (
+        const shouldResetSensor =
           formData.sensorId &&
-          !sensorsData.some((sensor) => sensor.id === formData.sensorId)
-        ) {
-          updateFormField('sensorId', '');
+          !sensorsData.some((sensor) => sensor.id === formData.sensorId);
+
+        if (shouldResetRoom || shouldResetSensor) {
+          setFormData((current) => ({
+            ...current,
+            roomId: shouldResetRoom ? '' : current.roomId,
+            sensorId: shouldResetRoom || shouldResetSensor ? '' : current.sensorId,
+          }));
         }
       })
       .catch(() => {
@@ -253,6 +297,63 @@ export function TemperatureReadings() {
         .includes(normalizedSearch);
     });
   }, [temperatureReadings, search]);
+
+  const activeFilters = useMemo(() => {
+    const filters: ActiveFilter[] = [];
+
+    const selectedCompany = companies.find(
+      (company) => company.id === selectedCompanyId,
+    );
+    const selectedRoom = rooms.find((room) => room.id === selectedRoomId);
+    const selectedSensor = sensors.find(
+      (sensor) => sensor.id === selectedSensorId,
+    );
+
+    if (selectedCompany) {
+      filters.push({
+        label: 'Empresa',
+        value: selectedCompany.name,
+      });
+    }
+
+    if (selectedRoom) {
+      filters.push({
+        label: 'Sala',
+        value: selectedRoom.name,
+      });
+    }
+
+    if (selectedSensor) {
+      filters.push({
+        label: 'Sensor',
+        value: selectedSensor.code,
+      });
+    }
+
+    filters.push({
+      label: 'Período',
+      value: `${formatDate(startDate)} até ${formatDate(endDate)}`,
+    });
+
+    if (search.trim()) {
+      filters.push({
+        label: 'Busca',
+        value: search.trim(),
+      });
+    }
+
+    return filters;
+  }, [
+    companies,
+    endDate,
+    rooms,
+    search,
+    selectedCompanyId,
+    selectedRoomId,
+    selectedSensorId,
+    sensors,
+    startDate,
+  ]);
 
   const averageTemperature = getAverage(
     temperatureReadings.map((reading) => reading.temperature),
@@ -347,14 +448,14 @@ export function TemperatureReadings() {
 
     try {
       const payload: CreateTemperatureReadingPayload = {
-  companyId: formData.companyId,
-  roomId: formData.roomId,
-  sensorId: optionalValue(formData.sensorId),
-  temperature,
-  humidity,
-  readAt: optionalIsoDateTime(formData.readAt),
-  source: optionalValue(formData.source),
-        };
+        companyId: formData.companyId,
+        roomId: formData.roomId,
+        sensorId: optionalValue(formData.sensorId),
+        temperature,
+        humidity,
+        readAt: optionalIsoDateTime(formData.readAt),
+        source: optionalValue(formData.source),
+      };
 
       await createTemperatureReading(payload);
 
@@ -369,11 +470,11 @@ export function TemperatureReadings() {
 
   if (isLoading) {
     return (
-  <LoadingState
-    title="Carregando leituras de temperatura..."
-    description="Buscando histórico térmico das salas."
-  />
-);
+      <LoadingState
+        title="Carregando leituras de temperatura..."
+        description="Buscando histórico térmico das salas."
+      />
+    );
   }
 
   return (
@@ -433,6 +534,14 @@ export function TemperatureReadings() {
             <button type="button" onClick={closeForm}>
               Fechar
             </button>
+          </div>
+
+          <div className="temperature-reading-form-tip">
+            <strong>Uso sem sensor ativo</strong>
+            <p>
+              Para alimentar o gráfico da tela Salas, selecione empresa e sala,
+              deixe o sensor vazio e mantenha a origem como MANUAL.
+            </p>
           </div>
 
           <form className="temperature-reading-form" onSubmit={handleSubmit}>
@@ -502,7 +611,7 @@ export function TemperatureReadings() {
                 onChange={(event) =>
                   updateFormField('temperature', event.target.value)
                 }
-                placeholder="Ex: 22.5"
+                placeholder="Ex: -18.5"
               />
             </label>
 
@@ -517,7 +626,7 @@ export function TemperatureReadings() {
                 onChange={(event) =>
                   updateFormField('humidity', event.target.value)
                 }
-                placeholder="Ex: 55"
+                placeholder="Ex: 72"
               />
             </label>
 
@@ -532,18 +641,28 @@ export function TemperatureReadings() {
               />
             </label>
 
-            <label>
+            <label className="temperature-reading-form-wide">
               Origem
               <input
                 type="text"
+                list="temperature-reading-source-options"
                 value={formData.source}
                 onChange={(event) =>
                   updateFormField('source', event.target.value)
                 }
-                placeholder="MANUAL, GOVEE, MQTT..."
+                placeholder="MANUAL, SENSOR, API..."
               />
+
+              <datalist id="temperature-reading-source-options">
+                <option value="MANUAL" />
+                <option value="SENSOR" />
+                <option value="API" />
+                <option value="IMPORT" />
+                <option value="GOVEE" />
+                <option value="MQTT" />
+              </datalist>
             </label>
-            
+
             {formError ? (
               <strong className="temperature-reading-form-error">
                 {formError}
@@ -567,80 +686,127 @@ export function TemperatureReadings() {
         <div className="temperature-readings-panel-header">
           <div>
             <h2>Histórico de leituras</h2>
-            <p>{filteredReadings.length} leitura(s) encontrada(s)</p>
+            <p>
+              {filteredReadings.length} leitura(s) exibida(s) de{' '}
+              {temperatureReadings.length} carregada(s)
+            </p>
           </div>
 
           <div className="temperature-readings-actions">
-            <select
-              value={selectedCompanyId}
-              onChange={(event) => {
-                setSelectedCompanyId(event.target.value);
-                setSelectedRoomId('');
-                setSelectedSensorId('');
-              }}
-            >
-              <option value="">Todas as empresas</option>
+            <label className="temperature-readings-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => {
+                  setSelectedCompanyId(event.target.value);
+                  setSelectedRoomId('');
+                  setSelectedSensorId('');
+                }}
+              >
+                <option value="">Todas as empresas</option>
 
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedRoomId}
-              onChange={(event) => {
-                setSelectedRoomId(event.target.value);
-                setSelectedSensorId('');
-              }}
-            >
-              <option value="">Todas as salas</option>
+            <label className="temperature-readings-filter-field">
+              <span>Sala</span>
+              <select
+                value={selectedRoomId}
+                onChange={(event) => {
+                  setSelectedRoomId(event.target.value);
+                  setSelectedSensorId('');
+                }}
+              >
+                <option value="">Todas as salas</option>
 
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedSensorId}
-              onChange={(event) => setSelectedSensorId(event.target.value)}
-            >
-              <option value="">Todos os sensores</option>
+            <label className="temperature-readings-filter-field">
+              <span>Sensor</span>
+              <select
+                value={selectedSensorId}
+                onChange={(event) => setSelectedSensorId(event.target.value)}
+              >
+                <option value="">Todos os sensores</option>
 
-              {sensors.map((sensor) => (
-                <option key={sensor.id} value={sensor.id}>
-                  {sensor.code}
-                </option>
-              ))}
-            </select>
+                {sensors.map((sensor) => (
+                  <option key={sensor.id} value={sensor.id}>
+                    {sensor.code}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <input
-              type="date"
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-              title="Data inicial"
-            />
+            <label className="temperature-readings-filter-field">
+              <span>Início</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            </label>
 
-            <input
-              type="date"
-              value={endDate}
-              onChange={(event) => setEndDate(event.target.value)}
-              title="Data final"
-            />
+            <label className="temperature-readings-filter-field">
+              <span>Fim</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(event) => setEndDate(event.target.value)}
+              />
+            </label>
 
-            <input
-              type="search"
-              placeholder="Buscar por sala, sensor, origem..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
+            <label className="temperature-readings-filter-field temperature-readings-search-field">
+              <span>Busca</span>
+              <input
+                type="search"
+                placeholder="Buscar por sala, sensor, origem..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
 
-            <button type="button" onClick={handleRefresh}>
-              Atualizar
-            </button>
+            <div className="temperature-readings-action-buttons">
+              <button type="button" onClick={() => void handleRefresh()}>
+                Aplicar filtros
+              </button>
+
+              <button
+                type="button"
+                className="temperature-readings-secondary-action"
+                onClick={() => void handleClearFilters()}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="temperature-readings-filter-status">
+          <div>
+            <strong>Filtros selecionados</strong>
+            <span>
+              Clique em Aplicar filtros para recarregar o histórico. A busca
+              textual filtra os registros já carregados.
+            </span>
+          </div>
+
+          <div className="temperature-readings-filter-chips">
+            {activeFilters.map((filter) => (
+              <span key={`${filter.label}-${filter.value}`}>
+                {filter.label}: <strong>{filter.value}</strong>
+              </span>
+            ))}
           </div>
         </div>
 
@@ -648,17 +814,17 @@ export function TemperatureReadings() {
           <div className="temperature-readings-error">
             <strong>{error}</strong>
 
-            <button type="button" onClick={handleRefresh}>
+            <button type="button" onClick={() => void handleRefresh()}>
               Tentar novamente
             </button>
           </div>
         ) : null}
 
         {!error && filteredReadings.length === 0 ? (
-         <EmptyState
-  title="Nenhuma leitura encontrada."
-  description="Ajuste os filtros ou registre uma nova leitura de temperatura."
-/>
+          <EmptyState
+            title="Nenhuma leitura encontrada."
+            description="Ajuste os filtros ou registre uma nova leitura de temperatura."
+          />
         ) : null}
 
         {!error && filteredReadings.length > 0 ? (
@@ -690,8 +856,11 @@ export function TemperatureReadings() {
 
                     <td>
                       <strong>{reading.room?.name ?? reading.roomId}</strong>
-                      {reading.room?.minTemperature !== undefined ||
-                      reading.room?.maxTemperature !== undefined ? (
+
+                      {hasTemperatureLimit(
+                        reading.room?.minTemperature,
+                        reading.room?.maxTemperature,
+                      ) ? (
                         <small>
                           Limite: {formatTemperature(reading.room?.minTemperature)}{' '}
                           até {formatTemperature(reading.room?.maxTemperature)}
@@ -701,6 +870,7 @@ export function TemperatureReadings() {
 
                     <td>
                       <span>{reading.sensor?.code ?? '-'}</span>
+
                       {reading.sensor?.location ? (
                         <small>{reading.sensor.location}</small>
                       ) : null}
@@ -722,7 +892,7 @@ export function TemperatureReadings() {
                       />
                     </td>
 
-                    <td>{reading.source || '-'}</td>
+                    <td>{formatSource(reading.source)}</td>
 
                     <td>{reading.notes || '-'}</td>
                   </tr>
@@ -877,11 +1047,11 @@ function defaultStartDate() {
   const date = new Date();
   date.setDate(date.getDate() - 7);
 
-  return date.toISOString().slice(0, 10);
+  return toDateInputValue(date);
 }
 
 function defaultEndDate() {
-  return new Date().toISOString().slice(0, 10);
+  return toDateInputValue(new Date());
 }
 
 function optionalStartIsoDate(value: string) {
@@ -900,8 +1070,22 @@ function optionalEndIsoDate(value: string) {
   return new Date(`${value}T23:59:59`).toISOString();
 }
 
+function toDateInputValue(date: Date) {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+
+  return localDate.toISOString().slice(0, 10);
+}
+
 function shortId(value: string) {
   return value.slice(0, 8).toUpperCase();
+}
+
+function formatDate(value?: string | null) {
+  if (!value) {
+    return '-';
+  }
+
+  return new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR');
 }
 
 function formatDateTime(value?: string | null) {
@@ -932,6 +1116,29 @@ function formatHumidity(value?: number | null) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 1,
   }).format(value)}%`;
+}
+
+function formatSource(value?: string | null) {
+  const labels: Record<string, string> = {
+    MANUAL: 'Manual',
+    SENSOR: 'Sensor',
+    IMPORT: 'Importação',
+    API: 'API',
+    GOVEE: 'Govee',
+    MQTT: 'MQTT',
+  };
+
+  return labels[value ?? ''] ?? value ?? '-';
+}
+
+function hasTemperatureLimit(
+  minTemperature?: number | null,
+  maxTemperature?: number | null,
+) {
+  return (
+    (minTemperature !== null && minTemperature !== undefined) ||
+    (maxTemperature !== null && maxTemperature !== undefined)
+  );
 }
 
 function getRequestErrorMessage(error: unknown) {

@@ -4723,3 +4723,57 @@ Testes realizados:
 - Filtros ficaram usáveis em coluna única.
 - Tabela rolou horizontalmente no mobile.
 - Formulário de sala ficou adequado em uma coluna.
+
+## 63.6.3. Revisão mobile da tela Leituras
+
+Foi realizada uma revisão visual e operacional da tela de Leituras para melhorar o uso em dispositivos móveis.
+
+Objetivo:
+
+- Facilitar o registro manual de leituras de temperatura e umidade em campo.
+- Melhorar a usabilidade enquanto os sensores reais ainda não estão ativos.
+- Deixar explícito que leituras manuais alimentam o gráfico térmico da tela Salas.
+- Melhorar filtros, tabela e formulário no mobile.
+
+Alterações aplicadas:
+
+- Formulário de nova leitura manual ajustado para uso em celular.
+- Adicionado aviso operacional sobre uso sem sensor ativo.
+- Orientado o preenchimento manual com:
+  - empresa;
+  - sala;
+  - sensor vazio;
+  - origem `MANUAL`.
+- Campo de origem passou a usar sugestões via `datalist`.
+- Filtros receberam rótulos visíveis.
+- Botão `Atualizar` foi renomeado para `Aplicar filtros`.
+- Adicionado botão `Limpar filtros`.
+- Adicionado painel de filtros selecionados.
+- Adicionados chips visuais de filtros ativos.
+- Tabela recebeu aviso para deslizar horizontalmente no mobile.
+- Cards de resumo foram ajustados para telas pequenas.
+- Formulário passou a usar uma coluna no mobile.
+- Botões do formulário ficaram com largura total no celular.
+
+Regras preservadas:
+
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+- Leituras manuais continuam sendo registradas em `/temperature-readings`.
+- Leituras de sala continuam alimentando o gráfico térmico da tela Salas.
+- Sensor continua opcional para leitura manual.
+- Equipamentos continuam usando medições técnicas separadas.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Leituras carregou corretamente.
+- Nova leitura manual foi criada com sensor vazio e origem `MANUAL`.
+- Leitura manual apareceu na tabela.
+- Leitura manual alimentou o gráfico térmico da tela Salas.
+- Filtros funcionaram.
+- Botão limpar filtros funcionou.
+- Layout mobile ficou adequado.
+- Formulário ficou usável em celular.
+- Tabela manteve rolagem horizontal no mobile.
