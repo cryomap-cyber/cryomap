@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
 import { EmptyState } from '../../components/Feedback/EmptyState';
 import { LoadingState } from '../../components/Feedback/LoadingState';
+import { useAuth } from '../../contexts/useAuth';
 import { getCompanies } from '../../services/companies';
 import { getEquipments } from '../../services/equipments';
 import { getRooms } from '../../services/rooms';
@@ -62,6 +63,11 @@ const emptyFormData: TaskFormData = {
 };
 
 export function Tasks() {
+  const { user } = useAuth();
+
+  const isClientUser = user?.role === 'CLIENT_USER';
+  const canManageTasks = !isClientUser;
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -116,7 +122,7 @@ export function Tasks() {
       setUsers(usersData);
       setTasks(tasksData);
     } catch {
-      setError('Não foi possível carregar as tarefas.');
+      setError('Não foi possível carregar os chamados.');
     } finally {
       setIsLoading(false);
     }
@@ -167,7 +173,7 @@ export function Tasks() {
           return;
         }
 
-        setError('Não foi possível carregar as tarefas.');
+        setError('Não foi possível carregar os chamados.');
       })
       .finally(() => {
         if (!isMounted) {
@@ -237,7 +243,7 @@ export function Tasks() {
           return;
         }
 
-        setError('Não foi possível filtrar as tarefas.');
+        setError('Não foi possível filtrar os chamados.');
       });
 
     return () => {
@@ -269,6 +275,8 @@ export function Tasks() {
         task.equipment?.code ?? '',
         task.assignedToUser?.name ?? '',
         task.assignedToUser?.email ?? '',
+        task.createdByUser?.name ?? '',
+        task.createdByUser?.email ?? '',
         task.status,
         task.priority,
         task.origin,
@@ -356,6 +364,10 @@ export function Tasks() {
     selectedStatus,
   ]);
 
+  const currentUserCompany = useMemo(() => {
+    return companies.find((company) => company.id === user?.companyId) ?? null;
+  }, [companies, user?.companyId]);
+
   const formRooms = useMemo(() => {
     if (!formData.companyId) {
       return rooms;
@@ -416,16 +428,28 @@ export function Tasks() {
     setEditingTask(null);
     setFormData({
       ...emptyFormData,
-      companyId: selectedCompanyId,
+      companyId: isClientUser ? user?.companyId ?? '' : selectedCompanyId,
       roomId: selectedRoomId,
       equipmentId: selectedEquipmentId,
-      origin: selectedOrigin ? (selectedOrigin as TaskOrigin) : 'CRYOMAP',
+      priority: selectedPriority
+        ? normalizeTaskPriority(selectedPriority)
+        : 'MEDIUM',
+      status: 'OPEN',
+      origin: isClientUser
+        ? 'CRYOMAP'
+        : selectedOrigin
+          ? (selectedOrigin as TaskOrigin)
+          : 'CRYOMAP',
     });
     setFormError('');
     setIsFormOpen(true);
   }
 
   function openEditForm(task: Task) {
+    if (!canManageTasks) {
+      return;
+    }
+
     setEditingTask(task);
     setFormData({
       companyId: task.companyId,
@@ -478,6 +502,10 @@ export function Tasks() {
         nextFormData.externalUrl = '';
       }
 
+      if (field === 'priority' && isClientUser && value === 'CRITICAL') {
+        nextFormData.priority = 'HIGH';
+      }
+
       return nextFormData;
     });
   }
@@ -487,8 +515,16 @@ export function Tasks() {
 
     setFormError('');
 
-    if (!formData.companyId) {
-      setFormError('Selecione a empresa da tarefa.');
+    const companyId = isClientUser
+      ? user?.companyId ?? formData.companyId
+      : formData.companyId;
+
+    if (!companyId) {
+      setFormError(
+        isClientUser
+          ? 'Seu usuário cliente não está vinculado a uma empresa.'
+          : 'Selecione a empresa do chamado.',
+      );
       return;
     }
 
@@ -497,12 +533,17 @@ export function Tasks() {
       return;
     }
 
+    if (editingTask && !canManageTasks) {
+      setFormError('Usuário cliente não pode editar chamados.');
+      return;
+    }
+
     setIsSaving(true);
 
     try {
       if (editingTask) {
         const updatePayload: UpdateTaskPayload = {
-          companyId: formData.companyId,
+          companyId,
           roomId: formData.roomId || null,
           equipmentId: formData.equipmentId || null,
           assignedToUserId: formData.assignedToUserId || null,
@@ -517,9 +558,22 @@ export function Tasks() {
         };
 
         await updateTask(editingTask.id, updatePayload);
+      } else if (isClientUser) {
+        const createPayload: CreateTaskPayload = {
+          companyId,
+          roomId: optionalValue(formData.roomId),
+          equipmentId: optionalValue(formData.equipmentId),
+          title: formData.title.trim(),
+          description: optionalValue(formData.description),
+          priority: normalizeClientPriority(formData.priority),
+          status: 'OPEN',
+          origin: 'CRYOMAP',
+        };
+
+        await createTask(createPayload);
       } else {
         const createPayload: CreateTaskPayload = {
-          companyId: formData.companyId,
+          companyId,
           roomId: optionalValue(formData.roomId),
           equipmentId: optionalValue(formData.equipmentId),
           assignedToUserId: optionalValue(formData.assignedToUserId),
@@ -546,8 +600,12 @@ export function Tasks() {
   }
 
   async function handleInactivate(task: Task) {
+    if (!canManageTasks) {
+      return;
+    }
+
     const confirmed = window.confirm(
-      `Deseja realmente remover a tarefa "${task.title}"?`,
+      `Deseja realmente remover o chamado "${task.title}"?`,
     );
 
     if (!confirmed) {
@@ -558,14 +616,14 @@ export function Tasks() {
       await inactivateTask(task.id);
       await handleRefresh();
     } catch {
-      setError('Não foi possível remover a tarefa.');
+      setError('Não foi possível remover o chamado.');
     }
   }
 
   if (isLoading) {
     return (
       <LoadingState
-        title="Carregando tarefas..."
+        title="Carregando chamados..."
         description="Buscando chamados e pendências operacionais."
       />
     );
@@ -576,33 +634,40 @@ export function Tasks() {
       <header className="tasks-header">
         <div>
           <span>Operação</span>
-          <h1>Tarefas</h1>
+          <h1>{isClientUser ? 'Meus chamados' : 'Chamados'}</h1>
           <p>
-            Acompanhe tarefas técnicas por empresa, sala, equipamento, origem,
-            status e prioridade.
+            {isClientUser
+              ? 'Abra chamados para sua empresa e acompanhe o andamento das solicitações técnicas.'
+              : 'Acompanhe chamados técnicos por empresa, sala, equipamento, origem, status e prioridade.'}
           </p>
         </div>
 
         <button type="button" onClick={openCreateForm}>
-          Nova tarefa
+          {isClientUser ? 'Abrir chamado' : 'Novo chamado'}
         </button>
       </header>
 
       <section className="tasks-summary">
         <SummaryCard title="Total" value={tasks.length} />
-        <SummaryCard title="Abertas" value={openTasks} />
+        <SummaryCard title="Abertos" value={openTasks} />
         <SummaryCard title="Em andamento" value={inProgressTasks} />
-        <SummaryCard title="Concluídas" value={doneTasks} />
-        <SummaryCard title="Externas" value={externalTasks} />
-        <SummaryCard title="Atrasadas" value={overdueTasks} danger />
+        <SummaryCard title="Concluídos" value={doneTasks} />
+        <SummaryCard title="Externos" value={externalTasks} />
+        <SummaryCard title="Atrasados" value={overdueTasks} danger />
       </section>
 
       {isFormOpen ? (
         <section className="task-form-panel">
           <div className="task-form-header">
             <div>
-              <span>Tarefa</span>
-              <h2>{editingTask ? 'Editar tarefa' : 'Nova tarefa'}</h2>
+              <span>{isClientUser ? 'Solicitação' : 'Chamado'}</span>
+              <h2>
+                {editingTask
+                  ? 'Editar chamado'
+                  : isClientUser
+                    ? 'Abrir chamado'
+                    : 'Novo chamado'}
+              </h2>
             </div>
 
             <button type="button" onClick={closeForm}>
@@ -611,32 +676,45 @@ export function Tasks() {
           </div>
 
           <div className="task-form-tip">
-            <strong>Fluxo técnico</strong>
+            <strong>
+              {isClientUser ? 'Solicitação do cliente' : 'Fluxo técnico'}
+            </strong>
             <p>
-              Use a tarefa para abrir ou acompanhar o chamado operacional. O
-              registro técnico detalhado, tempo parado e finalização operacional
-              continuam na tela Atendimentos.
+              {isClientUser
+                ? 'Descreva o problema para a equipe técnica. O chamado será vinculado automaticamente à sua empresa e registrado com seu usuário.'
+                : 'Use o chamado para abrir ou acompanhar a solicitação operacional. O registro técnico detalhado, tempo parado e finalização operacional continuam na tela Atendimentos.'}
             </p>
           </div>
 
           <form className="task-form" onSubmit={handleSubmit}>
-            <label>
-              Empresa *
-              <select
-                value={formData.companyId}
-                onChange={(event) =>
-                  updateFormField('companyId', event.target.value)
-                }
-              >
-                <option value="">Selecione uma empresa</option>
+            {isClientUser ? (
+              <div className="task-form-client-company">
+                <span>Empresa vinculada</span>
+                <strong>
+                  {currentUserCompany?.name ??
+                    'Empresa do usuário logado será usada automaticamente'}
+                </strong>
+                <small>O cliente não pode abrir chamado para outra empresa.</small>
+              </div>
+            ) : (
+              <label>
+                Empresa *
+                <select
+                  value={formData.companyId}
+                  onChange={(event) =>
+                    updateFormField('companyId', event.target.value)
+                  }
+                >
+                  <option value="">Selecione uma empresa</option>
 
-                {companies.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <label>
               Sala
@@ -674,23 +752,25 @@ export function Tasks() {
               </select>
             </label>
 
-            <label>
-              Responsável
-              <select
-                value={formData.assignedToUserId}
-                onChange={(event) =>
-                  updateFormField('assignedToUserId', event.target.value)
-                }
-              >
-                <option value="">Sem responsável definido</option>
+            {!isClientUser ? (
+              <label>
+                Responsável
+                <select
+                  value={formData.assignedToUserId}
+                  onChange={(event) =>
+                    updateFormField('assignedToUserId', event.target.value)
+                  }
+                >
+                  <option value="">Sem responsável definido</option>
 
-                {formUsers.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                  {formUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
 
             <label className="task-form-wide">
               Título *
@@ -699,12 +779,16 @@ export function Tasks() {
                 onChange={(event) =>
                   updateFormField('title', event.target.value)
                 }
-                placeholder="Ex: Verificar evaporador da Câmara Fria 01"
+                placeholder={
+                  isClientUser
+                    ? 'Ex: Câmara fria não está gelando'
+                    : 'Ex: Verificar evaporador da Câmara Fria 01'
+                }
               />
             </label>
 
             <label>
-              Prioridade
+              {isClientUser ? 'Urgência' : 'Prioridade'}
               <select
                 value={formData.priority}
                 onChange={(event) =>
@@ -717,74 +801,78 @@ export function Tasks() {
                 <option value="LOW">Baixa</option>
                 <option value="MEDIUM">Média</option>
                 <option value="HIGH">Alta</option>
-                <option value="CRITICAL">Crítica</option>
+                {!isClientUser ? <option value="CRITICAL">Crítica</option> : null}
               </select>
             </label>
 
-            <label>
-              Status
-              <select
-                value={formData.status}
-                onChange={(event) =>
-                  updateFormField('status', event.target.value as TaskStatus)
-                }
-              >
-                <option value="OPEN">Aberta</option>
-                <option value="IN_PROGRESS">Em andamento</option>
-                <option value="DONE">Concluída</option>
-                <option value="CANCELED">Cancelada</option>
-                <option value="OVERDUE">Atrasada</option>
-              </select>
-            </label>
+            {!isClientUser ? (
+              <>
+                <label>
+                  Status
+                  <select
+                    value={formData.status}
+                    onChange={(event) =>
+                      updateFormField('status', event.target.value as TaskStatus)
+                    }
+                  >
+                    <option value="OPEN">Aberto</option>
+                    <option value="IN_PROGRESS">Em andamento</option>
+                    <option value="DONE">Concluído</option>
+                    <option value="CANCELED">Cancelado</option>
+                    <option value="OVERDUE">Atrasado</option>
+                  </select>
+                </label>
 
-            <label>
-              Origem
-              <select
-                value={formData.origin}
-                onChange={(event) =>
-                  updateFormField('origin', event.target.value as TaskOrigin)
-                }
-              >
-                <option value="CRYOMAP">CryoMap</option>
-                <option value="AUVO">Auvo</option>
-                <option value="OTHER">Outro</option>
-              </select>
-            </label>
+                <label>
+                  Origem
+                  <select
+                    value={formData.origin}
+                    onChange={(event) =>
+                      updateFormField('origin', event.target.value as TaskOrigin)
+                    }
+                  >
+                    <option value="CRYOMAP">CryoMap</option>
+                    <option value="AUVO">Auvo</option>
+                    <option value="OTHER">Outro</option>
+                  </select>
+                </label>
 
-            <label>
-              Vencimento
-              <input
-                type="datetime-local"
-                value={formData.dueDate}
-                onChange={(event) =>
-                  updateFormField('dueDate', event.target.value)
-                }
-              />
-            </label>
+                <label>
+                  Vencimento
+                  <input
+                    type="datetime-local"
+                    value={formData.dueDate}
+                    onChange={(event) =>
+                      updateFormField('dueDate', event.target.value)
+                    }
+                  />
+                </label>
 
-            <label>
-              Código externo
-              <input
-                value={formData.externalCode}
-                disabled={formData.origin === 'CRYOMAP'}
-                onChange={(event) =>
-                  updateFormField('externalCode', event.target.value)
-                }
-                placeholder="Ex: AUVO-12345"
-              />
-            </label>
+                <label>
+                  Código externo
+                  <input
+                    value={formData.externalCode}
+                    disabled={formData.origin === 'CRYOMAP'}
+                    onChange={(event) =>
+                      updateFormField('externalCode', event.target.value)
+                    }
+                    placeholder="Ex: AUVO-12345"
+                  />
+                </label>
 
-            <label>
-              Link externo
-              <input
-                value={formData.externalUrl}
-                disabled={formData.origin === 'CRYOMAP'}
-                onChange={(event) =>
-                  updateFormField('externalUrl', event.target.value)
-                }
-                placeholder="Ex: link da OS no Auvo"
-              />
-            </label>
+                <label>
+                  Link externo
+                  <input
+                    value={formData.externalUrl}
+                    disabled={formData.origin === 'CRYOMAP'}
+                    onChange={(event) =>
+                      updateFormField('externalUrl', event.target.value)
+                    }
+                    placeholder="Ex: link da OS no Auvo"
+                  />
+                </label>
+              </>
+            ) : null}
 
             <label className="task-form-wide">
               Descrição
@@ -793,7 +881,11 @@ export function Tasks() {
                 onChange={(event) =>
                   updateFormField('description', event.target.value)
                 }
-                placeholder="Descreva a tarefa técnica, ocorrência ou rotina..."
+                placeholder={
+                  isClientUser
+                    ? 'Descreva o problema, local afetado, desde quando acontece e qualquer detalhe útil para o técnico.'
+                    : 'Descreva o chamado técnico, ocorrência ou rotina...'
+                }
                 rows={4}
               />
             </label>
@@ -812,7 +904,9 @@ export function Tasks() {
                   ? 'Salvando...'
                   : editingTask
                     ? 'Salvar alterações'
-                    : 'Cadastrar tarefa'}
+                    : isClientUser
+                      ? 'Abrir chamado'
+                      : 'Cadastrar chamado'}
               </button>
             </div>
           </form>
@@ -822,7 +916,7 @@ export function Tasks() {
       <section className="tasks-panel">
         <div className="tasks-panel-header">
           <div>
-            <h2>Lista de tarefas</h2>
+            <h2>Lista de chamados</h2>
             <p>
               {filteredTasks.length} registro(s) exibido(s) de {tasks.length}{' '}
               carregado(s)
@@ -892,11 +986,11 @@ export function Tasks() {
                 onChange={(event) => setSelectedStatus(event.target.value)}
               >
                 <option value="">Todos os status</option>
-                <option value="OPEN">Aberta</option>
+                <option value="OPEN">Aberto</option>
                 <option value="IN_PROGRESS">Em andamento</option>
-                <option value="DONE">Concluída</option>
-                <option value="CANCELED">Cancelada</option>
-                <option value="OVERDUE">Atrasada</option>
+                <option value="DONE">Concluído</option>
+                <option value="CANCELED">Cancelado</option>
+                <option value="OVERDUE">Atrasado</option>
               </select>
             </label>
 
@@ -931,7 +1025,7 @@ export function Tasks() {
               <span>Busca</span>
               <input
                 type="search"
-                placeholder="Buscar por título, origem, código externo..."
+                placeholder="Buscar por título, solicitante, origem..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
@@ -987,8 +1081,8 @@ export function Tasks() {
 
         {!error && filteredTasks.length === 0 ? (
           <EmptyState
-            title="Nenhuma tarefa encontrada."
-            description="Cadastre uma tarefa ou ajuste os filtros para visualizar resultados."
+            title="Nenhum chamado encontrado."
+            description="Abra um chamado ou ajuste os filtros para visualizar resultados."
           />
         ) : null}
 
@@ -997,18 +1091,19 @@ export function Tasks() {
             <table className="tasks-table">
               <thead>
                 <tr>
-                  <th>Tarefa</th>
+                  <th>Chamado</th>
                   <th>Origem</th>
                   <th>Referência externa</th>
                   <th>Empresa</th>
                   <th>Sala</th>
                   <th>Equipamento</th>
                   <th>Responsável</th>
+                  <th>Aberto por</th>
                   <th>Prioridade</th>
                   <th>Status</th>
                   <th>Vencimento</th>
-                  <th>Concluída em</th>
-                  <th>Criada em</th>
+                  <th>Concluído em</th>
+                  <th>Criado em</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -1065,6 +1160,14 @@ export function Tasks() {
                     </td>
 
                     <td>
+                      <span>{task.createdByUser?.name ?? '-'}</span>
+
+                      {task.createdByUser?.email ? (
+                        <small>{task.createdByUser.email}</small>
+                      ) : null}
+                    </td>
+
+                    <td>
                       <TaskPriorityBadge priority={task.priority} />
                     </td>
 
@@ -1079,18 +1182,24 @@ export function Tasks() {
                     <td>{formatDate(task.createdAt)}</td>
 
                     <td>
-                      <div className="task-row-actions">
-                        <button type="button" onClick={() => openEditForm(task)}>
-                          Editar
-                        </button>
+                      {canManageTasks ? (
+                        <div className="task-row-actions">
+                          <button type="button" onClick={() => openEditForm(task)}>
+                            Editar
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => void handleInactivate(task)}
-                        >
-                          Remover
-                        </button>
-                      </div>
+                          <button
+                            type="button"
+                            onClick={() => void handleInactivate(task)}
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="task-readonly-badge">
+                          Acompanhamento
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -1168,11 +1277,11 @@ function formatTaskOrigin(value: TaskOrigin) {
 
 function formatTaskStatus(value: TaskStatus) {
   const labels: Record<TaskStatus, string> = {
-    OPEN: 'Aberta',
+    OPEN: 'Aberto',
     IN_PROGRESS: 'Em andamento',
-    DONE: 'Concluída',
-    CANCELED: 'Cancelada',
-    OVERDUE: 'Atrasada',
+    DONE: 'Concluído',
+    CANCELED: 'Cancelado',
+    OVERDUE: 'Atrasado',
   };
 
   return labels[value];
@@ -1250,6 +1359,27 @@ function nullableIsoDateTime(value: string) {
   return new Date(value).toISOString();
 }
 
+function normalizeTaskPriority(value: string): TaskPriority {
+  if (
+    value === 'LOW' ||
+    value === 'MEDIUM' ||
+    value === 'HIGH' ||
+    value === 'CRITICAL'
+  ) {
+    return value;
+  }
+
+  return 'MEDIUM';
+}
+
+function normalizeClientPriority(value: TaskPriority): TaskPriority {
+  if (value === 'CRITICAL') {
+    return 'HIGH';
+  }
+
+  return value;
+}
+
 function getRequestErrorMessage(error: unknown) {
   if (
     typeof error === 'object' &&
@@ -1274,5 +1404,5 @@ function getRequestErrorMessage(error: unknown) {
     }
   }
 
-  return 'Não foi possível salvar a tarefa.';
+  return 'Não foi possível salvar o chamado.';
 }

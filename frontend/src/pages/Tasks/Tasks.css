@@ -336,7 +336,7 @@
 
 .tasks-table {
   width: 100%;
-  min-width: 1420px;
+  min-width: 1520px;
   border-collapse: collapse;
 }
 
@@ -498,6 +498,19 @@
   color: var(--color-danger-text);
 }
 
+.task-readonly-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: var(--color-surface-soft);
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .task-form-panel {
   position: fixed;
   inset: 24px;
@@ -614,8 +627,37 @@
 
 .task-form-wide,
 .task-form-error,
-.task-form-actions {
+.task-form-actions,
+.task-form-client-company {
   grid-column: 1 / -1;
+}
+
+.task-form-client-company {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(9, 109, 242, 0.12);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(237, 247, 255, 0.72);
+}
+
+.task-form-client-company span {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.task-form-client-company strong {
+  color: var(--color-primary-dark);
+  font-size: 15px;
+}
+
+.task-form-client-company small {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .task-form-error {
@@ -782,7 +824,7 @@
   }
 
   .tasks-table {
-    min-width: 1180px;
+    min-width: 1280px;
     font-size: 13px;
   }
 
@@ -905,7 +947,7 @@
   }
 
   .tasks-table {
-    min-width: 1080px;
+    min-width: 1160px;
     font-size: 12px;
   }
 
@@ -985,7 +1027,7 @@
   }
 
   .tasks-table {
-    min-width: 980px;
+    min-width: 1060px;
   }
 }
 

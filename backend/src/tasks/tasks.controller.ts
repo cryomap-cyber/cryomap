@@ -22,7 +22,12 @@ import { UpdateTaskDto } from './dto/update-task.dto.js';
 import { TasksService } from './tasks.service.js';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.MASTER_ADMIN, UserRole.SUPERVISOR, UserRole.TECHNICIAN)
+@Roles(
+  UserRole.MASTER_ADMIN,
+  UserRole.SUPERVISOR,
+  UserRole.TECHNICIAN,
+  UserRole.CLIENT_USER,
+)
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}

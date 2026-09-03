@@ -25,6 +25,7 @@ const taskSelect = {
   roomId: true,
   equipmentId: true,
   assignedToUserId: true,
+  createdByUserId: true,
   title: true,
   description: true,
   priority: true,
@@ -71,6 +72,15 @@ const taskSelect = {
       status: true,
     },
   },
+  createdByUser: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+    },
+  },
 } satisfies Prisma.TaskSelect;
 
 @Injectable()
@@ -94,7 +104,7 @@ export class TasksService {
       );
     }
 
-    if (createTaskDto.assignedToUserId) {
+    if (actor.role !== UserRole.CLIENT_USER && createTaskDto.assignedToUserId) {
       await this.ensureUserExists(createTaskDto.assignedToUserId, companyId);
     }
 
@@ -102,22 +112,33 @@ export class TasksService {
       ? this.parseDate(createTaskDto.dueDate, 'Prazo inválido')
       : undefined;
 
+    const status = this.resolveCreateStatus(createTaskDto, actor);
+
     return this.prisma.task.create({
       data: {
         companyId,
         roomId: createTaskDto.roomId,
         equipmentId: createTaskDto.equipmentId,
-        assignedToUserId: createTaskDto.assignedToUserId,
+        assignedToUserId:
+          actor.role === UserRole.CLIENT_USER
+            ? undefined
+            : createTaskDto.assignedToUserId,
+        createdByUserId: actor.id,
         title: createTaskDto.title.trim(),
         description: createTaskDto.description?.trim(),
-        priority: createTaskDto.priority ?? TaskPriority.MEDIUM,
-        status: createTaskDto.status ?? TaskStatus.OPEN,
-        origin: createTaskDto.origin ?? TaskOrigin.CRYOMAP,
-        externalCode: this.optionalText(createTaskDto.externalCode),
-        externalUrl: this.optionalText(createTaskDto.externalUrl),
-        dueDate,
-        completedAt:
-          createTaskDto.status === TaskStatus.DONE ? new Date() : undefined,
+        priority: this.resolveCreatePriority(createTaskDto, actor),
+        status,
+        origin: this.resolveCreateOrigin(createTaskDto, actor),
+        externalCode:
+          actor.role === UserRole.CLIENT_USER
+            ? null
+            : this.optionalText(createTaskDto.externalCode),
+        externalUrl:
+          actor.role === UserRole.CLIENT_USER
+            ? null
+            : this.optionalText(createTaskDto.externalUrl),
+        dueDate: actor.role === UserRole.CLIENT_USER ? undefined : dueDate,
+        completedAt: status === TaskStatus.DONE ? new Date() : undefined,
       },
       select: taskSelect,
     });
@@ -371,6 +392,10 @@ export class TasksService {
   }
 
   async remove(id: string, actor: AuthUser) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      throw new ForbiddenException('Usuário cliente não pode remover chamados');
+    }
+
     await this.findOne(id, actor);
 
     return this.prisma.task.update({
@@ -389,7 +414,19 @@ export class TasksService {
     actor: AuthUser,
   ) {
     if (actor.role === UserRole.CLIENT_USER) {
-      throw new ForbiddenException('Usuário cliente não pode acessar tarefas');
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Usuário cliente não está vinculado a uma empresa',
+        );
+      }
+
+      if (createTaskDto.companyId !== actor.companyId) {
+        throw new ForbiddenException(
+          'Usuário cliente só pode abrir chamados da própria empresa',
+        );
+      }
+
+      return actor.companyId;
     }
 
     if (actor.role === UserRole.TECHNICIAN) {
@@ -416,11 +453,23 @@ export class TasksService {
     actor: AuthUser,
   ) {
     if (actor.role === UserRole.CLIENT_USER) {
-      throw new ForbiddenException('Usuário cliente não pode acessar tarefas');
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Usuário cliente não está vinculado a uma empresa',
+        );
+      }
+
+      return actor.companyId;
     }
 
     if (actor.role === UserRole.TECHNICIAN) {
-      return actor.companyId ?? undefined;
+      if (!actor.companyId) {
+        throw new ForbiddenException(
+          'Técnico não está vinculado a uma empresa',
+        );
+      }
+
+      return actor.companyId;
     }
 
     return requestedCompanyId;
@@ -432,7 +481,7 @@ export class TasksService {
     actor: AuthUser,
   ) {
     if (actor.role === UserRole.CLIENT_USER) {
-      throw new ForbiddenException('Usuário cliente não pode acessar tarefas');
+      throw new ForbiddenException('Usuário cliente não pode editar chamados');
     }
 
     if (actor.role === UserRole.TECHNICIAN) {
@@ -463,19 +512,44 @@ export class TasksService {
     return requestedCompanyId ?? currentCompanyId;
   }
 
-  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+  private resolveCreatePriority(createTaskDto: CreateTaskDto, actor: AuthUser) {
     if (actor.role === UserRole.CLIENT_USER) {
-      throw new ForbiddenException('Usuário cliente não pode acessar tarefas');
+      if (createTaskDto.priority === TaskPriority.CRITICAL) {
+        return TaskPriority.HIGH;
+      }
+
+      return createTaskDto.priority ?? TaskPriority.MEDIUM;
     }
 
-    if (actor.role !== UserRole.TECHNICIAN) {
-      return;
+    return createTaskDto.priority ?? TaskPriority.MEDIUM;
+  }
+
+  private resolveCreateStatus(createTaskDto: CreateTaskDto, actor: AuthUser) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      return TaskStatus.OPEN;
     }
 
-    if (!actor.companyId || actor.companyId !== companyId) {
-      throw new ForbiddenException(
-        'Você não tem permissão para acessar esta empresa',
-      );
+    return createTaskDto.status ?? TaskStatus.OPEN;
+  }
+
+  private resolveCreateOrigin(createTaskDto: CreateTaskDto, actor: AuthUser) {
+    if (actor.role === UserRole.CLIENT_USER) {
+      return TaskOrigin.CRYOMAP;
+    }
+
+    return createTaskDto.origin ?? TaskOrigin.CRYOMAP;
+  }
+
+  private ensureCanAccessCompany(companyId: string, actor: AuthUser) {
+    if (
+      actor.role === UserRole.CLIENT_USER ||
+      actor.role === UserRole.TECHNICIAN
+    ) {
+      if (!actor.companyId || actor.companyId !== companyId) {
+        throw new ForbiddenException(
+          'Você não tem permissão para acessar esta empresa',
+        );
+      }
     }
   }
 

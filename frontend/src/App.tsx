@@ -5,7 +5,6 @@ import {
   allRoles,
   clientAndAdminRoles,
   managementRoles,
-  technicianAndAdminRoles,
 } from './permissions/role-permissions';
 import { Attachments } from './pages/Attachments/Attachments';
 import { Companies } from './pages/Companies/Companies';
@@ -46,6 +45,7 @@ export function App() {
             <Route path="/thermal-alerts" element={<ThermalAlerts />} />
             <Route path="/attachments" element={<Attachments />} />
             <Route path="/service-records" element={<ServiceRecords />} />
+            <Route path="/tasks" element={<Tasks />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={managementRoles} />}>
@@ -62,14 +62,6 @@ export function App() {
           >
             <Route path="/sensors" element={<Sensors />} />
             <Route path="/reports" element={<Reports />} />
-          </Route>
-
-          <Route
-            element={
-              <ProtectedRoute allowedRoles={[...technicianAndAdminRoles]} />
-            }
-          >
-            <Route path="/tasks" element={<Tasks />} />
           </Route>
         </Route>
       </Route>

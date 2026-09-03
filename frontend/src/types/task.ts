@@ -9,12 +9,21 @@ export type TaskStatus =
 
 export type TaskOrigin = 'CRYOMAP' | 'AUVO' | 'OTHER';
 
+export type TaskUserSummary = {
+  id: string;
+  name: string;
+  email?: string | null;
+  role?: string | null;
+  status?: string | null;
+};
+
 export type Task = {
   id: string;
   companyId: string;
   roomId?: string | null;
   equipmentId?: string | null;
   assignedToUserId?: string | null;
+  createdByUserId?: string | null;
   title: string;
   description?: string | null;
   priority: TaskPriority;
@@ -27,26 +36,19 @@ export type Task = {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
-
   company?: {
     id: string;
     name: string;
   } | null;
-
   room?: {
     id: string;
     name: string;
   } | null;
-
   equipment?: {
     id: string;
     name: string;
     code?: string | null;
   } | null;
-
-  assignedToUser?: {
-    id: string;
-    name: string;
-    email?: string | null;
-  } | null;
+  assignedToUser?: TaskUserSummary | null;
+  createdByUser?: TaskUserSummary | null;
 };

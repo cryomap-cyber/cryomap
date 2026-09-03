@@ -5270,3 +5270,58 @@ Resultado:
 
 - Etapa 63 considerada concluída para o escopo beta.
 - Não foram identificadas quebras impeditivas para avançar para auditoria/histórico.
+
+## 64. Chamados abertos por cliente
+
+Foi adicionada a possibilidade de usuários do tipo `CLIENT_USER` acessarem a tela Chamados e abrirem chamados para a própria empresa.
+
+Objetivo:
+
+- Permitir que o cliente registre problemas diretamente no CryoMap.
+- Reduzir dependência de canais externos para abertura de solicitações.
+- Registrar automaticamente qual usuário cliente abriu o chamado.
+- Manter o chamado vinculado à empresa do usuário logado.
+- Permitir que técnicos, supervisores e administradores visualizem quem abriu cada chamado.
+
+Decisão técnica:
+
+- Não foi criada nova migration para o campo "Aberto por".
+- Foi reaproveitado o campo já existente `createdByUserId` em `Task`.
+- No frontend, o campo é exibido como `Aberto por`.
+- No backend, o campo é preenchido automaticamente com o usuário autenticado.
+- O cliente não informa manualmente o usuário solicitante.
+
+Alterações aplicadas:
+
+- Backend passou a permitir `CLIENT_USER` nas rotas de tarefas/chamados.
+- Backend passou a registrar `createdByUserId` automaticamente ao criar chamado.
+- Backend passou a retornar os dados de `createdByUser` na listagem de tarefas.
+- `CLIENT_USER` passou a poder listar chamados da própria empresa.
+- `CLIENT_USER` passou a poder criar chamados apenas para a própria empresa.
+- `CLIENT_USER` não pode escolher outra empresa.
+- `CLIENT_USER` não pode escolher responsável técnico.
+- `CLIENT_USER` não pode definir status administrativo, origem externa, vencimento, código externo ou link externo.
+- `CLIENT_USER` não pode editar nem remover chamados.
+- Tela Chamados foi liberada no menu para `CLIENT_USER`.
+- Rota `/tasks` foi movida para o bloco de acesso `allRoles`.
+- A tela passou a mostrar o campo `Aberto por`.
+- O formulário de chamado foi simplificado para o perfil cliente.
+- Perfis `MASTER_ADMIN`, `SUPERVISOR` e `TECHNICIAN` mantiveram o fluxo operacional completo.
+
+Testes realizados:
+
+- Backend `npx prisma generate` passou.
+- Backend `npm run lint` passou.
+- Backend `npm run build` passou.
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Login como `CLIENT_USER` funcionou.
+- Menu exibiu Chamados para `CLIENT_USER`.
+- Rota `/tasks` deixou de redirecionar para Dashboard.
+- Cliente conseguiu abrir chamado.
+- Chamado ficou vinculado à empresa do cliente logado.
+- Campo `Aberto por` exibiu o usuário cliente corretamente.
+- Cliente não conseguiu editar nem remover chamados.
+- Perfil técnico conseguiu visualizar chamados da própria empresa.
+- Perfis administrativos continuaram com gestão completa de chamados.
+- Atendimentos continuaram podendo ser criados a partir de chamados.

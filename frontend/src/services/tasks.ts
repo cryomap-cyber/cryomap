@@ -5,7 +5,6 @@ import type {
   TaskStatus,
 } from '../types/task';
 import { api } from './api';
-import { getStoredAuthUser } from './auth-storage';
 
 export type GetTasksParams = {
   companyId?: string;
@@ -51,12 +50,6 @@ export type UpdateTaskPayload = {
 };
 
 export async function getTasks(params?: GetTasksParams) {
-  const storedUser = getStoredAuthUser();
-
-  if (storedUser?.role === 'CLIENT_USER') {
-    return [];
-  }
-
   const response = await api.get<Task[]>('/tasks', {
     params,
   });

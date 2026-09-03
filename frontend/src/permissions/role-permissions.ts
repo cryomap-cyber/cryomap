@@ -76,7 +76,7 @@ export const navigationItems: NavigationItem[] = [
   {
     label: 'Chamados',
     to: '/tasks',
-    allowedRoles: technicianAndAdminRoles,
+    allowedRoles: allRoles,
   },
   {
     label: 'Atendimentos',
