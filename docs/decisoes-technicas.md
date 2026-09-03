@@ -4777,3 +4777,54 @@ Testes realizados:
 - Layout mobile ficou adequado.
 - Formulário ficou usável em celular.
 - Tabela manteve rolagem horizontal no mobile.
+
+## 63.6.4. Revisão mobile da tela Chamados/Tarefas
+
+Foi realizada uma revisão visual e operacional da tela de Tarefas para melhorar o uso em dispositivos móveis.
+
+Objetivo:
+
+- Facilitar consulta e criação de chamados/tarefas pelo técnico em campo.
+- Melhorar filtros e leitura da lista no mobile.
+- Tornar o formulário de tarefa mais confortável no celular.
+- Manter a compatibilidade com chamados internos do CryoMap e referências externas, como Auvo.
+
+Alterações aplicadas:
+
+- Header da tela Tarefas ficou mais compacto no mobile.
+- Cards de resumo foram ajustados para telas pequenas.
+- Formulário de criação/edição foi ajustado para uma coluna no mobile.
+- Adicionado aviso operacional sobre o fluxo técnico:
+  - tarefa/chamado fica em Tarefas;
+  - registro técnico detalhado, tempo parado e finalização operacional ficam em Atendimentos.
+- Filtros receberam rótulos visíveis.
+- Botão `Atualizar` foi renomeado para `Aplicar filtros`.
+- Adicionado botão `Limpar filtros`.
+- Adicionado painel de filtros selecionados.
+- Adicionados chips visuais de filtros ativos.
+- Tabela recebeu aviso para deslizar horizontalmente no mobile.
+- Botões do formulário ficaram com largura total no celular.
+- A tabela manteve rolagem horizontal para preservar todas as colunas.
+
+Regras preservadas:
+
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+- Fluxo de status das tarefas foi preservado.
+- Campos de origem e referência externa foram preservados.
+- Chamados de origem `CRYOMAP`, `AUVO` e `OTHER` continuam disponíveis.
+- A finalização operacional detalhada continua na tela Atendimentos.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Tarefas carregou corretamente.
+- Nova tarefa foi criada.
+- Edição de tarefa funcionou.
+- Filtros de empresa, sala, equipamento, status, prioridade e origem funcionaram.
+- Busca textual funcionou.
+- Botão limpar filtros funcionou.
+- Layout mobile ficou adequado.
+- Formulário ficou usável em celular.
+- Tabela manteve rolagem horizontal no mobile.

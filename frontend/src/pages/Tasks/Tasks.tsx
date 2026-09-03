@@ -41,6 +41,11 @@ type TaskFormData = {
   dueDate: string;
 };
 
+type ActiveFilter = {
+  label: string;
+  value: string;
+};
+
 const emptyFormData: TaskFormData = {
   companyId: '',
   roomId: '',
@@ -115,6 +120,17 @@ export function Tasks() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleClearFilters() {
+    setSelectedCompanyId('');
+    setSelectedRoomId('');
+    setSelectedEquipmentId('');
+    setSelectedStatus('');
+    setSelectedPriority('');
+    setSelectedOrigin('');
+    setSearch('');
+    setError('');
   }
 
   useEffect(() => {
@@ -265,6 +281,80 @@ export function Tasks() {
         .includes(normalizedSearch);
     });
   }, [tasks, search]);
+
+  const activeFilters = useMemo(() => {
+    const filters: ActiveFilter[] = [];
+
+    const selectedCompany = companies.find(
+      (company) => company.id === selectedCompanyId,
+    );
+    const selectedRoom = rooms.find((room) => room.id === selectedRoomId);
+    const selectedEquipment = equipments.find(
+      (equipment) => equipment.id === selectedEquipmentId,
+    );
+
+    if (selectedCompany) {
+      filters.push({
+        label: 'Empresa',
+        value: selectedCompany.name,
+      });
+    }
+
+    if (selectedRoom) {
+      filters.push({
+        label: 'Sala',
+        value: selectedRoom.name,
+      });
+    }
+
+    if (selectedEquipment) {
+      filters.push({
+        label: 'Equipamento',
+        value: selectedEquipment.name,
+      });
+    }
+
+    if (selectedStatus) {
+      filters.push({
+        label: 'Status',
+        value: formatTaskStatus(selectedStatus as TaskStatus),
+      });
+    }
+
+    if (selectedPriority) {
+      filters.push({
+        label: 'Prioridade',
+        value: formatTaskPriority(selectedPriority as TaskPriority),
+      });
+    }
+
+    if (selectedOrigin) {
+      filters.push({
+        label: 'Origem',
+        value: formatTaskOrigin(selectedOrigin as TaskOrigin),
+      });
+    }
+
+    if (search.trim()) {
+      filters.push({
+        label: 'Busca',
+        value: search.trim(),
+      });
+    }
+
+    return filters;
+  }, [
+    companies,
+    equipments,
+    rooms,
+    search,
+    selectedCompanyId,
+    selectedEquipmentId,
+    selectedOrigin,
+    selectedPriority,
+    selectedRoomId,
+    selectedStatus,
+  ]);
 
   const formRooms = useMemo(() => {
     if (!formData.companyId) {
@@ -520,6 +610,15 @@ export function Tasks() {
             </button>
           </div>
 
+          <div className="task-form-tip">
+            <strong>Fluxo técnico</strong>
+            <p>
+              Use a tarefa para abrir ou acompanhar o chamado operacional. O
+              registro técnico detalhado, tempo parado e finalização operacional
+              continuam na tela Atendimentos.
+            </p>
+          </div>
+
           <form className="task-form" onSubmit={handleSubmit}>
             <label>
               Empresa *
@@ -724,99 +823,155 @@ export function Tasks() {
         <div className="tasks-panel-header">
           <div>
             <h2>Lista de tarefas</h2>
-            <p>{filteredTasks.length} registro(s) encontrado(s)</p>
+            <p>
+              {filteredTasks.length} registro(s) exibido(s) de {tasks.length}{' '}
+              carregado(s)
+            </p>
           </div>
 
           <div className="tasks-actions">
-            <select
-              value={selectedCompanyId}
-              onChange={(event) => {
-                setSelectedCompanyId(event.target.value);
-                setSelectedRoomId('');
-                setSelectedEquipmentId('');
-              }}
-            >
-              <option value="">Todas as empresas</option>
+            <label className="tasks-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => {
+                  setSelectedCompanyId(event.target.value);
+                  setSelectedRoomId('');
+                  setSelectedEquipmentId('');
+                }}
+              >
+                <option value="">Todas as empresas</option>
 
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedRoomId}
-              onChange={(event) => {
-                setSelectedRoomId(event.target.value);
-                setSelectedEquipmentId('');
-              }}
-            >
-              <option value="">Todas as salas</option>
+            <label className="tasks-filter-field">
+              <span>Sala</span>
+              <select
+                value={selectedRoomId}
+                onChange={(event) => {
+                  setSelectedRoomId(event.target.value);
+                  setSelectedEquipmentId('');
+                }}
+              >
+                <option value="">Todas as salas</option>
 
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedEquipmentId}
-              onChange={(event) => setSelectedEquipmentId(event.target.value)}
-            >
-              <option value="">Todos os equipamentos</option>
+            <label className="tasks-filter-field">
+              <span>Equipamento</span>
+              <select
+                value={selectedEquipmentId}
+                onChange={(event) => setSelectedEquipmentId(event.target.value)}
+              >
+                <option value="">Todos os equipamentos</option>
 
-              {equipments.map((equipment) => (
-                <option key={equipment.id} value={equipment.id}>
-                  {equipment.name}
-                </option>
-              ))}
-            </select>
+                {equipments.map((equipment) => (
+                  <option key={equipment.id} value={equipment.id}>
+                    {equipment.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <select
-              value={selectedStatus}
-              onChange={(event) => setSelectedStatus(event.target.value)}
-            >
-              <option value="">Todos os status</option>
-              <option value="OPEN">Aberta</option>
-              <option value="IN_PROGRESS">Em andamento</option>
-              <option value="DONE">Concluída</option>
-              <option value="CANCELED">Cancelada</option>
-              <option value="OVERDUE">Atrasada</option>
-            </select>
+            <label className="tasks-filter-field">
+              <span>Status</span>
+              <select
+                value={selectedStatus}
+                onChange={(event) => setSelectedStatus(event.target.value)}
+              >
+                <option value="">Todos os status</option>
+                <option value="OPEN">Aberta</option>
+                <option value="IN_PROGRESS">Em andamento</option>
+                <option value="DONE">Concluída</option>
+                <option value="CANCELED">Cancelada</option>
+                <option value="OVERDUE">Atrasada</option>
+              </select>
+            </label>
 
-            <select
-              value={selectedPriority}
-              onChange={(event) => setSelectedPriority(event.target.value)}
-            >
-              <option value="">Todas as prioridades</option>
-              <option value="LOW">Baixa</option>
-              <option value="MEDIUM">Média</option>
-              <option value="HIGH">Alta</option>
-              <option value="CRITICAL">Crítica</option>
-            </select>
+            <label className="tasks-filter-field">
+              <span>Prioridade</span>
+              <select
+                value={selectedPriority}
+                onChange={(event) => setSelectedPriority(event.target.value)}
+              >
+                <option value="">Todas as prioridades</option>
+                <option value="LOW">Baixa</option>
+                <option value="MEDIUM">Média</option>
+                <option value="HIGH">Alta</option>
+                <option value="CRITICAL">Crítica</option>
+              </select>
+            </label>
 
-            <select
-              value={selectedOrigin}
-              onChange={(event) => setSelectedOrigin(event.target.value)}
-            >
-              <option value="">Todas as origens</option>
-              <option value="CRYOMAP">CryoMap</option>
-              <option value="AUVO">Auvo</option>
-              <option value="OTHER">Outro</option>
-            </select>
+            <label className="tasks-filter-field">
+              <span>Origem</span>
+              <select
+                value={selectedOrigin}
+                onChange={(event) => setSelectedOrigin(event.target.value)}
+              >
+                <option value="">Todas as origens</option>
+                <option value="CRYOMAP">CryoMap</option>
+                <option value="AUVO">Auvo</option>
+                <option value="OTHER">Outro</option>
+              </select>
+            </label>
 
-            <input
-              type="search"
-              placeholder="Buscar por título, origem, código externo..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
+            <label className="tasks-filter-field tasks-search-field">
+              <span>Busca</span>
+              <input
+                type="search"
+                placeholder="Buscar por título, origem, código externo..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
 
-            <button type="button" onClick={() => void handleRefresh()}>
-              Atualizar
-            </button>
+            <div className="tasks-action-buttons">
+              <button type="button" onClick={() => void handleRefresh()}>
+                Aplicar filtros
+              </button>
+
+              <button
+                type="button"
+                className="tasks-secondary-action"
+                onClick={handleClearFilters}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="tasks-filter-status">
+          <div>
+            <strong>Filtros selecionados</strong>
+            <span>
+              Os filtros principais recarregam a lista. A busca textual filtra
+              os registros já carregados.
+            </span>
+          </div>
+
+          <div className="tasks-filter-chips">
+            {activeFilters.length > 0 ? (
+              activeFilters.map((filter) => (
+                <span key={`${filter.label}-${filter.value}`}>
+                  {filter.label}: <strong>{filter.value}</strong>
+                </span>
+              ))
+            ) : (
+              <span>Sem filtros específicos</span>
+            )}
           </div>
         </div>
 
@@ -895,6 +1050,7 @@ export function Tasks() {
 
                     <td>
                       <span>{task.equipment?.name ?? '-'}</span>
+
                       {task.equipment?.code ? (
                         <small>{task.equipment.code}</small>
                       ) : null}
@@ -902,6 +1058,7 @@ export function Tasks() {
 
                     <td>
                       <span>{task.assignedToUser?.name ?? '-'}</span>
+
                       {task.assignedToUser?.email ? (
                         <small>{task.assignedToUser.email}</small>
                       ) : null}
@@ -980,17 +1137,9 @@ type TaskStatusBadgeProps = {
 };
 
 function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
-  const labels: Record<TaskStatus, string> = {
-    OPEN: 'Aberta',
-    IN_PROGRESS: 'Em andamento',
-    DONE: 'Concluída',
-    CANCELED: 'Cancelada',
-    OVERDUE: 'Atrasada',
-  };
-
   return (
     <span className={`task-status ${status.toLowerCase().replace('_', '-')}`}>
-      {labels[status]}
+      {formatTaskStatus(status)}
     </span>
   );
 }
@@ -1000,16 +1149,9 @@ type TaskPriorityBadgeProps = {
 };
 
 function TaskPriorityBadge({ priority }: TaskPriorityBadgeProps) {
-  const labels: Record<TaskPriority, string> = {
-    LOW: 'Baixa',
-    MEDIUM: 'Média',
-    HIGH: 'Alta',
-    CRITICAL: 'Crítica',
-  };
-
   return (
     <span className={`task-priority ${priority.toLowerCase()}`}>
-      {labels[priority]}
+      {formatTaskPriority(priority)}
     </span>
   );
 }
@@ -1019,6 +1161,29 @@ function formatTaskOrigin(value: TaskOrigin) {
     CRYOMAP: 'CryoMap',
     AUVO: 'Auvo',
     OTHER: 'Outro',
+  };
+
+  return labels[value];
+}
+
+function formatTaskStatus(value: TaskStatus) {
+  const labels: Record<TaskStatus, string> = {
+    OPEN: 'Aberta',
+    IN_PROGRESS: 'Em andamento',
+    DONE: 'Concluída',
+    CANCELED: 'Cancelada',
+    OVERDUE: 'Atrasada',
+  };
+
+  return labels[value];
+}
+
+function formatTaskPriority(value: TaskPriority) {
+  const labels: Record<TaskPriority, string> = {
+    LOW: 'Baixa',
+    MEDIUM: 'Média',
+    HIGH: 'Alta',
+    CRITICAL: 'Crítica',
   };
 
   return labels[value];
