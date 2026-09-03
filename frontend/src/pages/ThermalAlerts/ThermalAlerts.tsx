@@ -824,11 +824,11 @@ export function ThermalAlerts() {
                     <td>{formatAlertType(alert.type)}</td>
 
                     <td>
-                      <SeverityBadge severity={alert.severity} />
+                      <SeverityBadge severity={alert.severity as ThermalAlertSeverity} />
                     </td>
 
                     <td>
-                      <StatusBadge status={alert.status} />
+                      <StatusBadge status={alert.status as ThermalAlertStatus} />
                     </td>
 
                     <td>

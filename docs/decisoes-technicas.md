@@ -5164,3 +5164,109 @@ Testes realizados:
 - Ações ficaram acessíveis diretamente no card mobile.
 - Técnico não precisa mais arrastar tabela para acessar ações no celular.
 - Perfil `CLIENT_USER` permaneceu somente consulta.
+
+## 63.7.1. Anexos ao finalizar atendimento
+
+Foi adicionada a possibilidade de anexar fotos e arquivos diretamente após a finalização de um atendimento.
+
+Objetivo:
+
+- Reduzir fricção no fluxo do técnico em campo.
+- Evitar que o técnico precise finalizar o atendimento e depois navegar até a tela Anexos.
+- Permitir anexar evidências imediatamente após o encerramento operacional.
+- Permitir envio de múltiplas fotos/arquivos de uma vez.
+- Preservar o backend atual de anexos.
+
+Alterações aplicadas:
+
+- Ao finalizar um atendimento, o sistema abre um painel para anexar fotos ou arquivos.
+- O técnico pode selecionar múltiplos arquivos no mesmo seletor.
+- Cada arquivo é enviado individualmente usando o endpoint atual de anexos.
+- Os arquivos são vinculados ao atendimento finalizado.
+- O fluxo permite pular anexos quando não houver arquivos no momento.
+- O painel pós-finalização foi ajustado para uso mobile.
+- A tela Anexos também passou a aceitar seleção de múltiplos arquivos no upload comum.
+- Mantido limite de 10 MB por arquivo.
+- Mantidos os tipos de anexo já existentes, incluindo:
+  - foto de serviço;
+  - relatório Auvo;
+  - outro.
+- O link externo do Auvo continua pertencendo ao chamado/tarefa, enquanto fotos, PDFs, relatórios e prints ficam como anexos.
+
+Regras preservadas:
+
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+- Endpoint `/attachments` continua recebendo um arquivo por requisição.
+- O frontend envia múltiplos arquivos fazendo múltiplas requisições.
+- Anexos continuam podendo ser vinculados a empresa, tarefa ou atendimento.
+- Técnicos, supervisores e master admin continuam podendo anexar arquivos.
+- `CLIENT_USER` continua sem ações operacionais.
+- O fluxo anterior da tela Anexos foi preservado.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Atendimentos carregou corretamente.
+- Finalização de atendimento funcionou.
+- Painel de anexos apareceu após finalizar atendimento.
+- Seleção de múltiplas fotos funcionou.
+- Envio de múltiplos anexos funcionou.
+- Arquivos ficaram vinculados ao atendimento finalizado.
+- A opção de pular anexos funcionou.
+- A opção de não anexar no momento funcionou.
+- Validação de arquivo acima de 10 MB funcionou.
+- Fluxo ficou adequado no mobile.
+- Tela Anexos continuou funcionando.
+- Upload múltiplo pela tela Anexos funcionou.
+
+## 63.8. Revisão final da preparação beta
+
+Foi realizada a revisão final da Etapa 63 para validar a estabilidade geral antes de avançar para auditoria/histórico.
+
+Objetivo:
+
+- Confirmar que backend e frontend continuam compilando.
+- Confirmar que os fluxos operacionais principais funcionam.
+- Validar o fluxo técnico em desktop e mobile.
+- Conferir permissões principais por perfil.
+- Garantir que a preparação beta não deixou quebras óbvias.
+
+Validações realizadas:
+
+- Backend validado.
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou após ajuste de tipagem em badges de alertas térmicos.
+- Dashboard abriu corretamente.
+- Empresas abriu corretamente.
+- Salas abriu corretamente.
+- Gráfico de salas carregou corretamente.
+- Equipamentos abriu corretamente.
+- Medições de Equipamentos abriu corretamente.
+- Gráfico técnico de equipamentos carregou corretamente.
+- Chamados/Tarefas abriu corretamente.
+- Atendimentos abriu corretamente.
+- Criação de atendimento funcionou.
+- Finalização de atendimento funcionou.
+- Upload de múltiplos anexos após finalizar atendimento funcionou.
+- Tela Anexos exibiu arquivos vinculados corretamente.
+- Relatórios abriu corretamente.
+- Exportação PDF funcionou.
+- Exportação Excel funcionou.
+- Alertas abriu corretamente.
+- Usuários abriu corretamente.
+- Perfil `CLIENT_USER` manteve comportamento de somente consulta onde aplicável.
+- Perfil `TECHNICIAN` manteve fluxo operacional em mobile.
+- Fluxo mobile de Chamados, Atendimentos e Anexos ficou adequado para uso em campo.
+
+Correção aplicada durante a revisão:
+
+- Ajustada tipagem dos badges de severidade e status na tela de Alertas.
+- O ajuste foi necessário porque os valores de `alert.severity` e `alert.status` chegavam como `string`, enquanto os componentes esperavam tipos específicos.
+- A correção não alterou regra de negócio nem backend.
+
+Resultado:
+
+- Etapa 63 considerada concluída para o escopo beta.
+- Não foram identificadas quebras impeditivas para avançar para auditoria/histórico.
