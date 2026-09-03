@@ -23,7 +23,8 @@
 
 .service-records-header span,
 .service-records-panel-header span,
-.service-record-form-header span {
+.service-record-form-header span,
+.service-record-attachment-header span {
   color: var(--color-primary);
   font-weight: 900;
   text-transform: uppercase;
@@ -524,7 +525,8 @@
   white-space: nowrap;
 }
 
-.service-record-form-panel {
+.service-record-form-panel,
+.service-record-attachment-panel {
   position: fixed;
   inset: 24px;
   z-index: 70;
@@ -547,7 +549,12 @@
   animation: serviceRecordFormEnter 0.18s ease-out;
 }
 
-.service-record-form-header {
+.service-record-attachment-panel {
+  max-width: 760px;
+}
+
+.service-record-form-header,
+.service-record-attachment-header {
   display: flex;
   justify-content: space-between;
   gap: 18px;
@@ -555,13 +562,21 @@
   margin-bottom: 14px;
 }
 
-.service-record-form-header h2 {
+.service-record-form-header h2,
+.service-record-attachment-header h2 {
   margin: 4px 0 0;
   color: var(--color-primary-dark);
   letter-spacing: -0.03em;
 }
 
-.service-record-form-header button {
+.service-record-attachment-header p {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.service-record-form-header button,
+.service-record-attachment-header button {
   border: 0;
   border-radius: 14px;
   padding: 10px 14px;
@@ -594,13 +609,15 @@
   line-height: 1.45;
 }
 
-.service-record-form {
+.service-record-form,
+.service-record-attachment-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
-.service-record-form label {
+.service-record-form label,
+.service-record-attachment-form label {
   display: grid;
   gap: 7px;
   color: var(--color-text-soft);
@@ -610,7 +627,9 @@
 
 .service-record-form input,
 .service-record-form select,
-.service-record-form textarea {
+.service-record-form textarea,
+.service-record-attachment-form input,
+.service-record-attachment-form select {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 15px;
@@ -622,7 +641,9 @@
 
 .service-record-form input:focus,
 .service-record-form select:focus,
-.service-record-form textarea:focus {
+.service-record-form textarea:focus,
+.service-record-attachment-form input:focus,
+.service-record-attachment-form select:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px rgba(34, 193, 255, 0.18);
 }
@@ -640,8 +661,85 @@
 
 .service-record-form-wide,
 .service-record-form-error,
-.service-record-form-actions {
+.service-record-form-actions,
+.service-record-attachment-file-field,
+.service-record-attachment-selected-files,
+.service-record-attachment-actions {
   grid-column: 1 / -1;
+}
+
+.service-record-attachment-file-field small {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.service-record-attachment-context {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.service-record-attachment-context div {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(9, 109, 242, 0.1);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(237, 247, 255, 0.72);
+  min-width: 0;
+}
+
+.service-record-attachment-context span {
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.service-record-attachment-context strong {
+  color: var(--color-primary-dark);
+  font-size: 13px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.service-record-attachment-selected-files {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(9, 109, 242, 0.1);
+  border-radius: 18px;
+  padding: 12px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(237, 247, 255, 0.72),
+      rgba(255, 255, 255, 0.96)
+    );
+}
+
+.service-record-attachment-selected-files > strong {
+  color: var(--color-primary-dark);
+  font-size: 13px;
+}
+
+.service-record-attachment-selected-files div {
+  display: grid;
+  gap: 6px;
+}
+
+.service-record-attachment-selected-files span {
+  display: block;
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: #ffffff;
+  color: var(--color-text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .service-record-problem-field {
@@ -722,13 +820,15 @@
   padding: 12px;
 }
 
-.service-record-form-actions {
+.service-record-form-actions,
+.service-record-attachment-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.service-record-form-actions button {
+.service-record-form-actions button,
+.service-record-attachment-actions button {
   border: 0;
   border-radius: 14px;
   padding: 12px 16px;
@@ -736,12 +836,14 @@
   cursor: pointer;
 }
 
-.service-record-form-actions button:first-child {
+.service-record-form-actions button:first-child,
+.service-record-attachment-actions button:first-child {
   background: var(--color-surface-soft);
   color: var(--color-primary);
 }
 
-.service-record-form-actions button:last-child {
+.service-record-form-actions button:last-child,
+.service-record-attachment-actions button:last-child {
   background:
     linear-gradient(
       135deg,
@@ -752,7 +854,8 @@
   box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
 }
 
-.service-record-form-actions button:disabled {
+.service-record-form-actions button:disabled,
+.service-record-attachment-actions button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   box-shadow: none;
@@ -1210,7 +1313,8 @@
     white-space: normal;
   }
 
-  .service-record-form-panel {
+  .service-record-form-panel,
+  .service-record-attachment-panel {
     inset: 10px;
     width: calc(100vw - 20px);
     max-height: calc(100vh - 20px);
@@ -1218,17 +1322,20 @@
     padding: 16px;
   }
 
-  .service-record-form-header {
+  .service-record-form-header,
+  .service-record-attachment-header {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
   }
 
-  .service-record-form-header h2 {
+  .service-record-form-header h2,
+  .service-record-attachment-header h2 {
     font-size: 20px;
   }
 
-  .service-record-form-header button {
+  .service-record-form-header button,
+  .service-record-attachment-header button {
     width: 100%;
     min-height: 40px;
   }
@@ -1238,14 +1345,18 @@
     padding: 10px 12px;
   }
 
-  .service-record-form {
+  .service-record-form,
+  .service-record-attachment-form,
+  .service-record-attachment-context {
     grid-template-columns: 1fr;
     gap: 12px;
   }
 
   .service-record-form input,
   .service-record-form select,
-  .service-record-form textarea {
+  .service-record-form textarea,
+  .service-record-attachment-form input,
+  .service-record-attachment-form select {
     min-height: 42px;
     border-radius: 13px;
     padding: 10px 12px;
@@ -1271,13 +1382,20 @@
     border-radius: 12px;
   }
 
-  .service-record-form-actions {
+  .service-record-form-actions,
+  .service-record-attachment-actions {
     flex-direction: column;
   }
 
-  .service-record-form-actions button {
+  .service-record-form-actions button,
+  .service-record-attachment-actions button {
     width: 100%;
     min-height: 42px;
+  }
+
+  .service-record-attachment-selected-files {
+    border-radius: 15px;
+    padding: 10px;
   }
 
   .service-records-error {
@@ -1300,7 +1418,7 @@
 
 @keyframes serviceRecordFormEnter {
   from {
-    opacity: 1;
+    opacity: 0;
     transform: translateY(10px) scale(0.98);
   }
 
@@ -1309,3 +1427,4 @@
     transform: translateY(0) scale(1);
   }
 }
+

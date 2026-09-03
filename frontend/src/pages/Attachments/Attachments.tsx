@@ -1,5 +1,7 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 
+import { EmptyState } from '../../components/Feedback/EmptyState';
+import { LoadingState } from '../../components/Feedback/LoadingState';
 import { useAuth } from '../../contexts/useAuth';
 import {
   createAttachment,
@@ -17,8 +19,6 @@ import type { ServiceRecord } from '../../types/service-record';
 import type { Task } from '../../types/task';
 import type { User } from '../../types/user';
 import './Attachments.css';
-import { LoadingState } from '../../components/Feedback/LoadingState';
-import { EmptyState } from '../../components/Feedback/EmptyState';
 
 const attachmentTypeOptions: { value: AttachmentType; label: string }[] = [
   {
@@ -48,7 +48,7 @@ type AttachmentFormData = {
   taskId: string;
   serviceRecordId: string;
   type: AttachmentType;
-  file: File | null;
+  files: File[];
 };
 
 const emptyFormData: AttachmentFormData = {
@@ -56,8 +56,10 @@ const emptyFormData: AttachmentFormData = {
   taskId: '',
   serviceRecordId: '',
   type: 'OTHER',
-  file: null,
+  files: [],
 };
+
+const maxAttachmentSizeInBytes = 10 * 1024 * 1024;
 
 export function Attachments() {
   const { user } = useAuth();
@@ -336,6 +338,11 @@ export function Attachments() {
     0,
   );
 
+  const selectedFilesSize = formData.files.reduce(
+    (total, file) => total + file.size,
+    0,
+  );
+
   const servicePhotos = attachments.filter(
     (attachment) => attachment.type === 'SERVICE_PHOTO',
   ).length;
@@ -406,26 +413,34 @@ export function Attachments() {
       return;
     }
 
-    if (!formData.file) {
-      setFormError('Selecione um arquivo.');
+    if (formData.files.length === 0) {
+      setFormError('Selecione um ou mais arquivos.');
       return;
     }
 
-    if (formData.file.size > 10 * 1024 * 1024) {
-      setFormError('O arquivo deve ter no máximo 10 MB.');
+    const oversizedFile = formData.files.find(
+      (file) => file.size > maxAttachmentSizeInBytes,
+    );
+
+    if (oversizedFile) {
+      setFormError(
+        `O arquivo "${oversizedFile.name}" deve ter no máximo 10 MB.`,
+      );
       return;
     }
 
     setIsSaving(true);
 
     try {
-      await createAttachment({
-        file: formData.file,
-        companyId: formData.companyId || undefined,
-        taskId: formData.taskId || undefined,
-        serviceRecordId: formData.serviceRecordId || undefined,
-        type: formData.type,
-      });
+      for (const file of formData.files) {
+        await createAttachment({
+          file,
+          companyId: formData.companyId || undefined,
+          taskId: formData.taskId || undefined,
+          serviceRecordId: formData.serviceRecordId || undefined,
+          type: formData.type,
+        });
+      }
 
       closeForm();
       await handleRefresh();
@@ -477,11 +492,11 @@ export function Attachments() {
 
   if (isLoading) {
     return (
-  <LoadingState
-    title="Carregando anexos..."
-    description="Buscando arquivos vinculados ao sistema."
-  />
-);
+      <LoadingState
+        title="Carregando anexos..."
+        description="Buscando arquivos vinculados ao sistema."
+      />
+    );
   }
 
   return (
@@ -589,10 +604,7 @@ export function Attachments() {
               <select
                 value={formData.type}
                 onChange={(event) =>
-                  updateFormField(
-                    'type',
-                    event.target.value as AttachmentType,
-                  )
+                  updateFormField('type', event.target.value as AttachmentType)
                 }
               >
                 {attachmentTypeOptions.map((option) => (
@@ -604,21 +616,36 @@ export function Attachments() {
             </label>
 
             <label className="attachment-form-wide">
-              Arquivo *
+              Arquivos *
               <input
                 ref={fileInputRef}
                 type="file"
+                multiple
                 onChange={(event) =>
-                  updateFormField('file', event.target.files?.[0] ?? null)
+                  updateFormField(
+                    'files',
+                    Array.from(event.target.files ?? []),
+                  )
                 }
               />
-              <small>Limite: 10 MB por arquivo.</small>
+              <small>
+                Você pode selecionar mais de um arquivo. Limite: 10 MB por
+                arquivo.
+              </small>
             </label>
 
-            {formData.file ? (
+            {formData.files.length > 0 ? (
               <div className="attachment-selected-file">
-                <strong>{formData.file.name}</strong>
-                <span>{formatFileSize(formData.file.size)}</span>
+                <strong>
+                  {formData.files.length} arquivo(s) selecionado(s)
+                </strong>
+                <span>{formatFileSize(selectedFilesSize)}</span>
+
+                {formData.files.map((file) => (
+                  <small key={`${file.name}-${file.size}-${file.lastModified}`}>
+                    {file.name} · {formatFileSize(file.size)}
+                  </small>
+                ))}
               </div>
             ) : null}
 
@@ -632,7 +659,7 @@ export function Attachments() {
               </button>
 
               <button type="submit" disabled={isSaving}>
-                {isSaving ? 'Enviando...' : 'Enviar anexo'}
+                {isSaving ? 'Enviando...' : 'Enviar anexos'}
               </button>
             </div>
           </form>
@@ -750,9 +777,9 @@ export function Attachments() {
 
         {!error && filteredAttachments.length === 0 ? (
           <EmptyState
-  title="Nenhum anexo encontrado."
-  description="Envie um anexo ou ajuste os filtros para visualizar arquivos."
-/>
+            title="Nenhum anexo encontrado."
+            description="Envie um anexo ou ajuste os filtros para visualizar arquivos."
+          />
         ) : null}
 
         {!error && filteredAttachments.length > 0 ? (
@@ -935,5 +962,6 @@ function getRequestErrorMessage(error: unknown) {
     }
   }
 
-  return 'Não foi possível enviar o anexo.';
+  return 'Não foi possível enviar os anexos.';
 }
+

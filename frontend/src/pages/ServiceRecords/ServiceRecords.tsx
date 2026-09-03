@@ -3,6 +3,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '../../components/Feedback/EmptyState';
 import { LoadingState } from '../../components/Feedback/LoadingState';
 import { useAuth } from '../../contexts/useAuth';
+import { createAttachment } from '../../services/attachments';
 import { getCompanies } from '../../services/companies';
 import { getEquipments } from '../../services/equipments';
 import { getRooms } from '../../services/rooms';
@@ -17,6 +18,7 @@ import {
 } from '../../services/service-records';
 import { getTasks } from '../../services/tasks';
 import { getUsers } from '../../services/users';
+import type { AttachmentType } from '../../types/attachment';
 import type { Company } from '../../types/company';
 import type { Equipment } from '../../types/equipment';
 import type { Room } from '../../types/room';
@@ -37,6 +39,11 @@ type ServiceRecordFormData = {
   notes: string;
 };
 
+type FinishAttachmentFormData = {
+  type: AttachmentType;
+  files: File[];
+};
+
 type ActiveFilter = {
   label: string;
   value: string;
@@ -52,6 +59,28 @@ const emptyFormData: ServiceRecordFormData = {
   servicePerformed: '',
   notes: '',
 };
+
+const emptyFinishAttachmentFormData: FinishAttachmentFormData = {
+  type: 'SERVICE_PHOTO',
+  files: [],
+};
+
+const attachmentTypeOptions: { value: AttachmentType; label: string }[] = [
+  {
+    value: 'SERVICE_PHOTO',
+    label: 'Foto de serviço',
+  },
+  {
+    value: 'AUVO_REPORT',
+    label: 'Relatório Auvo',
+  },
+  {
+    value: 'OTHER',
+    label: 'Outro arquivo',
+  },
+];
+
+const maxAttachmentSizeInBytes = 10 * 1024 * 1024;
 
 export function ServiceRecords() {
   const { user } = useAuth();
@@ -77,8 +106,11 @@ export function ServiceRecords() {
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [formError, setFormError] = useState('');
+  const [finishAttachmentError, setFinishAttachmentError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingFinishAttachments, setIsUploadingFinishAttachments] =
+    useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isProblemSuggestionsOpen, setIsProblemSuggestionsOpen] =
@@ -86,8 +118,12 @@ export function ServiceRecords() {
   const [editingRecord, setEditingRecord] = useState<ServiceRecord | null>(
     null,
   );
+  const [finishedRecordForAttachments, setFinishedRecordForAttachments] =
+    useState<ServiceRecord | null>(null);
   const [formData, setFormData] =
     useState<ServiceRecordFormData>(emptyFormData);
+  const [finishAttachmentFormData, setFinishAttachmentFormData] =
+    useState<FinishAttachmentFormData>(emptyFinishAttachmentFormData);
 
   async function handleRefresh() {
     setError('');
@@ -497,6 +533,11 @@ export function ServiceRecords() {
     return total + (serviceRecord.downtimeMinutes ?? 0);
   }, 0);
 
+  const selectedAttachmentFilesSize = finishAttachmentFormData.files.reduce(
+    (total, file) => total + file.size,
+    0,
+  );
+
   function openCreateForm() {
     if (!canManageServiceRecords) {
       return;
@@ -547,11 +588,29 @@ export function ServiceRecords() {
     setIsProblemSuggestionsOpen(false);
   }
 
+  function closeFinishAttachmentPanel() {
+    if (isUploadingFinishAttachments) {
+      return;
+    }
+
+    setFinishedRecordForAttachments(null);
+    setFinishAttachmentFormData(emptyFinishAttachmentFormData);
+    setFinishAttachmentError('');
+  }
+
   function updateFormField(field: keyof ServiceRecordFormData, value: string) {
     setFormData((current) => ({
       ...current,
       [field]: value,
     }));
+  }
+
+  function updateFinishAttachmentFiles(files: FileList | null) {
+    setFinishAttachmentFormData((current) => ({
+      ...current,
+      files: Array.from(files ?? []),
+    }));
+    setFinishAttachmentError('');
   }
 
   function handleProblemSuggestionSelect(title: string) {
@@ -627,17 +686,26 @@ export function ServiceRecords() {
     }
 
     const confirmed = window.confirm(
-      `Deseja finalizar o atendimento da tarefa "${serviceRecord.task?.title ?? serviceRecord.taskId}"?`,
+      `Deseja finalizar o atendimento da tarefa "${serviceRecord.task?.title ?? serviceRecord.taskId}"? Após finalizar, será possível anexar fotos e relatórios.`,
     );
 
     if (!confirmed) {
       return;
     }
 
+    const finishedAt = new Date().toISOString();
+
     try {
       await updateServiceRecord(serviceRecord.id, {
-        finishedAt: new Date().toISOString(),
+        finishedAt,
       });
+
+      setFinishedRecordForAttachments({
+        ...serviceRecord,
+        finishedAt,
+      });
+      setFinishAttachmentFormData(emptyFinishAttachmentFormData);
+      setFinishAttachmentError('');
 
       await handleRefresh();
     } catch {
@@ -663,6 +731,10 @@ export function ServiceRecords() {
         finishedAt: null,
       });
 
+      if (finishedRecordForAttachments?.id === serviceRecord.id) {
+        closeFinishAttachmentPanel();
+      }
+
       await handleRefresh();
     } catch {
       setError('Não foi possível reabrir o atendimento.');
@@ -684,9 +756,63 @@ export function ServiceRecords() {
 
     try {
       await removeServiceRecord(serviceRecord.id);
+
+      if (finishedRecordForAttachments?.id === serviceRecord.id) {
+        closeFinishAttachmentPanel();
+      }
+
       await handleRefresh();
     } catch {
       setError('Não foi possível remover o atendimento.');
+    }
+  }
+
+  async function handleFinishAttachmentSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    if (!finishedRecordForAttachments || !canManageServiceRecords) {
+      return;
+    }
+
+    setFinishAttachmentError('');
+
+    if (finishAttachmentFormData.files.length === 0) {
+      setFinishAttachmentError('Selecione uma ou mais fotos/arquivos.');
+      return;
+    }
+
+    const oversizedFile = finishAttachmentFormData.files.find(
+      (file) => file.size > maxAttachmentSizeInBytes,
+    );
+
+    if (oversizedFile) {
+      setFinishAttachmentError(
+        `O arquivo "${oversizedFile.name}" ultrapassa o limite de 10 MB.`,
+      );
+      return;
+    }
+
+    setIsUploadingFinishAttachments(true);
+
+    try {
+      for (const file of finishAttachmentFormData.files) {
+        await createAttachment({
+          file,
+          companyId: finishedRecordForAttachments.companyId || undefined,
+          taskId: finishedRecordForAttachments.taskId || undefined,
+          serviceRecordId: finishedRecordForAttachments.id,
+          type: finishAttachmentFormData.type,
+        });
+      }
+
+      closeFinishAttachmentPanel();
+      await handleRefresh();
+    } catch (requestError) {
+      setFinishAttachmentError(getAttachmentRequestErrorMessage(requestError));
+    } finally {
+      setIsUploadingFinishAttachments(false);
     }
   }
 
@@ -941,6 +1067,121 @@ export function ServiceRecords() {
         </section>
       ) : null}
 
+      {finishedRecordForAttachments && canManageServiceRecords ? (
+        <section className="service-record-attachment-panel">
+          <div className="service-record-attachment-header">
+            <div>
+              <span>Finalização concluída</span>
+              <h2>Anexar fotos ou relatório</h2>
+              <p>
+                O atendimento foi finalizado. Selecione uma ou mais fotos ou
+                arquivos para vincular diretamente a este atendimento.
+              </p>
+            </div>
+
+            <button type="button" onClick={closeFinishAttachmentPanel}>
+              Agora não
+            </button>
+          </div>
+
+          <div className="service-record-attachment-context">
+            <div>
+              <span>Tarefa</span>
+              <strong>
+                {finishedRecordForAttachments.task?.title ??
+                  finishedRecordForAttachments.taskId}
+              </strong>
+            </div>
+
+            <div>
+              <span>Atendimento</span>
+              <strong>{shortId(finishedRecordForAttachments.id)}</strong>
+            </div>
+
+            <div>
+              <span>Finalizado em</span>
+              <strong>
+                {formatDateTime(finishedRecordForAttachments.finishedAt)}
+              </strong>
+            </div>
+          </div>
+
+          <form
+            className="service-record-attachment-form"
+            onSubmit={handleFinishAttachmentSubmit}
+          >
+            <label>
+              Tipo de anexo
+              <select
+                value={finishAttachmentFormData.type}
+                onChange={(event) =>
+                  setFinishAttachmentFormData((current) => ({
+                    ...current,
+                    type: event.target.value as AttachmentType,
+                  }))
+                }
+              >
+                {attachmentTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="service-record-attachment-file-field">
+              Fotos/arquivos
+              <input
+                type="file"
+                multiple
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                onChange={(event) => updateFinishAttachmentFiles(event.target.files)}
+              />
+              <small>
+                Você pode selecionar várias fotos de uma vez. Limite: 10 MB por
+                arquivo. Para relatório ou evidência do Auvo, use o tipo
+                Relatório Auvo.
+              </small>
+            </label>
+
+            {finishAttachmentFormData.files.length > 0 ? (
+              <div className="service-record-attachment-selected-files">
+                <strong>
+                  {finishAttachmentFormData.files.length} arquivo(s)
+                  selecionado(s) · {formatFileSize(selectedAttachmentFilesSize)}
+                </strong>
+
+                <div>
+                  {finishAttachmentFormData.files.map((file) => (
+                    <span key={`${file.name}-${file.size}-${file.lastModified}`}>
+                      {file.name} · {formatFileSize(file.size)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {finishAttachmentError ? (
+              <strong className="service-record-form-error">
+                {finishAttachmentError}
+              </strong>
+            ) : null}
+
+            <div className="service-record-attachment-actions">
+              <button type="button" onClick={closeFinishAttachmentPanel}>
+                Pular anexos
+              </button>
+
+              <button type="submit" disabled={isUploadingFinishAttachments}>
+                {isUploadingFinishAttachments
+                  ? 'Enviando anexos...'
+                  : 'Enviar anexos'}
+              </button>
+            </div>
+          </form>
+        </section>
+      ) : null}
+
       <section className="service-records-panel">
         <div className="service-records-panel-header">
           <div>
@@ -957,9 +1198,7 @@ export function ServiceRecords() {
             onClick={() => setIsFiltersOpen((current) => !current)}
           >
             {isFiltersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
-            {activeFilters.length > 0 ? (
-              <span>{activeFilters.length}</span>
-            ) : null}
+            {activeFilters.length > 0 ? <span>{activeFilters.length}</span> : null}
           </button>
         </div>
 
@@ -1592,6 +1831,18 @@ function formatTaskPriority(value: TaskPriority) {
   return labels[value];
 }
 
+function formatFileSize(size: number) {
+  if (size < 1024) {
+    return `${size} B`;
+  }
+
+  if (size < 1024 * 1024) {
+    return `${(size / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function normalizeSearchText(value: string) {
   return value
     .trim()
@@ -1641,3 +1892,31 @@ function getRequestErrorMessage(error: unknown) {
 
   return 'Não foi possível salvar o atendimento.';
 }
+
+function getAttachmentRequestErrorMessage(error: unknown) {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof error.response === 'object' &&
+    error.response !== null &&
+    'data' in error.response
+  ) {
+    const data = error.response.data;
+
+    if (typeof data === 'object' && data !== null && 'message' in data) {
+      const message = data.message;
+
+      if (typeof message === 'string') {
+        return message;
+      }
+
+      if (Array.isArray(message)) {
+        return message.join(' | ');
+      }
+    }
+  }
+
+  return 'Não foi possível enviar os anexos.';
+}
+
