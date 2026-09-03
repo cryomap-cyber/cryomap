@@ -80,6 +80,7 @@ export function ServiceRecords() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isProblemSuggestionsOpen, setIsProblemSuggestionsOpen] =
     useState(false);
   const [editingRecord, setEditingRecord] = useState<ServiceRecord | null>(
@@ -417,9 +418,7 @@ export function ServiceRecords() {
   ]);
 
   const filteredProblemSuggestions = useMemo(() => {
-    const normalizedSearch = normalizeSearchText(
-      formData.standardizedProblem,
-    );
+    const normalizedSearch = normalizeSearchText(formData.standardizedProblem);
 
     if (!normalizedSearch) {
       return problemSuggestions.slice(0, 6);
@@ -952,6 +951,25 @@ export function ServiceRecords() {
             </p>
           </div>
 
+          <button
+            type="button"
+            className="service-records-filter-toggle"
+            onClick={() => setIsFiltersOpen((current) => !current)}
+          >
+            {isFiltersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
+            {activeFilters.length > 0 ? (
+              <span>{activeFilters.length}</span>
+            ) : null}
+          </button>
+        </div>
+
+        <div
+          className={
+            isFiltersOpen
+              ? 'service-records-filter-area open'
+              : 'service-records-filter-area'
+          }
+        >
           <div className="service-records-actions">
             <label className="service-records-filter-field">
               <span>Empresa</span>
@@ -1088,29 +1106,38 @@ export function ServiceRecords() {
               </button>
             </div>
           </div>
+
+          <div className="service-records-filter-status">
+            <div>
+              <strong>Filtros selecionados</strong>
+              <span>
+                No celular, mantenha os filtros fechados durante o atendimento e
+                abra apenas quando precisar localizar registros específicos.
+              </span>
+            </div>
+
+            <div className="service-records-filter-chips">
+              {activeFilters.length > 0 ? (
+                activeFilters.map((filter) => (
+                  <span key={`${filter.label}-${filter.value}`}>
+                    {filter.label}: <strong>{filter.value}</strong>
+                  </span>
+                ))
+              ) : (
+                <span>Sem filtros específicos</span>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div className="service-records-filter-status">
-          <div>
-            <strong>Filtros selecionados</strong>
-            <span>
-              Os filtros principais recarregam a lista. A busca textual filtra
-              os registros já carregados.
-            </span>
+        {activeFilters.length > 0 && !isFiltersOpen ? (
+          <div className="service-records-compact-filter-status">
+            <span>{activeFilters.length} filtro(s) ativo(s)</span>
+            <button type="button" onClick={() => setIsFiltersOpen(true)}>
+              Ver filtros
+            </button>
           </div>
-
-          <div className="service-records-filter-chips">
-            {activeFilters.length > 0 ? (
-              activeFilters.map((filter) => (
-                <span key={`${filter.label}-${filter.value}`}>
-                  {filter.label}: <strong>{filter.value}</strong>
-                </span>
-              ))
-            ) : (
-              <span>Sem filtros específicos</span>
-            )}
-          </div>
-        </div>
+        ) : null}
 
         {error ? (
           <div className="service-records-error">
@@ -1130,142 +1157,160 @@ export function ServiceRecords() {
         ) : null}
 
         {!error && filteredServiceRecords.length > 0 ? (
-          <div className="service-records-table-wrapper">
-            <table className="service-records-table">
-              <thead>
-                <tr>
-                  <th>Atendimento</th>
-                  <th>Tarefa</th>
-                  <th>Empresa</th>
-                  <th>Sala</th>
-                  <th>Equipamento</th>
-                  <th>Técnico</th>
-                  <th>Status</th>
-                  <th>Início</th>
-                  <th>Fim</th>
-                  <th>Tempo parado</th>
-                  <th>Problema padrão</th>
-                  <th>Problema detalhado</th>
-                  <th>Serviço</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+          <>
+            <div className="service-records-mobile-list">
+              {filteredServiceRecords.map((serviceRecord) => (
+                <ServiceRecordMobileCard
+                  key={serviceRecord.id}
+                  serviceRecord={serviceRecord}
+                  canManageServiceRecords={canManageServiceRecords}
+                  onEdit={openEditForm}
+                  onFinish={handleFinish}
+                  onReopen={handleReopen}
+                  onRemove={handleRemove}
+                />
+              ))}
+            </div>
 
-              <tbody>
-                {filteredServiceRecords.map((serviceRecord) => (
-                  <tr key={serviceRecord.id}>
-                    <td>
-                      <strong>{shortId(serviceRecord.id)}</strong>
-                      <small>{formatDate(serviceRecord.createdAt)}</small>
-                    </td>
-
-                    <td>
-                      <strong>{serviceRecord.task?.title ?? '-'}</strong>
-
-                      {serviceRecord.task?.priority ? (
-                        <small>
-                          Prioridade:{' '}
-                          {formatTaskPriority(serviceRecord.task.priority)}
-                        </small>
-                      ) : null}
-                    </td>
-
-                    <td>
-                      {serviceRecord.company?.name ?? serviceRecord.companyId}
-                    </td>
-
-                    <td>{serviceRecord.room?.name ?? '-'}</td>
-
-                    <td>
-                      <span>{serviceRecord.equipment?.name ?? '-'}</span>
-
-                      {serviceRecord.equipment?.code ? (
-                        <small>{serviceRecord.equipment.code}</small>
-                      ) : null}
-                    </td>
-
-                    <td>
-                      <span>{serviceRecord.technician?.name ?? '-'}</span>
-
-                      {serviceRecord.technician?.email ? (
-                        <small>{serviceRecord.technician.email}</small>
-                      ) : null}
-                    </td>
-
-                    <td>
-                      <ServiceRecordStatusBadge
-                        finishedAt={serviceRecord.finishedAt}
-                      />
-                    </td>
-
-                    <td>{formatDateTime(serviceRecord.startedAt)}</td>
-
-                    <td>{formatDateTime(serviceRecord.finishedAt)}</td>
-
-                    <td>
-                      <strong>
-                        {formatMinutes(serviceRecord.downtimeMinutes)}
-                      </strong>
-                    </td>
-
-                    <td>
-                      {serviceRecord.standardizedProblem ? (
-                        <strong className="service-record-standardized-problem">
-                          {serviceRecord.standardizedProblem}
-                        </strong>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-
-                    <td>{serviceRecord.problemFound || '-'}</td>
-
-                    <td>{serviceRecord.servicePerformed || '-'}</td>
-
-                    <td>
-                      {canManageServiceRecords ? (
-                        <div className="service-record-row-actions">
-                          <button
-                            type="button"
-                            onClick={() => openEditForm(serviceRecord)}
-                          >
-                            Editar
-                          </button>
-
-                          {!serviceRecord.finishedAt ? (
-                            <button
-                              type="button"
-                              onClick={() => void handleFinish(serviceRecord)}
-                            >
-                              Finalizar
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => void handleReopen(serviceRecord)}
-                            >
-                              Reabrir
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => void handleRemove(serviceRecord)}
-                          >
-                            Remover
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="service-record-readonly-badge">
-                          Somente consulta
-                        </span>
-                      )}
-                    </td>
+            <div className="service-records-table-wrapper">
+              <table className="service-records-table">
+                <thead>
+                  <tr>
+                    <th>Atendimento</th>
+                    <th>Tarefa</th>
+                    <th>Empresa</th>
+                    <th>Sala</th>
+                    <th>Equipamento</th>
+                    <th>Técnico</th>
+                    <th>Status</th>
+                    <th>Início</th>
+                    <th>Fim</th>
+                    <th>Tempo parado</th>
+                    <th>Problema padrão</th>
+                    <th>Problema detalhado</th>
+                    <th>Serviço</th>
+                    <th>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {filteredServiceRecords.map((serviceRecord) => (
+                    <tr key={serviceRecord.id}>
+                      <td>
+                        <strong>{shortId(serviceRecord.id)}</strong>
+                        <small>{formatDate(serviceRecord.createdAt)}</small>
+                      </td>
+
+                      <td>
+                        <strong>{serviceRecord.task?.title ?? '-'}</strong>
+
+                        {serviceRecord.task?.priority ? (
+                          <small>
+                            Prioridade:{' '}
+                            {formatTaskPriority(serviceRecord.task.priority)}
+                          </small>
+                        ) : null}
+                      </td>
+
+                      <td>
+                        {serviceRecord.company?.name ?? serviceRecord.companyId}
+                      </td>
+
+                      <td>{serviceRecord.room?.name ?? '-'}</td>
+
+                      <td>
+                        <span>{serviceRecord.equipment?.name ?? '-'}</span>
+
+                        {serviceRecord.equipment?.code ? (
+                          <small>{serviceRecord.equipment.code}</small>
+                        ) : null}
+                      </td>
+
+                      <td>
+                        <span>{serviceRecord.technician?.name ?? '-'}</span>
+
+                        {serviceRecord.technician?.email ? (
+                          <small>{serviceRecord.technician.email}</small>
+                        ) : null}
+                      </td>
+
+                      <td>
+                        <ServiceRecordStatusBadge
+                          finishedAt={serviceRecord.finishedAt}
+                        />
+                      </td>
+
+                      <td>{formatDateTime(serviceRecord.startedAt)}</td>
+
+                      <td>{formatDateTime(serviceRecord.finishedAt)}</td>
+
+                      <td>
+                        <strong>
+                          {formatMinutes(serviceRecord.downtimeMinutes)}
+                        </strong>
+                      </td>
+
+                      <td>
+                        {serviceRecord.standardizedProblem ? (
+                          <strong className="service-record-standardized-problem">
+                            {serviceRecord.standardizedProblem}
+                          </strong>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+
+                      <td>{serviceRecord.problemFound || '-'}</td>
+
+                      <td>{serviceRecord.servicePerformed || '-'}</td>
+
+                      <td>
+                        {canManageServiceRecords ? (
+                          <div className="service-record-row-actions">
+                            <button
+                              type="button"
+                              onClick={() => openEditForm(serviceRecord)}
+                            >
+                              Editar
+                            </button>
+
+                            {!serviceRecord.finishedAt ? (
+                              <button
+                                type="button"
+                                className="service-record-row-action-finish"
+                                onClick={() => void handleFinish(serviceRecord)}
+                              >
+                                Finalizar
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => void handleReopen(serviceRecord)}
+                              >
+                                Reabrir
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              className="service-record-row-action-remove"
+                              onClick={() => void handleRemove(serviceRecord)}
+                            >
+                              Remover
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="service-record-readonly-badge">
+                            Somente consulta
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
       </section>
     </div>
@@ -1305,6 +1350,131 @@ function ServiceRecordStatusBadge({
   }
 
   return <span className="service-record-status running">Em andamento</span>;
+}
+
+type ServiceRecordMobileCardProps = {
+  serviceRecord: ServiceRecord;
+  canManageServiceRecords: boolean;
+  onEdit: (serviceRecord: ServiceRecord) => void;
+  onFinish: (serviceRecord: ServiceRecord) => Promise<void>;
+  onReopen: (serviceRecord: ServiceRecord) => Promise<void>;
+  onRemove: (serviceRecord: ServiceRecord) => Promise<void>;
+};
+
+function ServiceRecordMobileCard({
+  serviceRecord,
+  canManageServiceRecords,
+  onEdit,
+  onFinish,
+  onReopen,
+  onRemove,
+}: ServiceRecordMobileCardProps) {
+  return (
+    <article className="service-record-mobile-card">
+      <div className="service-record-mobile-card-header">
+        <div>
+          <span>Atendimento {shortId(serviceRecord.id)}</span>
+          <strong>{serviceRecord.task?.title ?? 'Tarefa não informada'}</strong>
+        </div>
+
+        <ServiceRecordStatusBadge finishedAt={serviceRecord.finishedAt} />
+      </div>
+
+      <div className="service-record-mobile-card-main">
+        <div>
+          <span>Sala</span>
+          <strong>{serviceRecord.room?.name ?? '-'}</strong>
+        </div>
+
+        <div>
+          <span>Equipamento</span>
+          <strong>{serviceRecord.equipment?.name ?? '-'}</strong>
+          {serviceRecord.equipment?.code ? (
+            <small>{serviceRecord.equipment.code}</small>
+          ) : null}
+        </div>
+
+        <div>
+          <span>Técnico</span>
+          <strong>{serviceRecord.technician?.name ?? '-'}</strong>
+        </div>
+
+        <div>
+          <span>Tempo parado</span>
+          <strong>{formatMinutes(serviceRecord.downtimeMinutes)}</strong>
+        </div>
+      </div>
+
+      <div className="service-record-mobile-card-dates">
+        <span>Início: {formatDateTime(serviceRecord.startedAt)}</span>
+        <span>Fim: {formatDateTime(serviceRecord.finishedAt)}</span>
+      </div>
+
+      {serviceRecord.standardizedProblem ||
+      serviceRecord.problemFound ||
+      serviceRecord.servicePerformed ? (
+        <div className="service-record-mobile-card-detail">
+          {serviceRecord.standardizedProblem ? (
+            <strong className="service-record-standardized-problem">
+              {serviceRecord.standardizedProblem}
+            </strong>
+          ) : null}
+
+          {serviceRecord.problemFound ? (
+            <p>
+              <strong>Problema:</strong> {serviceRecord.problemFound}
+            </p>
+          ) : null}
+
+          {serviceRecord.servicePerformed ? (
+            <p>
+              <strong>Serviço:</strong> {serviceRecord.servicePerformed}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="service-record-mobile-card-actions">
+        {canManageServiceRecords ? (
+          <>
+            <button type="button" onClick={() => onEdit(serviceRecord)}>
+              Editar
+            </button>
+
+            {!serviceRecord.finishedAt ? (
+              <button
+                type="button"
+                className="finish"
+                onClick={() => void onFinish(serviceRecord)}
+              >
+                Finalizar
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="reopen"
+                onClick={() => void onReopen(serviceRecord)}
+              >
+                Reabrir
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="remove"
+              onClick={() => void onRemove(serviceRecord)}
+            >
+              Remover
+            </button>
+          </>
+        ) : (
+          <span className="service-record-readonly-badge">
+            Somente consulta
+          </span>
+        )}
+      </div>
+    </article>
+  );
 }
 
 function optionalValue(value: string) {

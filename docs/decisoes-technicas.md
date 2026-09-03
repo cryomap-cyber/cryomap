@@ -5090,3 +5090,77 @@ Testes realizados:
 - Filtros ficaram usáveis no celular.
 - Cards de exportação ficaram adequados em uma coluna.
 - Painéis de relatório ficaram legíveis no mobile.
+
+## 63.6.9. Ajuste operacional mobile da tela Atendimentos
+
+Foi realizada uma revisão operacional da tela de Atendimentos para melhorar o uso real por técnicos em dispositivos móveis.
+
+Objetivo:
+
+- Reduzir poluição visual no mobile.
+- Facilitar ações de editar, finalizar, reabrir e remover atendimento no celular.
+- Evitar que o técnico precise arrastar a tabela horizontalmente para acessar ações.
+- Ocultar filtros por padrão no mobile.
+- Manter a tabela completa no desktop.
+- Melhorar o fluxo operacional da equipe técnica em campo.
+
+Alterações aplicadas:
+
+- Filtros passaram a ficar ocultos por padrão no mobile.
+- Adicionado botão `Mostrar filtros` / `Ocultar filtros`.
+- Adicionado contador de filtros ativos no botão de filtros.
+- Adicionado aviso compacto quando há filtros ativos e o painel está fechado.
+- Cards de resumo foram compactados no mobile.
+- Resumo passou a usar faixa horizontal compacta no celular.
+- Criada visualização mobile por cards operacionais.
+- Cada card mobile mostra:
+  - tarefa;
+  - status;
+  - sala;
+  - equipamento;
+  - técnico;
+  - início;
+  - fim;
+  - tempo parado;
+  - problema;
+  - serviço realizado.
+- Ações passaram a aparecer diretamente no card mobile:
+  - editar;
+  - finalizar;
+  - reabrir;
+  - remover.
+- Tabela completa foi preservada para desktop.
+- No mobile, a tabela deixou de ser o fluxo principal de operação.
+- Formulário de atendimento foi preservado e mantido responsivo.
+
+Regras preservadas:
+
+- Nenhuma alteração de backend.
+- Nenhuma migration necessária.
+- `CLIENT_USER` permanece somente consulta.
+- Perfis técnicos e administrativos continuam podendo registrar atendimentos.
+- Problema padronizado continua aceitando sugestão cadastrada ou texto livre.
+- Tempo parado continua sendo calculado com base em início e fim.
+- Finalização e reabertura continuam usando o fluxo atual de atendimento.
+- Desktop continua com tabela completa.
+
+Testes realizados:
+
+- Frontend `npm run lint` passou.
+- Frontend `npm run build` passou.
+- Tela Atendimentos carregou corretamente no desktop.
+- Tabela completa continuou disponível no desktop.
+- Criação de atendimento funcionou.
+- Edição de atendimento funcionou.
+- Finalização de atendimento funcionou.
+- Reabertura de atendimento funcionou.
+- Remoção de atendimento funcionou.
+- Filtros funcionaram.
+- Layout mobile ficou adequado.
+- Filtros ficaram ocultos por padrão no mobile.
+- Botão mostrar/ocultar filtros funcionou.
+- Cards de resumo ocuparam menos espaço no mobile.
+- Lista mobile em cards funcionou.
+- Ações ficaram acessíveis diretamente no card mobile.
+- Técnico não precisa mais arrastar tabela para acessar ações no celular.
+- Perfil `CLIENT_USER` permaneceu somente consulta.
