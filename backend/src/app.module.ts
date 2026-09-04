@@ -9,6 +9,7 @@ import { CompaniesModule } from './companies/companies.module.js';
 import { DashboardModule } from './dashboard/dashboard.module.js';
 import { EquipmentTemperatureReadingsModule } from './equipment-temperature-readings/equipment-temperature-readings.module.js';
 import { EquipmentsModule } from './equipments/equipments.module.js';
+import { GoveeModule } from './govee/govee.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ReportsModule } from './reports/reports.module.js';
 import { RoomsModule } from './rooms/rooms.module.js';
@@ -41,6 +42,7 @@ import { UsersModule } from './users/users.module.js';
     DashboardModule,
     ThermalAlertsModule,
     ReportsModule,
+    GoveeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
