@@ -5367,3 +5367,63 @@ Comando agendado no cron:
 
 ```cron
 0 2 * * * cd /home/artechdev/Projetos/cryomap && /home/artechdev/Projetos/cryomap/scripts/backup-postgres.sh >> /home/artechdev/Projetos/cryomap/backups/postgres/backup.log 2>&1
+
+## 66. Integração com sensor real
+
+Foi implementada a primeira integração real do CryoMap com sensor físico, usando o sensor Govee H5179.
+
+Objetivo:
+
+- Ler temperatura e umidade de um sensor físico real.
+- Gravar automaticamente leituras no CryoMap.
+- Alimentar os gráficos térmicos com dados reais.
+- Atualizar a temperatura atual da sala.
+- Atualizar a última leitura do sensor.
+- Manter o fluxo de alertas térmicos já existente.
+
+Decisão técnica:
+
+- A integração inicial será feita via API oficial da Govee.
+- O modelo validado foi `H5179`.
+- O campo `Sensor.code` do CryoMap será usado como identificador do dispositivo Govee.
+- Para o sensor testado, o `Device ID` da Govee foi usado como código do sensor no CryoMap.
+- A temperatura retornada pela Govee veio em Fahrenheit.
+- O backend converte a temperatura para Celsius antes de gravar no CryoMap.
+- A variável `GOVEE_TEMPERATURE_UNIT` foi mantida como `fahrenheit`.
+- A sincronização automática será feita de hora em hora para melhorar a visualização nos gráficos sem gerar excesso de chamadas.
+
+Variáveis adicionadas ao `.env` do backend:
+
+```env
+GOVEE_API_KEY="..."
+GOVEE_API_BASE_URL="https://openapi.api.govee.com"
+GOVEE_TEMPERATURE_UNIT="fahrenheit"
+
+## 67.1. Produção local em Docker
+
+Foi criada uma configuração de produção local para validar o CryoMap antes do deploy em servidor/VPS.
+
+Objetivo:
+
+- Testar o CryoMap em modo produção sem depender ainda de um servidor externo.
+- Validar build real do backend e frontend.
+- Validar Nginx servindo o frontend.
+- Validar proxy `/api` para o backend.
+- Validar PostgreSQL em container com volume persistente.
+- Validar uploads/anexos em volume persistente.
+- Validar sincronização Govee dentro do container do backend.
+
+Arquitetura validada:
+
+- Frontend React buildado e servido por Nginx.
+- Backend NestJS rodando em modo produção.
+- PostgreSQL rodando em container Docker.
+- Nginx encaminhando chamadas `/api` para o backend.
+- Uploads persistidos via volume Docker.
+- Banco persistido via volume Docker.
+
+Endereço local de produção:
+
+```text
+http://localhost:8080
+

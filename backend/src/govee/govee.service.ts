@@ -116,7 +116,10 @@ export class GoveeService {
       }
 
       try {
-        const state = await this.getDeviceState(goveeDevice.sku, goveeDevice.device);
+        const state = await this.getDeviceState(
+          goveeDevice.sku,
+          goveeDevice.device,
+        );
 
         if (state.online === false) {
           await this.prisma.sensor.update({
@@ -281,7 +284,9 @@ export class GoveeService {
 
   private extractDevices(response: GoveeApiResponse): GoveeDevice[] {
     if (Array.isArray(response.data)) {
-      return response.data.filter(this.isRecord).map((item) => this.toDevice(item));
+      return response.data
+        .filter(this.isRecord)
+        .map((item) => this.toDevice(item));
     }
 
     if (this.isRecord(response.data)) {
