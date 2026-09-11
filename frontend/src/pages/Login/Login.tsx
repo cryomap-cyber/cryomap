@@ -8,8 +8,8 @@ export function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
 
-  const [email, setEmail] = useState('admin@cryomap.local');
-  const [password, setPassword] = useState('Admin@123456');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,14 +49,14 @@ export function Login() {
       </section>
 
       <section className="login-panel">
-        <form className="login-form" onSubmit={handleSubmit}>
+        <form className="login-form" onSubmit={handleSubmit} autoComplete="off">
           <div className="login-logo">
              <img src={cryomapLogo} alt="CryoMap" />
               </div>
           <div>
             <span className="login-kicker">Acesso</span>
             <h2>Entrar no CryoMap</h2>
-            <p>Use o usuário Master Admin criado no backend.</p>
+            <p>Use seu usuário e senha cadastrados.</p>
           </div>
 
           <label>
@@ -64,7 +64,7 @@ export function Login() {
             <input
               type="email"
               value={email}
-              autoComplete="email"
+              autoComplete="off"
               onChange={(event) => setEmail(event.target.value)}
             />
           </label>
@@ -74,7 +74,7 @@ export function Login() {
             <input
               type="password"
               value={password}
-              autoComplete="current-password"
+              autoComplete="off"
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
