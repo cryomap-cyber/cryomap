@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
 import { EmptyState } from '../../components/Feedback/EmptyState';
 import { LoadingState } from '../../components/Feedback/LoadingState';
 import { getCompanies } from '../../services/companies';
@@ -253,6 +254,12 @@ export function Equipments() {
     });
   }, [equipments, search]);
 
+  const activeFilterCount = [
+    selectedCompanyId,
+    selectedRoomId,
+    search.trim(),
+  ].filter(Boolean).length;
+
   const formRooms = useMemo(() => {
     if (!formData.companyId) {
       return rooms;
@@ -446,7 +453,19 @@ export function Equipments() {
         </button>
       </header>
 
-      <section className="equipments-summary">
+      <CollapsibleSection
+        title="Resumo dos equipamentos"
+        openDescription="Indicadores gerais dos equipamentos estão visíveis."
+        closedDescription="Indicadores gerais estão ocultos para liberar espaço na tela."
+        openLabel="Ocultar resumo"
+        closedLabel="Mostrar resumo"
+        storageKey="cryomap.equipments.summary-open"
+        defaultOpen
+        defaultOpenOnMobile={false}
+        className="equipments-summary-disclosure"
+        contentClassName="equipments-summary"
+        variant="section"
+      >
         <SummaryCard title="Total" value={equipments.length} />
         <SummaryCard title="Ativos" value={activeEquipments} />
         <SummaryCard title="Rodando" value={runningEquipments} />
@@ -455,7 +474,7 @@ export function Equipments() {
         <SummaryCard title="Offline" value={offlineEquipments} />
         <SummaryCard title="Inativos" value={inactiveEquipments} />
         <SummaryCard title="Com medição" value={equipmentsWithMeasurement} />
-      </section>
+      </CollapsibleSection>
 
       {isFormOpen ? (
         <section className="equipment-form-panel">
@@ -674,45 +693,77 @@ export function Equipments() {
             <p>{filteredEquipments.length} registro(s) encontrado(s)</p>
           </div>
 
-          <div className="equipments-actions">
-            <select
-              value={selectedCompanyId}
-              onChange={(event) => setSelectedCompanyId(event.target.value)}
-            >
-              <option value="">Todas as empresas</option>
-
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedRoomId}
-              onChange={(event) => setSelectedRoomId(event.target.value)}
-            >
-              <option value="">Todas as salas</option>
-
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="search"
-              placeholder="Buscar por nome, código, fluido, pressão..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-
-            <button type="button" onClick={() => void handleRefresh()}>
-              Atualizar
-            </button>
-          </div>
+          <button
+            type="button"
+            className="equipments-refresh-action"
+            onClick={() => void handleRefresh()}
+          >
+            Atualizar
+          </button>
         </div>
+
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Refine a lista por empresa, sala ou busca textual."
+          closedDescription={
+            activeFilterCount > 0
+              ? `${activeFilterCount} filtro(s) ativo(s).`
+              : 'Nenhum filtro específico selecionado.'
+          }
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.equipments.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeFilterCount}
+          className="equipments-filters-disclosure"
+          contentClassName="equipments-filter-area"
+          variant="toolbar"
+        >
+          <div className="equipments-actions">
+            <label className="equipments-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => setSelectedCompanyId(event.target.value)}
+              >
+                <option value="">Todas as empresas</option>
+
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="equipments-filter-field">
+              <span>Sala</span>
+              <select
+                value={selectedRoomId}
+                onChange={(event) => setSelectedRoomId(event.target.value)}
+              >
+                <option value="">Todas as salas</option>
+
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="equipments-filter-field equipments-search-field">
+              <span>Busca</span>
+              <input
+                type="search"
+                placeholder="Buscar por nome, código, fluido, pressão..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+          </div>
+        </CollapsibleSection>
 
         {error ? (
           <div className="equipments-error">
