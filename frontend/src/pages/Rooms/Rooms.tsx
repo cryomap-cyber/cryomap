@@ -17,6 +17,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
 import { EmptyState } from '../../components/Feedback/EmptyState';
 import { LoadingState } from '../../components/Feedback/LoadingState';
 import { useAuth } from '../../contexts/useAuth';
@@ -422,6 +423,9 @@ export function Rooms() {
     selectedChartRoom,
   ]);
 
+  const activeListFilterCount =
+    (appliedCompanyId ? 1 : 0) + (appliedSearch.trim() ? 1 : 0);
+
   const normalRooms = rooms.filter(
     (room) => room.thermalStatus === 'NORMAL',
   ).length;
@@ -697,14 +701,26 @@ export function Rooms() {
         ) : null}
       </header>
 
-      <section className="rooms-summary">
+      <CollapsibleSection
+        title="Resumo das salas"
+        openDescription="Indicadores gerais das salas estão visíveis."
+        closedDescription="Indicadores gerais estão ocultos para liberar espaço na tela."
+        openLabel="Ocultar resumo"
+        closedLabel="Mostrar resumo"
+        storageKey="cryomap.rooms.summary-open"
+        defaultOpen
+        defaultOpenOnMobile={false}
+        className="rooms-summary-disclosure"
+        contentClassName="rooms-summary"
+        variant="section"
+      >
         <SummaryCard title="Total" value={rooms.length} />
         <SummaryCard title="Com temperatura" value={roomsWithTemperature} />
         <SummaryCard title="Normal" value={normalRooms} />
         <SummaryCard title="Atenção" value={warningRooms} />
         <SummaryCard title="Críticas" value={criticalRooms} danger />
         <SummaryCard title="Offline" value={offlineRooms} />
-      </section>
+      </CollapsibleSection>
 
       <section className="rooms-temperature-chart-panel">
         <div className="rooms-temperature-chart-header">
@@ -1068,6 +1084,33 @@ export function Rooms() {
             </p>
           </div>
 
+          <button
+            type="button"
+            className="rooms-refresh-action"
+            onClick={() => void handleRefresh()}
+          >
+            Atualizar
+          </button>
+        </div>
+
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Ajuste os filtros para refinar a lista de salas."
+          closedDescription={
+            activeListFilterCount > 0
+              ? `${activeListFilterCount} filtro(s) ativo(s) na lista.`
+              : 'Nenhum filtro específico aplicado à lista.'
+          }
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.rooms.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeListFilterCount}
+          className="rooms-filters-disclosure"
+          contentClassName="rooms-filter-area"
+          variant="toolbar"
+        >
           <div className="rooms-actions">
             <select
               value={selectedCompanyId}
@@ -1100,12 +1143,8 @@ export function Rooms() {
             >
               Limpar filtros
             </button>
-
-            <button type="button" onClick={() => void handleRefresh()}>
-              Atualizar
-            </button>
           </div>
-        </div>
+        </CollapsibleSection>
 
         <div className="rooms-filter-status">
           <div>
