@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
 import { EmptyState } from '../../components/Feedback/EmptyState';
 import { LoadingState } from '../../components/Feedback/LoadingState';
 import { useAuth } from '../../contexts/useAuth';
@@ -62,8 +63,6 @@ const emptyFormData: TaskFormData = {
   dueDate: '',
 };
 
-const TASK_FILTERS_STORAGE_KEY = 'cryomap.tasks.filters-open';
-const TASK_SUMMARY_STORAGE_KEY = 'cryomap.tasks.summary-open';
 
 export function Tasks() {
   const { user } = useAuth();
@@ -95,43 +94,6 @@ export function Tasks() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [formData, setFormData] = useState<TaskFormData>(emptyFormData);
 
-  const [isFiltersOpen, setIsFiltersOpen] = useState(() => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    return window.localStorage.getItem(TASK_FILTERS_STORAGE_KEY) === 'true';
-  });
-
-  const [isSummaryOpen, setIsSummaryOpen] = useState(() => {
-    if (typeof window === 'undefined') {
-      return true;
-    }
-
-    const storedValue = window.localStorage.getItem(
-      TASK_SUMMARY_STORAGE_KEY,
-    );
-
-    if (storedValue !== null) {
-      return storedValue === 'true';
-    }
-
-    return !window.matchMedia('(max-width: 700px)').matches;
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      TASK_FILTERS_STORAGE_KEY,
-      String(isFiltersOpen),
-    );
-  }, [isFiltersOpen]);
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      TASK_SUMMARY_STORAGE_KEY,
-      String(isSummaryOpen),
-    );
-  }, [isSummaryOpen]);
 
   async function handleRefresh() {
     setError('');
@@ -810,75 +772,50 @@ export function Tasks() {
         </button>
       </header>
 
-      <section className="tasks-overview-control">
-        <div>
-          <strong>
-            Resumo dos chamados
-          </strong>
+      <CollapsibleSection
+        title="Resumo dos chamados"
+        openDescription="Indicadores gerais da operação estão visíveis."
+        closedDescription="Indicadores gerais estão ocultos para liberar espaço na tela."
+        openLabel="Ocultar resumo"
+        closedLabel="Mostrar resumo"
+        storageKey="cryomap.tasks.summary-open"
+        defaultOpen
+        defaultOpenOnMobile={false}
+        className="tasks-summary-disclosure"
+        contentClassName="tasks-summary"
+        variant="section"
+      >
+        <SummaryCard
+          title="Total"
+          value={tasks.length}
+        />
 
-          <span>
-            {isSummaryOpen
-              ? 'Indicadores gerais da operação estão visíveis.'
-              : 'Indicadores gerais estão ocultos para liberar espaço na tela.'}
-          </span>
-        </div>
+        <SummaryCard
+          title="Abertos"
+          value={openTasks}
+        />
 
-        <button
-          type="button"
-          className={
-            isSummaryOpen ? 'is-open' : ''
-          }
-          aria-expanded={isSummaryOpen}
-          aria-controls="tasks-summary"
-          onClick={() =>
-            setIsSummaryOpen(
-              (current) => !current,
-            )
-          }
-        >
-          {isSummaryOpen
-            ? 'Ocultar resumo'
-            : 'Mostrar resumo'}
-        </button>
-      </section>
+        <SummaryCard
+          title="Em andamento"
+          value={inProgressTasks}
+        />
 
-      {isSummaryOpen ? (
-        <section
-          id="tasks-summary"
-          className="tasks-summary"
-        >
-          <SummaryCard
-            title="Total"
-            value={tasks.length}
-          />
+        <SummaryCard
+          title="Concluídos"
+          value={doneTasks}
+        />
 
-          <SummaryCard
-            title="Abertos"
-            value={openTasks}
-          />
+        <SummaryCard
+          title="Externos"
+          value={externalTasks}
+        />
 
-          <SummaryCard
-            title="Em andamento"
-            value={inProgressTasks}
-          />
-
-          <SummaryCard
-            title="Concluídos"
-            value={doneTasks}
-          />
-
-          <SummaryCard
-            title="Externos"
-            value={externalTasks}
-          />
-
-          <SummaryCard
-            title="Atrasados"
-            value={overdueTasks}
-            danger
-          />
-        </section>
-      ) : null}
+        <SummaryCard
+          title="Atrasados"
+          value={overdueTasks}
+          danger
+        />
+      </CollapsibleSection>
 
       {isFormOpen ? (
         <section className="task-form-panel">
@@ -1298,55 +1235,35 @@ export function Tasks() {
             </p>
           </div>
 
-          <div className="tasks-panel-toolbar">
-            <button
-              type="button"
-              className={
-                isFiltersOpen
-                  ? 'tasks-filter-toggle is-open'
-                  : 'tasks-filter-toggle'
-              }
-              aria-expanded={
-                isFiltersOpen
-              }
-              aria-controls="tasks-filters-panel"
-              onClick={() =>
-                setIsFiltersOpen(
-                  (current) => !current,
-                )
-              }
-            >
-              <span>
-                {isFiltersOpen
-                  ? 'Ocultar filtros'
-                  : 'Filtros'}
-              </span>
-
-              {activeFilterCount >
-              0 ? (
-                <strong>
-                  {activeFilterCount}
-                </strong>
-              ) : null}
-            </button>
-
-            <button
-              type="button"
-              className="tasks-refresh-action"
-              onClick={() =>
-                void handleRefresh()
-              }
-            >
-              Atualizar
-            </button>
-          </div>
+          <button
+            type="button"
+            className="tasks-refresh-action"
+            onClick={() =>
+              void handleRefresh()
+            }
+          >
+            Atualizar
+          </button>
         </div>
 
-        {isFiltersOpen ? (
-          <div
-            id="tasks-filters-panel"
-            className="tasks-filters-panel"
-          >
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Ajuste os filtros para refinar a lista de chamados."
+          closedDescription={
+            activeFilterCount > 0
+              ? `${activeFilterCount} filtro(s) ativo(s).`
+              : 'Nenhum filtro específico selecionado.'
+          }
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.tasks.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeFilterCount}
+          className="tasks-filters-disclosure"
+          contentClassName="tasks-filters-panel"
+          variant="toolbar"
+        >
             <div className="tasks-actions">
               <label className="tasks-filter-field">
                 <span>
@@ -1592,8 +1509,7 @@ export function Tasks() {
                 Limpar filtros
               </button>
             </div>
-          </div>
-        ) : null}
+        </CollapsibleSection>
 
         {activeFilterCount > 0 ? (
           <div className="tasks-active-filters">
