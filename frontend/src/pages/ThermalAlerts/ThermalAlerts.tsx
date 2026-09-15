@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
 import { EmptyState } from '../../components/Feedback/EmptyState';
 import { LoadingState } from '../../components/Feedback/LoadingState';
 import { useAuth } from '../../contexts/useAuth';
@@ -552,7 +553,19 @@ export function ThermalAlerts() {
         </button>
       </header>
 
-      <section className="thermal-alerts-summary">
+      <CollapsibleSection
+        title="Resumo dos alertas"
+        openDescription="Indicadores dos alertas térmicos do período estão visíveis."
+        closedDescription="Indicadores dos alertas estão ocultos para liberar espaço na tela."
+        openLabel="Ocultar resumo"
+        closedLabel="Mostrar resumo"
+        storageKey="cryomap.thermal-alerts.summary-open"
+        defaultOpen
+        defaultOpenOnMobile={false}
+        className="thermal-alerts-summary-disclosure"
+        contentClassName="thermal-alerts-summary"
+        variant="section"
+      >
         <SummaryCard title="Total" value={alerts.length} />
         <SummaryCard
           title="Ativos"
@@ -571,7 +584,7 @@ export function ThermalAlerts() {
           danger={criticalAlerts > 0}
         />
         <SummaryCard title="Resolvidos" value={resolvedAlerts} />
-      </section>
+      </CollapsibleSection>
 
       <section className="thermal-alerts-panel">
         <div className="thermal-alerts-panel-header">
@@ -582,7 +595,26 @@ export function ThermalAlerts() {
               carregado(s)
             </p>
           </div>
+        </div>
 
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Ajuste empresa, sala, sensor, tipo, severidade, status, período e busca."
+          closedDescription={
+            activeFilters.length > 0
+              ? `${activeFilters.length} filtro(s) ativo(s).`
+              : 'Nenhum filtro específico selecionado.'
+          }
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.thermal-alerts.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeFilters.length}
+          className="thermal-alerts-filters-disclosure"
+          contentClassName="thermal-alerts-filter-area"
+          variant="toolbar"
+        >
           <div className="thermal-alerts-actions">
             <label className="thermal-alerts-filter-field">
               <span>Empresa</span>
@@ -729,7 +761,7 @@ export function ThermalAlerts() {
               </button>
             </div>
           </div>
-        </div>
+        </CollapsibleSection>
 
         <div className="thermal-alerts-filter-status">
           <div>
