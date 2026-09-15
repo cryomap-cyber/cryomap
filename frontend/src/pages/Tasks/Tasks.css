@@ -61,15 +61,83 @@
   box-shadow: 0 14px 34px rgba(9, 109, 242, 0.2);
 }
 
+.tasks-overview-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.94),
+      rgba(247, 251, 255, 0.94)
+    );
+  box-shadow: var(--shadow-card);
+}
+
+.tasks-overview-control > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tasks-overview-control > div > strong {
+  color: var(--color-primary-dark);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.tasks-overview-control > div > span {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.tasks-overview-control > button {
+  flex-shrink: 0;
+  min-height: 40px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 13px;
+  padding: 0 14px;
+  background: var(--color-surface-soft);
+  color: var(--color-primary-dark);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.tasks-overview-control > button:hover,
+.tasks-overview-control > button.is-open {
+  border-color: rgba(9, 109, 242, 0.22);
+  background: rgba(237, 247, 255, 0.92);
+  color: var(--color-primary);
+}
+
+.tasks-overview-control > button:active {
+  transform: translateY(1px);
+}
+
 .tasks-summary {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
+  animation: tasksSummaryEnter 0.16s ease-out;
 }
 
 .tasks-summary-card {
   position: relative;
   overflow: hidden;
+  min-height: 104px;
   background:
     linear-gradient(
       180deg,
@@ -77,8 +145,8 @@
       rgba(245, 251, 255, 0.96)
     );
   border: 1px solid var(--color-border-soft);
-  border-radius: 24px;
-  padding: 20px;
+  border-radius: 20px;
+  padding: 16px 18px;
   box-shadow: var(--shadow-card);
 }
 
@@ -86,7 +154,7 @@
   content: '';
   position: absolute;
   inset: 0 auto 0 0;
-  width: 5px;
+  width: 4px;
   background:
     linear-gradient(
       180deg,
@@ -98,20 +166,26 @@
 .tasks-summary-card span {
   display: block;
   color: var(--color-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .tasks-summary-card strong {
-  font-size: 36px;
+  font-size: 30px;
+  line-height: 1;
   color: var(--color-primary-dark);
   letter-spacing: -0.05em;
 }
 
 .tasks-summary-card.danger {
   border-color: rgba(217, 48, 37, 0.18);
-  background: linear-gradient(180deg, #fff7f7, #ffffff);
+  background:
+    linear-gradient(
+      180deg,
+      #fff7f7,
+      #ffffff
+    );
 }
 
 .tasks-summary-card.danger::before {
@@ -851,24 +925,29 @@
     align-self: flex-start;
   }
 
+  .tasks-overview-control {
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+
   .tasks-summary {
-    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
   }
 
   .tasks-summary-card {
-    min-height: auto;
+    min-height: 86px;
     padding: 12px 14px;
     border-radius: 16px;
   }
 
   .tasks-summary-card span {
-    font-size: 12px;
+    margin-bottom: 6px;
+    font-size: 11px;
   }
 
   .tasks-summary-card strong {
     font-size: 24px;
-    line-height: 1;
   }
 
   .tasks-panel {
@@ -932,21 +1011,24 @@
 
 @media (max-width: 700px) {
   .tasks-page {
-    gap: 14px;
+    gap: 12px;
   }
 
   .tasks-header {
     flex-direction: column;
-    padding: 18px;
-    border-radius: 22px;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 20px;
   }
 
   .tasks-header h1 {
+    margin-top: 4px;
     font-size: 24px;
   }
 
   .tasks-header p {
     font-size: 13px;
+    line-height: 1.45;
   }
 
   .tasks-header button {
@@ -956,18 +1038,50 @@
     font-size: 13px;
   }
 
+  .tasks-overview-control {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .tasks-overview-control > div {
+    gap: 2px;
+  }
+
+  .tasks-overview-control > div > strong {
+    font-size: 13px;
+  }
+
+  .tasks-overview-control > div > span {
+    font-size: 11px;
+  }
+
+  .tasks-overview-control > button {
+    width: 100%;
+    min-height: 40px;
+    font-size: 12px;
+  }
+
   .tasks-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 7px;
   }
 
   .tasks-summary-card {
+    min-height: 74px;
     padding: 10px 11px;
     border-radius: 14px;
   }
 
+  .tasks-summary-card::before {
+    width: 3px;
+  }
+
   .tasks-summary-card span {
-    font-size: 11px;
+    margin-bottom: 5px;
+    font-size: 10px;
   }
 
   .tasks-summary-card strong {
@@ -1128,14 +1242,37 @@
 }
 
 @media (max-width: 430px) {
-  .tasks-summary,
+  .tasks-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .tasks-actions,
   .tasks-panel-toolbar {
     grid-template-columns: 1fr;
   }
 
+  .tasks-summary-card {
+    padding: 9px 10px;
+  }
+
+  .tasks-summary-card strong {
+    font-size: 19px;
+  }
+
   .tasks-table {
     min-width: 1060px;
+  }
+}
+
+@keyframes tasksSummaryEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

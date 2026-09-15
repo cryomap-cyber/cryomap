@@ -63,6 +63,7 @@ const emptyFormData: TaskFormData = {
 };
 
 const TASK_FILTERS_STORAGE_KEY = 'cryomap.tasks.filters-open';
+const TASK_SUMMARY_STORAGE_KEY = 'cryomap.tasks.summary-open';
 
 export function Tasks() {
   const { user } = useAuth();
@@ -99,9 +100,23 @@ export function Tasks() {
       return false;
     }
 
-    return (
-      window.localStorage.getItem(TASK_FILTERS_STORAGE_KEY) === 'true'
+    return window.localStorage.getItem(TASK_FILTERS_STORAGE_KEY) === 'true';
+  });
+
+  const [isSummaryOpen, setIsSummaryOpen] = useState(() => {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+
+    const storedValue = window.localStorage.getItem(
+      TASK_SUMMARY_STORAGE_KEY,
     );
+
+    if (storedValue !== null) {
+      return storedValue === 'true';
+    }
+
+    return !window.matchMedia('(max-width: 700px)').matches;
   });
 
   useEffect(() => {
@@ -110,6 +125,13 @@ export function Tasks() {
       String(isFiltersOpen),
     );
   }, [isFiltersOpen]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      TASK_SUMMARY_STORAGE_KEY,
+      String(isSummaryOpen),
+    );
+  }, [isSummaryOpen]);
 
   async function handleRefresh() {
     setError('');
@@ -365,7 +387,9 @@ export function Tasks() {
     if (selectedStatus) {
       filters.push({
         label: 'Status',
-        value: formatTaskStatus(selectedStatus as TaskStatus),
+        value: formatTaskStatus(
+          selectedStatus as TaskStatus,
+        ),
       });
     }
 
@@ -381,7 +405,9 @@ export function Tasks() {
     if (selectedOrigin) {
       filters.push({
         label: 'Origem',
-        value: formatTaskOrigin(selectedOrigin as TaskOrigin),
+        value: formatTaskOrigin(
+          selectedOrigin as TaskOrigin,
+        ),
       });
     }
 
@@ -444,7 +470,11 @@ export function Tasks() {
 
       return true;
     });
-  }, [equipments, formData.companyId, formData.roomId]);
+  }, [
+    equipments,
+    formData.companyId,
+    formData.roomId,
+  ]);
 
   const formUsers = useMemo(() => {
     return users.filter((userItem) => {
@@ -482,7 +512,8 @@ export function Tasks() {
 
   const externalTasks = tasks.filter(
     (task) =>
-      task.origin === 'AUVO' || task.origin === 'OTHER',
+      task.origin === 'AUVO' ||
+      task.origin === 'OTHER',
   ).length;
 
   function openCreateForm() {
@@ -632,22 +663,33 @@ export function Tasks() {
           assignedToUserId:
             formData.assignedToUserId || null,
           title: formData.title.trim(),
-          description: nullableValue(formData.description),
+          description: nullableValue(
+            formData.description,
+          ),
           priority: formData.priority,
           status: formData.status,
           origin: formData.origin,
           externalCode: nullableValue(
             formData.externalCode,
           ),
-          externalUrl: nullableValue(formData.externalUrl),
-          dueDate: nullableIsoDateTime(formData.dueDate),
+          externalUrl: nullableValue(
+            formData.externalUrl,
+          ),
+          dueDate: nullableIsoDateTime(
+            formData.dueDate,
+          ),
         };
 
-        await updateTask(editingTask.id, updatePayload);
+        await updateTask(
+          editingTask.id,
+          updatePayload,
+        );
       } else if (isClientUser) {
         const createPayload: CreateTaskPayload = {
           companyId,
-          roomId: optionalValue(formData.roomId),
+          roomId: optionalValue(
+            formData.roomId,
+          ),
           equipmentId: optionalValue(
             formData.equipmentId,
           ),
@@ -666,7 +708,9 @@ export function Tasks() {
       } else {
         const createPayload: CreateTaskPayload = {
           companyId,
-          roomId: optionalValue(formData.roomId),
+          roomId: optionalValue(
+            formData.roomId,
+          ),
           equipmentId: optionalValue(
             formData.equipmentId,
           ),
@@ -766,38 +810,75 @@ export function Tasks() {
         </button>
       </header>
 
-      <section className="tasks-summary">
-        <SummaryCard
-          title="Total"
-          value={tasks.length}
-        />
+      <section className="tasks-overview-control">
+        <div>
+          <strong>
+            Resumo dos chamados
+          </strong>
 
-        <SummaryCard
-          title="Abertos"
-          value={openTasks}
-        />
+          <span>
+            {isSummaryOpen
+              ? 'Indicadores gerais da operação estão visíveis.'
+              : 'Indicadores gerais estão ocultos para liberar espaço na tela.'}
+          </span>
+        </div>
 
-        <SummaryCard
-          title="Em andamento"
-          value={inProgressTasks}
-        />
-
-        <SummaryCard
-          title="Concluídos"
-          value={doneTasks}
-        />
-
-        <SummaryCard
-          title="Externos"
-          value={externalTasks}
-        />
-
-        <SummaryCard
-          title="Atrasados"
-          value={overdueTasks}
-          danger
-        />
+        <button
+          type="button"
+          className={
+            isSummaryOpen ? 'is-open' : ''
+          }
+          aria-expanded={isSummaryOpen}
+          aria-controls="tasks-summary"
+          onClick={() =>
+            setIsSummaryOpen(
+              (current) => !current,
+            )
+          }
+        >
+          {isSummaryOpen
+            ? 'Ocultar resumo'
+            : 'Mostrar resumo'}
+        </button>
       </section>
+
+      {isSummaryOpen ? (
+        <section
+          id="tasks-summary"
+          className="tasks-summary"
+        >
+          <SummaryCard
+            title="Total"
+            value={tasks.length}
+          />
+
+          <SummaryCard
+            title="Abertos"
+            value={openTasks}
+          />
+
+          <SummaryCard
+            title="Em andamento"
+            value={inProgressTasks}
+          />
+
+          <SummaryCard
+            title="Concluídos"
+            value={doneTasks}
+          />
+
+          <SummaryCard
+            title="Externos"
+            value={externalTasks}
+          />
+
+          <SummaryCard
+            title="Atrasados"
+            value={overdueTasks}
+            danger
+          />
+        </section>
+      ) : null}
 
       {isFormOpen ? (
         <section className="task-form-panel">
@@ -846,7 +927,9 @@ export function Tasks() {
           >
             {isClientUser ? (
               <div className="task-form-client-company">
-                <span>Empresa vinculada</span>
+                <span>
+                  Empresa vinculada
+                </span>
 
                 <strong>
                   {currentUserCompany?.name ??
@@ -854,8 +937,8 @@ export function Tasks() {
                 </strong>
 
                 <small>
-                  O cliente não pode abrir chamado
-                  para outra empresa.
+                  O cliente não pode abrir
+                  chamado para outra empresa.
                 </small>
               </div>
             ) : (
@@ -874,14 +957,16 @@ export function Tasks() {
                     Selecione uma empresa
                   </option>
 
-                  {companies.map((company) => (
-                    <option
-                      key={company.id}
-                      value={company.id}
-                    >
-                      {company.name}
-                    </option>
-                  ))}
+                  {companies.map(
+                    (company) => (
+                      <option
+                        key={company.id}
+                        value={company.id}
+                      >
+                        {company.name}
+                      </option>
+                    ),
+                  )}
                 </select>
               </label>
             )}
@@ -901,21 +986,25 @@ export function Tasks() {
                   Sem sala específica
                 </option>
 
-                {formRooms.map((room) => (
-                  <option
-                    key={room.id}
-                    value={room.id}
-                  >
-                    {room.name}
-                  </option>
-                ))}
+                {formRooms.map(
+                  (room) => (
+                    <option
+                      key={room.id}
+                      value={room.id}
+                    >
+                      {room.name}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
 
             <label>
               Equipamento
               <select
-                value={formData.equipmentId}
+                value={
+                  formData.equipmentId
+                }
                 onChange={(event) =>
                   updateFormField(
                     'equipmentId',
@@ -958,14 +1047,16 @@ export function Tasks() {
                     Sem responsável definido
                   </option>
 
-                  {formUsers.map((userItem) => (
-                    <option
-                      key={userItem.id}
-                      value={userItem.id}
-                    >
-                      {userItem.name}
-                    </option>
-                  ))}
+                  {formUsers.map(
+                    (userItem) => (
+                      <option
+                        key={userItem.id}
+                        value={userItem.id}
+                      >
+                        {userItem.name}
+                      </option>
+                    ),
+                  )}
                 </select>
               </label>
             ) : null}
@@ -1144,7 +1235,9 @@ export function Tasks() {
             <label className="task-form-wide">
               Descrição
               <textarea
-                value={formData.description}
+                value={
+                  formData.description
+                }
                 onChange={(event) =>
                   updateFormField(
                     'description',
@@ -1194,12 +1287,14 @@ export function Tasks() {
       <section className="tasks-panel">
         <div className="tasks-panel-header">
           <div>
-            <h2>Lista de chamados</h2>
+            <h2>
+              Lista de chamados
+            </h2>
 
             <p>
-              {filteredTasks.length} registro(s)
-              exibido(s) de {tasks.length}{' '}
-              carregado(s)
+              {filteredTasks.length}{' '}
+              registro(s) exibido(s) de{' '}
+              {tasks.length} carregado(s)
             </p>
           </div>
 
@@ -1211,7 +1306,9 @@ export function Tasks() {
                   ? 'tasks-filter-toggle is-open'
                   : 'tasks-filter-toggle'
               }
-              aria-expanded={isFiltersOpen}
+              aria-expanded={
+                isFiltersOpen
+              }
               aria-controls="tasks-filters-panel"
               onClick={() =>
                 setIsFiltersOpen(
@@ -1225,7 +1322,8 @@ export function Tasks() {
                   : 'Filtros'}
               </span>
 
-              {activeFilterCount > 0 ? (
+              {activeFilterCount >
+              0 ? (
                 <strong>
                   {activeFilterCount}
                 </strong>
@@ -1251,7 +1349,9 @@ export function Tasks() {
           >
             <div className="tasks-actions">
               <label className="tasks-filter-field">
-                <span>Empresa</span>
+                <span>
+                  Empresa
+                </span>
 
                 <select
                   value={
@@ -1283,7 +1383,9 @@ export function Tasks() {
               </label>
 
               <label className="tasks-filter-field">
-                <span>Sala</span>
+                <span>
+                  Sala
+                </span>
 
                 <select
                   value={selectedRoomId}
@@ -1298,19 +1400,23 @@ export function Tasks() {
                     Todas as salas
                   </option>
 
-                  {rooms.map((room) => (
-                    <option
-                      key={room.id}
-                      value={room.id}
-                    >
-                      {room.name}
-                    </option>
-                  ))}
+                  {rooms.map(
+                    (room) => (
+                      <option
+                        key={room.id}
+                        value={room.id}
+                      >
+                        {room.name}
+                      </option>
+                    ),
+                  )}
                 </select>
               </label>
 
               <label className="tasks-filter-field">
-                <span>Equipamento</span>
+                <span>
+                  Equipamento
+                </span>
 
                 <select
                   value={
@@ -1340,7 +1446,9 @@ export function Tasks() {
               </label>
 
               <label className="tasks-filter-field">
-                <span>Status</span>
+                <span>
+                  Status
+                </span>
 
                 <select
                   value={selectedStatus}
@@ -1377,10 +1485,14 @@ export function Tasks() {
               </label>
 
               <label className="tasks-filter-field">
-                <span>Prioridade</span>
+                <span>
+                  Prioridade
+                </span>
 
                 <select
-                  value={selectedPriority}
+                  value={
+                    selectedPriority
+                  }
                   onChange={(event) =>
                     setSelectedPriority(
                       event.target.value,
@@ -1410,7 +1522,9 @@ export function Tasks() {
               </label>
 
               <label className="tasks-filter-field">
-                <span>Origem</span>
+                <span>
+                  Origem
+                </span>
 
                 <select
                   value={selectedOrigin}
@@ -1439,7 +1553,9 @@ export function Tasks() {
               </label>
 
               <label className="tasks-filter-field tasks-search-field">
-                <span>Busca</span>
+                <span>
+                  Busca
+                </span>
 
                 <input
                   type="search"
@@ -1465,9 +1581,12 @@ export function Tasks() {
               <button
                 type="button"
                 className="tasks-secondary-action"
-                onClick={handleClearFilters}
+                onClick={
+                  handleClearFilters
+                }
                 disabled={
-                  activeFilterCount === 0
+                  activeFilterCount ===
+                  0
                 }
               >
                 Limpar filtros
@@ -1479,7 +1598,9 @@ export function Tasks() {
         {activeFilterCount > 0 ? (
           <div className="tasks-active-filters">
             <div className="tasks-active-filters-heading">
-              <span>Filtros ativos</span>
+              <span>
+                Filtros ativos
+              </span>
 
               <strong>
                 {activeFilterCount}
@@ -1503,7 +1624,9 @@ export function Tasks() {
 
             <button
               type="button"
-              onClick={handleClearFilters}
+              onClick={
+                handleClearFilters
+              }
             >
               Limpar
             </button>
@@ -1512,7 +1635,9 @@ export function Tasks() {
 
         {error ? (
           <div className="tasks-error">
-            <strong>{error}</strong>
+            <strong>
+              {error}
+            </strong>
 
             <button
               type="button"
@@ -1539,22 +1664,48 @@ export function Tasks() {
             <table className="tasks-table">
               <thead>
                 <tr>
-                  <th>Chamado</th>
-                  <th>Origem</th>
+                  <th>
+                    Chamado
+                  </th>
+                  <th>
+                    Origem
+                  </th>
                   <th>
                     Referência externa
                   </th>
-                  <th>Empresa</th>
-                  <th>Sala</th>
-                  <th>Equipamento</th>
-                  <th>Responsável</th>
-                  <th>Aberto por</th>
-                  <th>Prioridade</th>
-                  <th>Status</th>
-                  <th>Vencimento</th>
-                  <th>Concluído em</th>
-                  <th>Criado em</th>
-                  <th>Ações</th>
+                  <th>
+                    Empresa
+                  </th>
+                  <th>
+                    Sala
+                  </th>
+                  <th>
+                    Equipamento
+                  </th>
+                  <th>
+                    Responsável
+                  </th>
+                  <th>
+                    Aberto por
+                  </th>
+                  <th>
+                    Prioridade
+                  </th>
+                  <th>
+                    Status
+                  </th>
+                  <th>
+                    Vencimento
+                  </th>
+                  <th>
+                    Concluído em
+                  </th>
+                  <th>
+                    Criado em
+                  </th>
+                  <th>
+                    Ações
+                  </th>
                 </tr>
               </thead>
 
@@ -1575,7 +1726,9 @@ export function Tasks() {
 
                       <td>
                         <TaskOriginBadge
-                          origin={task.origin}
+                          origin={
+                            task.origin
+                          }
                         />
                       </td>
 
@@ -1587,7 +1740,9 @@ export function Tasks() {
                             }
                           </strong>
                         ) : (
-                          <span>-</span>
+                          <span>
+                            -
+                          </span>
                         )}
 
                         {task.externalUrl ? (
@@ -1605,7 +1760,8 @@ export function Tasks() {
                       </td>
 
                       <td>
-                        {task.company?.name ??
+                        {task.company
+                          ?.name ??
                           task.companyId}
                       </td>
 
@@ -1616,11 +1772,13 @@ export function Tasks() {
 
                       <td>
                         <span>
-                          {task.equipment
+                          {task
+                            .equipment
                             ?.name ?? '-'}
                         </span>
 
-                        {task.equipment
+                        {task
+                          .equipment
                           ?.code ? (
                           <small>
                             {
@@ -1768,8 +1926,13 @@ function SummaryCard({
           : 'tasks-summary-card'
       }
     >
-      <span>{title}</span>
-      <strong>{value}</strong>
+      <span>
+        {title}
+      </span>
+
+      <strong>
+        {value}
+      </strong>
     </article>
   );
 }
@@ -1909,10 +2072,12 @@ function formatDateTimeInput(
     return '';
   }
 
-  const offset = date.getTimezoneOffset();
+  const offset =
+    date.getTimezoneOffset();
 
   const localDate = new Date(
-    date.getTime() - offset * 60_000,
+    date.getTime() -
+      offset * 60_000,
   );
 
   return localDate
@@ -1920,14 +2085,20 @@ function formatDateTimeInput(
     .slice(0, 16);
 }
 
-function optionalValue(value: string) {
-  const normalized = value.trim();
+function optionalValue(
+  value: string,
+) {
+  const normalized =
+    value.trim();
 
   return normalized || undefined;
 }
 
-function nullableValue(value: string) {
-  const normalized = value.trim();
+function nullableValue(
+  value: string,
+) {
+  const normalized =
+    value.trim();
 
   return normalized || null;
 }
@@ -1939,7 +2110,9 @@ function optionalIsoDateTime(
     return undefined;
   }
 
-  return new Date(value).toISOString();
+  return new Date(
+    value,
+  ).toISOString();
 }
 
 function nullableIsoDateTime(
@@ -1949,7 +2122,9 @@ function nullableIsoDateTime(
     return null;
   }
 
-  return new Date(value).toISOString();
+  return new Date(
+    value,
+  ).toISOString();
 }
 
 function normalizeTaskPriority(
@@ -1984,24 +2159,32 @@ function getRequestErrorMessage(
     typeof error === 'object' &&
     error !== null &&
     'response' in error &&
-    typeof error.response === 'object' &&
+    typeof error.response ===
+      'object' &&
     error.response !== null &&
     'data' in error.response
   ) {
-    const data = error.response.data;
+    const data =
+      error.response.data;
 
     if (
       typeof data === 'object' &&
       data !== null &&
       'message' in data
     ) {
-      const message = data.message;
+      const message =
+        data.message;
 
-      if (typeof message === 'string') {
+      if (
+        typeof message ===
+        'string'
+      ) {
         return message;
       }
 
-      if (Array.isArray(message)) {
+      if (
+        Array.isArray(message)
+      ) {
         return message.join(' | ');
       }
     }
