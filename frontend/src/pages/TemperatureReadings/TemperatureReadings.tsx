@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
 import { EmptyState } from '../../components/Feedback/EmptyState';
 import { LoadingState } from '../../components/Feedback/LoadingState';
 import { getCompanies } from '../../services/companies';
@@ -494,7 +495,19 @@ export function TemperatureReadings() {
         </button>
       </header>
 
-      <section className="temperature-readings-summary">
+      <CollapsibleSection
+        title="Resumo das leituras"
+        openDescription="Indicadores térmicos do período selecionado estão visíveis."
+        closedDescription="Indicadores térmicos estão ocultos para liberar espaço na tela."
+        openLabel="Ocultar resumo"
+        closedLabel="Mostrar resumo"
+        storageKey="cryomap.temperature-readings.summary-open"
+        defaultOpen
+        defaultOpenOnMobile={false}
+        className="temperature-readings-summary-disclosure"
+        contentClassName="temperature-readings-summary"
+        variant="section"
+      >
         <SummaryCard title="Total" value={temperatureReadings.length} />
         <SummaryCard
           title="Temperatura média"
@@ -521,7 +534,7 @@ export function TemperatureReadings() {
           title="Umidade média"
           value={formatHumidity(averageHumidity)}
         />
-      </section>
+      </CollapsibleSection>
 
       {isFormOpen ? (
         <section className="temperature-reading-form-panel">
@@ -691,7 +704,22 @@ export function TemperatureReadings() {
               {temperatureReadings.length} carregada(s)
             </p>
           </div>
+        </div>
 
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Ajuste empresa, sala, sensor, período e busca para refinar o histórico."
+          closedDescription={`${activeFilters.length} filtro(s) ativo(s).`}
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.temperature-readings.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeFilters.length}
+          className="temperature-readings-filters-disclosure"
+          contentClassName="temperature-readings-filter-area"
+          variant="toolbar"
+        >
           <div className="temperature-readings-actions">
             <label className="temperature-readings-filter-field">
               <span>Empresa</span>
@@ -790,7 +818,7 @@ export function TemperatureReadings() {
               </button>
             </div>
           </div>
-        </div>
+        </CollapsibleSection>
 
         <div className="temperature-readings-filter-status">
           <div>
