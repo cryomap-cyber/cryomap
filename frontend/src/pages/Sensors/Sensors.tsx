@@ -1,4 +1,8 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
+import { EmptyState } from '../../components/Feedback/EmptyState';
+import { LoadingState } from '../../components/Feedback/LoadingState';
 import { getCompanies } from '../../services/companies';
 import { getRooms } from '../../services/rooms';
 import {
@@ -12,8 +16,6 @@ import type { Company } from '../../types/company';
 import type { Room } from '../../types/room';
 import type { Sensor, SensorStatus, SensorType } from '../../types/sensor';
 import './Sensors.css';
-import { LoadingState } from '../../components/Feedback/LoadingState';
-import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type SensorFormData = {
   companyId: string;
@@ -196,6 +198,24 @@ export function Sensors() {
     return rooms.filter((room) => room.companyId === formData.companyId);
   }, [rooms, formData.companyId]);
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+
+    if (selectedCompanyId) {
+      count += 1;
+    }
+
+    if (selectedRoomId) {
+      count += 1;
+    }
+
+    if (search.trim()) {
+      count += 1;
+    }
+
+    return count;
+  }, [search, selectedCompanyId, selectedRoomId]);
+
   const activeSensors = sensors.filter(
     (sensor) => sensor.status === 'ACTIVE',
   ).length;
@@ -331,11 +351,11 @@ export function Sensors() {
 
   if (isLoading) {
     return (
-  <LoadingState
-    title="Carregando sensores..."
-    description="Buscando sensores vinculados às salas."
-  />
-);
+      <LoadingState
+        title="Carregando sensores..."
+        description="Buscando sensores vinculados às salas."
+      />
+    );
   }
 
   return (
@@ -355,13 +375,25 @@ export function Sensors() {
         </button>
       </header>
 
-      <section className="sensors-summary">
+      <CollapsibleSection
+        title="Resumo dos sensores"
+        openDescription="Indicadores gerais dos sensores estão visíveis."
+        closedDescription="Indicadores gerais estão ocultos para liberar espaço na tela."
+        openLabel="Ocultar resumo"
+        closedLabel="Mostrar resumo"
+        storageKey="cryomap.sensors.summary-open"
+        defaultOpen
+        defaultOpenOnMobile={false}
+        className="sensors-summary-disclosure"
+        contentClassName="sensors-summary"
+        variant="section"
+      >
         <SummaryCard title="Total" value={sensors.length} />
         <SummaryCard title="Ativos" value={activeSensors} />
         <SummaryCard title="Offline" value={offlineSensors} danger />
         <SummaryCard title="Manutenção" value={maintenanceSensors} />
         <SummaryCard title="Inativos" value={inactiveSensors} />
-      </section>
+      </CollapsibleSection>
 
       {isFormOpen ? (
         <section className="sensor-form-panel">
@@ -499,45 +531,77 @@ export function Sensors() {
             <p>{filteredSensors.length} registro(s) encontrado(s)</p>
           </div>
 
-          <div className="sensors-actions">
-            <select
-              value={selectedCompanyId}
-              onChange={(event) => setSelectedCompanyId(event.target.value)}
-            >
-              <option value="">Todas as empresas</option>
-
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedRoomId}
-              onChange={(event) => setSelectedRoomId(event.target.value)}
-            >
-              <option value="">Todas as salas</option>
-
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="search"
-              placeholder="Buscar por código, localização, sala..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-
-            <button type="button" onClick={handleRefresh}>
-              Atualizar
-            </button>
-          </div>
+          <button
+            type="button"
+            className="sensors-refresh-action"
+            onClick={() => void handleRefresh()}
+          >
+            Atualizar
+          </button>
         </div>
+
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Refine a lista por empresa, sala ou busca textual."
+          closedDescription={
+            activeFilterCount > 0
+              ? `${activeFilterCount} filtro(s) ativo(s).`
+              : 'Nenhum filtro específico selecionado.'
+          }
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.sensors.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeFilterCount}
+          className="sensors-filters-disclosure"
+          contentClassName="sensors-filter-area"
+          variant="toolbar"
+        >
+          <div className="sensors-actions">
+            <label className="sensors-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => setSelectedCompanyId(event.target.value)}
+              >
+                <option value="">Todas as empresas</option>
+
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="sensors-filter-field">
+              <span>Sala</span>
+              <select
+                value={selectedRoomId}
+                onChange={(event) => setSelectedRoomId(event.target.value)}
+              >
+                <option value="">Todas as salas</option>
+
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="sensors-filter-field">
+              <span>Busca</span>
+              <input
+                type="search"
+                placeholder="Buscar por código, localização, sala..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+          </div>
+        </CollapsibleSection>
 
         {error ? (
           <div className="sensors-error">
@@ -551,9 +615,9 @@ export function Sensors() {
 
         {!error && filteredSensors.length === 0 ? (
           <EmptyState
-  title="Nenhum sensor encontrado."
-  description="Cadastre um sensor ou ajuste os filtros para visualizar resultados."
-/>
+            title="Nenhum sensor encontrado."
+            description="Cadastre um sensor ou ajuste os filtros para visualizar resultados."
+          />
         ) : null}
 
         {!error && filteredSensors.length > 0 ? (
