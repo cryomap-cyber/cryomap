@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
 import { EmptyState } from '../../components/Feedback/EmptyState';
 import { LoadingState } from '../../components/Feedback/LoadingState';
 import { useAuth } from '../../contexts/useAuth';
@@ -112,7 +113,6 @@ export function ServiceRecords() {
   const [isUploadingFinishAttachments, setIsUploadingFinishAttachments] =
     useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isProblemSuggestionsOpen, setIsProblemSuggestionsOpen] =
     useState(false);
   const [editingRecord, setEditingRecord] = useState<ServiceRecord | null>(
@@ -851,7 +851,19 @@ export function ServiceRecords() {
         ) : null}
       </header>
 
-      <section className="service-records-summary">
+      <CollapsibleSection
+        title="Resumo dos atendimentos"
+        openDescription="Indicadores gerais dos atendimentos estão visíveis."
+        closedDescription="Indicadores gerais estão ocultos para liberar espaço na tela."
+        openLabel="Ocultar resumo"
+        closedLabel="Mostrar resumo"
+        storageKey="cryomap.service-records.summary-open"
+        defaultOpen
+        defaultOpenOnMobile={false}
+        className="service-records-summary-disclosure"
+        contentClassName="service-records-summary"
+        variant="section"
+      >
         <SummaryCard title="Total" value={serviceRecords.length} />
         <SummaryCard title="Em andamento" value={runningRecords} />
         <SummaryCard title="Finalizados" value={finishedRecords} />
@@ -861,7 +873,7 @@ export function ServiceRecords() {
           value={formatMinutes(totalDowntimeMinutes)}
           danger={totalDowntimeMinutes > 0}
         />
-      </section>
+      </CollapsibleSection>
 
       {isFormOpen && canManageServiceRecords ? (
         <section className="service-record-form-panel">
@@ -1194,20 +1206,30 @@ export function ServiceRecords() {
 
           <button
             type="button"
-            className="service-records-filter-toggle"
-            onClick={() => setIsFiltersOpen((current) => !current)}
+            className="service-records-refresh-action"
+            onClick={() => void handleRefresh()}
           >
-            {isFiltersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
-            {activeFilters.length > 0 ? <span>{activeFilters.length}</span> : null}
+            Atualizar
           </button>
         </div>
 
-        <div
-          className={
-            isFiltersOpen
-              ? 'service-records-filter-area open'
-              : 'service-records-filter-area'
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Ajuste os filtros para refinar a lista de atendimentos."
+          closedDescription={
+            activeFilters.length > 0
+              ? `${activeFilters.length} filtro(s) ativo(s).`
+              : 'Nenhum filtro específico selecionado.'
           }
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.service-records.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeFilters.length}
+          className="service-records-filters-disclosure"
+          contentClassName="service-records-filter-area"
+          variant="toolbar"
         >
           <div className="service-records-actions">
             <label className="service-records-filter-field">
@@ -1367,16 +1389,7 @@ export function ServiceRecords() {
               )}
             </div>
           </div>
-        </div>
-
-        {activeFilters.length > 0 && !isFiltersOpen ? (
-          <div className="service-records-compact-filter-status">
-            <span>{activeFilters.length} filtro(s) ativo(s)</span>
-            <button type="button" onClick={() => setIsFiltersOpen(true)}>
-              Ver filtros
-            </button>
-          </div>
-        ) : null}
+        </CollapsibleSection>
 
         {error ? (
           <div className="service-records-error">
