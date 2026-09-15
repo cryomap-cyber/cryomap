@@ -62,6 +62,8 @@ const emptyFormData: TaskFormData = {
   dueDate: '',
 };
 
+const TASK_FILTERS_STORAGE_KEY = 'cryomap.tasks.filters-open';
+
 export function Tasks() {
   const { user } = useAuth();
 
@@ -73,6 +75,7 @@ export function Tasks() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
@@ -80,41 +83,70 @@ export function Tasks() {
   const [selectedPriority, setSelectedPriority] = useState('');
   const [selectedOrigin, setSelectedOrigin] = useState('');
   const [search, setSearch] = useState('');
+
   const [error, setError] = useState('');
   const [formError, setFormError] = useState('');
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [formData, setFormData] = useState<TaskFormData>(emptyFormData);
+
+  const [isFiltersOpen, setIsFiltersOpen] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return (
+      window.localStorage.getItem(TASK_FILTERS_STORAGE_KEY) === 'true'
+    );
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      TASK_FILTERS_STORAGE_KEY,
+      String(isFiltersOpen),
+    );
+  }, [isFiltersOpen]);
 
   async function handleRefresh() {
     setError('');
     setIsLoading(true);
 
     try {
-      const [companiesData, roomsData, equipmentsData, usersData, tasksData] =
-        await Promise.all([
-          getCompanies(),
-          getRooms(selectedCompanyId || undefined),
-          getEquipments({
-            companyId: selectedCompanyId || undefined,
-            roomId: selectedRoomId || undefined,
-          }),
-          getUsers({
-            companyId: selectedCompanyId || undefined,
-          }),
-          getTasks({
-            companyId: selectedCompanyId || undefined,
-            roomId: selectedRoomId || undefined,
-            equipmentId: selectedEquipmentId || undefined,
-            status: selectedStatus ? (selectedStatus as TaskStatus) : undefined,
-            priority: selectedPriority
-              ? (selectedPriority as TaskPriority)
-              : undefined,
-            origin: selectedOrigin ? (selectedOrigin as TaskOrigin) : undefined,
-          }),
-        ]);
+      const [
+        companiesData,
+        roomsData,
+        equipmentsData,
+        usersData,
+        tasksData,
+      ] = await Promise.all([
+        getCompanies(),
+        getRooms(selectedCompanyId || undefined),
+        getEquipments({
+          companyId: selectedCompanyId || undefined,
+          roomId: selectedRoomId || undefined,
+        }),
+        getUsers({
+          companyId: selectedCompanyId || undefined,
+        }),
+        getTasks({
+          companyId: selectedCompanyId || undefined,
+          roomId: selectedRoomId || undefined,
+          equipmentId: selectedEquipmentId || undefined,
+          status: selectedStatus
+            ? (selectedStatus as TaskStatus)
+            : undefined,
+          priority: selectedPriority
+            ? (selectedPriority as TaskPriority)
+            : undefined,
+          origin: selectedOrigin
+            ? (selectedOrigin as TaskOrigin)
+            : undefined,
+        }),
+      ]);
 
       setCompanies(companiesData);
       setRooms(roomsData);
@@ -204,11 +236,15 @@ export function Tasks() {
         companyId: selectedCompanyId || undefined,
         roomId: selectedRoomId || undefined,
         equipmentId: selectedEquipmentId || undefined,
-        status: selectedStatus ? (selectedStatus as TaskStatus) : undefined,
+        status: selectedStatus
+          ? (selectedStatus as TaskStatus)
+          : undefined,
         priority: selectedPriority
           ? (selectedPriority as TaskPriority)
           : undefined,
-        origin: selectedOrigin ? (selectedOrigin as TaskOrigin) : undefined,
+        origin: selectedOrigin
+          ? (selectedOrigin as TaskOrigin)
+          : undefined,
       }),
     ])
       .then(([roomsData, equipmentsData, usersData, tasksData]) => {
@@ -296,7 +332,11 @@ export function Tasks() {
     const selectedCompany = companies.find(
       (company) => company.id === selectedCompanyId,
     );
-    const selectedRoom = rooms.find((room) => room.id === selectedRoomId);
+
+    const selectedRoom = rooms.find(
+      (room) => room.id === selectedRoomId,
+    );
+
     const selectedEquipment = equipments.find(
       (equipment) => equipment.id === selectedEquipmentId,
     );
@@ -332,7 +372,9 @@ export function Tasks() {
     if (selectedPriority) {
       filters.push({
         label: 'Prioridade',
-        value: formatTaskPriority(selectedPriority as TaskPriority),
+        value: formatTaskPriority(
+          selectedPriority as TaskPriority,
+        ),
       });
     }
 
@@ -364,8 +406,14 @@ export function Tasks() {
     selectedStatus,
   ]);
 
+  const activeFilterCount = activeFilters.length;
+
   const currentUserCompany = useMemo(() => {
-    return companies.find((company) => company.id === user?.companyId) ?? null;
+    return (
+      companies.find(
+        (company) => company.id === user?.companyId,
+      ) ?? null
+    );
   }, [companies, user?.companyId]);
 
   const formRooms = useMemo(() => {
@@ -373,16 +421,24 @@ export function Tasks() {
       return rooms;
     }
 
-    return rooms.filter((room) => room.companyId === formData.companyId);
+    return rooms.filter(
+      (room) => room.companyId === formData.companyId,
+    );
   }, [rooms, formData.companyId]);
 
   const formEquipments = useMemo(() => {
     return equipments.filter((equipment) => {
-      if (formData.companyId && equipment.companyId !== formData.companyId) {
+      if (
+        formData.companyId &&
+        equipment.companyId !== formData.companyId
+      ) {
         return false;
       }
 
-      if (formData.roomId && equipment.roomId !== formData.roomId) {
+      if (
+        formData.roomId &&
+        equipment.roomId !== formData.roomId
+      ) {
         return false;
       }
 
@@ -391,8 +447,8 @@ export function Tasks() {
   }, [equipments, formData.companyId, formData.roomId]);
 
   const formUsers = useMemo(() => {
-    return users.filter((user) => {
-      if (user.status !== 'ACTIVE') {
+    return users.filter((userItem) => {
+      if (userItem.status !== 'ACTIVE') {
         return false;
       }
 
@@ -400,35 +456,43 @@ export function Tasks() {
         return true;
       }
 
-      if (!user.companyId) {
+      if (!userItem.companyId) {
         return true;
       }
 
-      return user.companyId === formData.companyId;
+      return userItem.companyId === formData.companyId;
     });
   }, [users, formData.companyId]);
 
-  const openTasks = tasks.filter((task) => task.status === 'OPEN').length;
+  const openTasks = tasks.filter(
+    (task) => task.status === 'OPEN',
+  ).length;
 
   const inProgressTasks = tasks.filter(
     (task) => task.status === 'IN_PROGRESS',
   ).length;
 
-  const doneTasks = tasks.filter((task) => task.status === 'DONE').length;
+  const doneTasks = tasks.filter(
+    (task) => task.status === 'DONE',
+  ).length;
 
   const overdueTasks = tasks.filter(
     (task) => task.status === 'OVERDUE',
   ).length;
 
   const externalTasks = tasks.filter(
-    (task) => task.origin === 'AUVO' || task.origin === 'OTHER',
+    (task) =>
+      task.origin === 'AUVO' || task.origin === 'OTHER',
   ).length;
 
   function openCreateForm() {
     setEditingTask(null);
+
     setFormData({
       ...emptyFormData,
-      companyId: isClientUser ? user?.companyId ?? '' : selectedCompanyId,
+      companyId: isClientUser
+        ? user?.companyId ?? ''
+        : selectedCompanyId,
       roomId: selectedRoomId,
       equipmentId: selectedEquipmentId,
       priority: selectedPriority
@@ -441,6 +505,7 @@ export function Tasks() {
           ? (selectedOrigin as TaskOrigin)
           : 'CRYOMAP',
     });
+
     setFormError('');
     setIsFormOpen(true);
   }
@@ -451,6 +516,7 @@ export function Tasks() {
     }
 
     setEditingTask(task);
+
     setFormData({
       companyId: task.companyId,
       roomId: task.roomId ?? '',
@@ -465,6 +531,7 @@ export function Tasks() {
       externalUrl: task.externalUrl ?? '',
       dueDate: formatDateTimeInput(task.dueDate),
     });
+
     setFormError('');
     setIsFormOpen(true);
   }
@@ -480,7 +547,10 @@ export function Tasks() {
     setFormError('');
   }
 
-  function updateFormField(field: keyof TaskFormData, value: string) {
+  function updateFormField(
+    field: keyof TaskFormData,
+    value: string,
+  ) {
     setFormData((current) => {
       const nextFormData = {
         ...current,
@@ -497,12 +567,19 @@ export function Tasks() {
         nextFormData.equipmentId = '';
       }
 
-      if (field === 'origin' && value === 'CRYOMAP') {
+      if (
+        field === 'origin' &&
+        value === 'CRYOMAP'
+      ) {
         nextFormData.externalCode = '';
         nextFormData.externalUrl = '';
       }
 
-      if (field === 'priority' && isClientUser && value === 'CRITICAL') {
+      if (
+        field === 'priority' &&
+        isClientUser &&
+        value === 'CRITICAL'
+      ) {
         nextFormData.priority = 'HIGH';
       }
 
@@ -510,7 +587,9 @@ export function Tasks() {
     });
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     setFormError('');
@@ -529,12 +608,16 @@ export function Tasks() {
     }
 
     if (formData.title.trim().length < 2) {
-      setFormError('Informe um título com pelo menos 2 caracteres.');
+      setFormError(
+        'Informe um título com pelo menos 2 caracteres.',
+      );
       return;
     }
 
     if (editingTask && !canManageTasks) {
-      setFormError('Usuário cliente não pode editar chamados.');
+      setFormError(
+        'Usuário cliente não pode editar chamados.',
+      );
       return;
     }
 
@@ -546,13 +629,16 @@ export function Tasks() {
           companyId,
           roomId: formData.roomId || null,
           equipmentId: formData.equipmentId || null,
-          assignedToUserId: formData.assignedToUserId || null,
+          assignedToUserId:
+            formData.assignedToUserId || null,
           title: formData.title.trim(),
           description: nullableValue(formData.description),
           priority: formData.priority,
           status: formData.status,
           origin: formData.origin,
-          externalCode: nullableValue(formData.externalCode),
+          externalCode: nullableValue(
+            formData.externalCode,
+          ),
           externalUrl: nullableValue(formData.externalUrl),
           dueDate: nullableIsoDateTime(formData.dueDate),
         };
@@ -562,10 +648,16 @@ export function Tasks() {
         const createPayload: CreateTaskPayload = {
           companyId,
           roomId: optionalValue(formData.roomId),
-          equipmentId: optionalValue(formData.equipmentId),
+          equipmentId: optionalValue(
+            formData.equipmentId,
+          ),
           title: formData.title.trim(),
-          description: optionalValue(formData.description),
-          priority: normalizeClientPriority(formData.priority),
+          description: optionalValue(
+            formData.description,
+          ),
+          priority: normalizeClientPriority(
+            formData.priority,
+          ),
           status: 'OPEN',
           origin: 'CRYOMAP',
         };
@@ -575,16 +667,28 @@ export function Tasks() {
         const createPayload: CreateTaskPayload = {
           companyId,
           roomId: optionalValue(formData.roomId),
-          equipmentId: optionalValue(formData.equipmentId),
-          assignedToUserId: optionalValue(formData.assignedToUserId),
+          equipmentId: optionalValue(
+            formData.equipmentId,
+          ),
+          assignedToUserId: optionalValue(
+            formData.assignedToUserId,
+          ),
           title: formData.title.trim(),
-          description: optionalValue(formData.description),
+          description: optionalValue(
+            formData.description,
+          ),
           priority: formData.priority,
           status: formData.status,
           origin: formData.origin,
-          externalCode: optionalValue(formData.externalCode),
-          externalUrl: optionalValue(formData.externalUrl),
-          dueDate: optionalIsoDateTime(formData.dueDate),
+          externalCode: optionalValue(
+            formData.externalCode,
+          ),
+          externalUrl: optionalValue(
+            formData.externalUrl,
+          ),
+          dueDate: optionalIsoDateTime(
+            formData.dueDate,
+          ),
         };
 
         await createTask(createPayload);
@@ -593,7 +697,9 @@ export function Tasks() {
       closeForm();
       await handleRefresh();
     } catch (requestError) {
-      setFormError(getRequestErrorMessage(requestError));
+      setFormError(
+        getRequestErrorMessage(requestError),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -616,7 +722,9 @@ export function Tasks() {
       await inactivateTask(task.id);
       await handleRefresh();
     } catch {
-      setError('Não foi possível remover o chamado.');
+      setError(
+        'Não foi possível remover o chamado.',
+      );
     }
   }
 
@@ -634,7 +742,13 @@ export function Tasks() {
       <header className="tasks-header">
         <div>
           <span>Operação</span>
-          <h1>{isClientUser ? 'Meus chamados' : 'Chamados'}</h1>
+
+          <h1>
+            {isClientUser
+              ? 'Meus chamados'
+              : 'Chamados'}
+          </h1>
+
           <p>
             {isClientUser
               ? 'Abra chamados para sua empresa e acompanhe o andamento das solicitações técnicas.'
@@ -642,25 +756,59 @@ export function Tasks() {
           </p>
         </div>
 
-        <button type="button" onClick={openCreateForm}>
-          {isClientUser ? 'Abrir chamado' : 'Novo chamado'}
+        <button
+          type="button"
+          onClick={openCreateForm}
+        >
+          {isClientUser
+            ? 'Abrir chamado'
+            : 'Novo chamado'}
         </button>
       </header>
 
       <section className="tasks-summary">
-        <SummaryCard title="Total" value={tasks.length} />
-        <SummaryCard title="Abertos" value={openTasks} />
-        <SummaryCard title="Em andamento" value={inProgressTasks} />
-        <SummaryCard title="Concluídos" value={doneTasks} />
-        <SummaryCard title="Externos" value={externalTasks} />
-        <SummaryCard title="Atrasados" value={overdueTasks} danger />
+        <SummaryCard
+          title="Total"
+          value={tasks.length}
+        />
+
+        <SummaryCard
+          title="Abertos"
+          value={openTasks}
+        />
+
+        <SummaryCard
+          title="Em andamento"
+          value={inProgressTasks}
+        />
+
+        <SummaryCard
+          title="Concluídos"
+          value={doneTasks}
+        />
+
+        <SummaryCard
+          title="Externos"
+          value={externalTasks}
+        />
+
+        <SummaryCard
+          title="Atrasados"
+          value={overdueTasks}
+          danger
+        />
       </section>
 
       {isFormOpen ? (
         <section className="task-form-panel">
           <div className="task-form-header">
             <div>
-              <span>{isClientUser ? 'Solicitação' : 'Chamado'}</span>
+              <span>
+                {isClientUser
+                  ? 'Solicitação'
+                  : 'Chamado'}
+              </span>
+
               <h2>
                 {editingTask
                   ? 'Editar chamado'
@@ -670,15 +818,21 @@ export function Tasks() {
               </h2>
             </div>
 
-            <button type="button" onClick={closeForm}>
+            <button
+              type="button"
+              onClick={closeForm}
+            >
               Fechar
             </button>
           </div>
 
           <div className="task-form-tip">
             <strong>
-              {isClientUser ? 'Solicitação do cliente' : 'Fluxo técnico'}
+              {isClientUser
+                ? 'Solicitação do cliente'
+                : 'Fluxo técnico'}
             </strong>
+
             <p>
               {isClientUser
                 ? 'Descreva o problema para a equipe técnica. O chamado será vinculado automaticamente à sua empresa e registrado com seu usuário.'
@@ -686,15 +840,23 @@ export function Tasks() {
             </p>
           </div>
 
-          <form className="task-form" onSubmit={handleSubmit}>
+          <form
+            className="task-form"
+            onSubmit={handleSubmit}
+          >
             {isClientUser ? (
               <div className="task-form-client-company">
                 <span>Empresa vinculada</span>
+
                 <strong>
                   {currentUserCompany?.name ??
                     'Empresa do usuário logado será usada automaticamente'}
                 </strong>
-                <small>O cliente não pode abrir chamado para outra empresa.</small>
+
+                <small>
+                  O cliente não pode abrir chamado
+                  para outra empresa.
+                </small>
               </div>
             ) : (
               <label>
@@ -702,13 +864,21 @@ export function Tasks() {
                 <select
                   value={formData.companyId}
                   onChange={(event) =>
-                    updateFormField('companyId', event.target.value)
+                    updateFormField(
+                      'companyId',
+                      event.target.value,
+                    )
                   }
                 >
-                  <option value="">Selecione uma empresa</option>
+                  <option value="">
+                    Selecione uma empresa
+                  </option>
 
                   {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
+                    <option
+                      key={company.id}
+                      value={company.id}
+                    >
                       {company.name}
                     </option>
                   ))}
@@ -721,13 +891,21 @@ export function Tasks() {
               <select
                 value={formData.roomId}
                 onChange={(event) =>
-                  updateFormField('roomId', event.target.value)
+                  updateFormField(
+                    'roomId',
+                    event.target.value,
+                  )
                 }
               >
-                <option value="">Sem sala específica</option>
+                <option value="">
+                  Sem sala específica
+                </option>
 
                 {formRooms.map((room) => (
-                  <option key={room.id} value={room.id}>
+                  <option
+                    key={room.id}
+                    value={room.id}
+                  >
                     {room.name}
                   </option>
                 ))}
@@ -739,16 +917,26 @@ export function Tasks() {
               <select
                 value={formData.equipmentId}
                 onChange={(event) =>
-                  updateFormField('equipmentId', event.target.value)
+                  updateFormField(
+                    'equipmentId',
+                    event.target.value,
+                  )
                 }
               >
-                <option value="">Sem equipamento específico</option>
+                <option value="">
+                  Sem equipamento específico
+                </option>
 
-                {formEquipments.map((equipment) => (
-                  <option key={equipment.id} value={equipment.id}>
-                    {equipment.name}
-                  </option>
-                ))}
+                {formEquipments.map(
+                  (equipment) => (
+                    <option
+                      key={equipment.id}
+                      value={equipment.id}
+                    >
+                      {equipment.name}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
 
@@ -756,16 +944,26 @@ export function Tasks() {
               <label>
                 Responsável
                 <select
-                  value={formData.assignedToUserId}
+                  value={
+                    formData.assignedToUserId
+                  }
                   onChange={(event) =>
-                    updateFormField('assignedToUserId', event.target.value)
+                    updateFormField(
+                      'assignedToUserId',
+                      event.target.value,
+                    )
                   }
                 >
-                  <option value="">Sem responsável definido</option>
+                  <option value="">
+                    Sem responsável definido
+                  </option>
 
-                  {formUsers.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
+                  {formUsers.map((userItem) => (
+                    <option
+                      key={userItem.id}
+                      value={userItem.id}
+                    >
+                      {userItem.name}
                     </option>
                   ))}
                 </select>
@@ -777,7 +975,10 @@ export function Tasks() {
               <input
                 value={formData.title}
                 onChange={(event) =>
-                  updateFormField('title', event.target.value)
+                  updateFormField(
+                    'title',
+                    event.target.value,
+                  )
                 }
                 placeholder={
                   isClientUser
@@ -788,20 +989,37 @@ export function Tasks() {
             </label>
 
             <label>
-              {isClientUser ? 'Urgência' : 'Prioridade'}
+              {isClientUser
+                ? 'Urgência'
+                : 'Prioridade'}
+
               <select
                 value={formData.priority}
                 onChange={(event) =>
                   updateFormField(
                     'priority',
-                    event.target.value as TaskPriority,
+                    event.target
+                      .value as TaskPriority,
                   )
                 }
               >
-                <option value="LOW">Baixa</option>
-                <option value="MEDIUM">Média</option>
-                <option value="HIGH">Alta</option>
-                {!isClientUser ? <option value="CRITICAL">Crítica</option> : null}
+                <option value="LOW">
+                  Baixa
+                </option>
+
+                <option value="MEDIUM">
+                  Média
+                </option>
+
+                <option value="HIGH">
+                  Alta
+                </option>
+
+                {!isClientUser ? (
+                  <option value="CRITICAL">
+                    Crítica
+                  </option>
+                ) : null}
               </select>
             </label>
 
@@ -812,14 +1030,32 @@ export function Tasks() {
                   <select
                     value={formData.status}
                     onChange={(event) =>
-                      updateFormField('status', event.target.value as TaskStatus)
+                      updateFormField(
+                        'status',
+                        event.target
+                          .value as TaskStatus,
+                      )
                     }
                   >
-                    <option value="OPEN">Aberto</option>
-                    <option value="IN_PROGRESS">Em andamento</option>
-                    <option value="DONE">Concluído</option>
-                    <option value="CANCELED">Cancelado</option>
-                    <option value="OVERDUE">Atrasado</option>
+                    <option value="OPEN">
+                      Aberto
+                    </option>
+
+                    <option value="IN_PROGRESS">
+                      Em andamento
+                    </option>
+
+                    <option value="DONE">
+                      Concluído
+                    </option>
+
+                    <option value="CANCELED">
+                      Cancelado
+                    </option>
+
+                    <option value="OVERDUE">
+                      Atrasado
+                    </option>
                   </select>
                 </label>
 
@@ -828,12 +1064,24 @@ export function Tasks() {
                   <select
                     value={formData.origin}
                     onChange={(event) =>
-                      updateFormField('origin', event.target.value as TaskOrigin)
+                      updateFormField(
+                        'origin',
+                        event.target
+                          .value as TaskOrigin,
+                      )
                     }
                   >
-                    <option value="CRYOMAP">CryoMap</option>
-                    <option value="AUVO">Auvo</option>
-                    <option value="OTHER">Outro</option>
+                    <option value="CRYOMAP">
+                      CryoMap
+                    </option>
+
+                    <option value="AUVO">
+                      Auvo
+                    </option>
+
+                    <option value="OTHER">
+                      Outro
+                    </option>
                   </select>
                 </label>
 
@@ -843,7 +1091,10 @@ export function Tasks() {
                     type="datetime-local"
                     value={formData.dueDate}
                     onChange={(event) =>
-                      updateFormField('dueDate', event.target.value)
+                      updateFormField(
+                        'dueDate',
+                        event.target.value,
+                      )
                     }
                   />
                 </label>
@@ -851,10 +1102,18 @@ export function Tasks() {
                 <label>
                   Código externo
                   <input
-                    value={formData.externalCode}
-                    disabled={formData.origin === 'CRYOMAP'}
+                    value={
+                      formData.externalCode
+                    }
+                    disabled={
+                      formData.origin ===
+                      'CRYOMAP'
+                    }
                     onChange={(event) =>
-                      updateFormField('externalCode', event.target.value)
+                      updateFormField(
+                        'externalCode',
+                        event.target.value,
+                      )
                     }
                     placeholder="Ex: AUVO-12345"
                   />
@@ -863,10 +1122,18 @@ export function Tasks() {
                 <label>
                   Link externo
                   <input
-                    value={formData.externalUrl}
-                    disabled={formData.origin === 'CRYOMAP'}
+                    value={
+                      formData.externalUrl
+                    }
+                    disabled={
+                      formData.origin ===
+                      'CRYOMAP'
+                    }
                     onChange={(event) =>
-                      updateFormField('externalUrl', event.target.value)
+                      updateFormField(
+                        'externalUrl',
+                        event.target.value,
+                      )
                     }
                     placeholder="Ex: link da OS no Auvo"
                   />
@@ -879,7 +1146,10 @@ export function Tasks() {
               <textarea
                 value={formData.description}
                 onChange={(event) =>
-                  updateFormField('description', event.target.value)
+                  updateFormField(
+                    'description',
+                    event.target.value,
+                  )
                 }
                 placeholder={
                   isClientUser
@@ -891,15 +1161,23 @@ export function Tasks() {
             </label>
 
             {formError ? (
-              <strong className="task-form-error">{formError}</strong>
+              <strong className="task-form-error">
+                {formError}
+              </strong>
             ) : null}
 
             <div className="task-form-actions">
-              <button type="button" onClick={closeForm}>
+              <button
+                type="button"
+                onClick={closeForm}
+              >
                 Cancelar
               </button>
 
-              <button type="submit" disabled={isSaving}>
+              <button
+                type="submit"
+                disabled={isSaving}
+              >
                 {isSaving
                   ? 'Salvando...'
                   : editingTask
@@ -917,183 +1195,355 @@ export function Tasks() {
         <div className="tasks-panel-header">
           <div>
             <h2>Lista de chamados</h2>
+
             <p>
-              {filteredTasks.length} registro(s) exibido(s) de {tasks.length}{' '}
+              {filteredTasks.length} registro(s)
+              exibido(s) de {tasks.length}{' '}
               carregado(s)
             </p>
           </div>
 
-          <div className="tasks-actions">
-            <label className="tasks-filter-field">
-              <span>Empresa</span>
-              <select
-                value={selectedCompanyId}
-                onChange={(event) => {
-                  setSelectedCompanyId(event.target.value);
-                  setSelectedRoomId('');
-                  setSelectedEquipmentId('');
-                }}
-              >
-                <option value="">Todas as empresas</option>
+          <div className="tasks-panel-toolbar">
+            <button
+              type="button"
+              className={
+                isFiltersOpen
+                  ? 'tasks-filter-toggle is-open'
+                  : 'tasks-filter-toggle'
+              }
+              aria-expanded={isFiltersOpen}
+              aria-controls="tasks-filters-panel"
+              onClick={() =>
+                setIsFiltersOpen(
+                  (current) => !current,
+                )
+              }
+            >
+              <span>
+                {isFiltersOpen
+                  ? 'Ocultar filtros'
+                  : 'Filtros'}
+              </span>
 
-                {companies.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
+              {activeFilterCount > 0 ? (
+                <strong>
+                  {activeFilterCount}
+                </strong>
+              ) : null}
+            </button>
+
+            <button
+              type="button"
+              className="tasks-refresh-action"
+              onClick={() =>
+                void handleRefresh()
+              }
+            >
+              Atualizar
+            </button>
+          </div>
+        </div>
+
+        {isFiltersOpen ? (
+          <div
+            id="tasks-filters-panel"
+            className="tasks-filters-panel"
+          >
+            <div className="tasks-actions">
+              <label className="tasks-filter-field">
+                <span>Empresa</span>
+
+                <select
+                  value={
+                    selectedCompanyId
+                  }
+                  onChange={(event) => {
+                    setSelectedCompanyId(
+                      event.target.value,
+                    );
+                    setSelectedRoomId('');
+                    setSelectedEquipmentId('');
+                  }}
+                >
+                  <option value="">
+                    Todas as empresas
                   </option>
-                ))}
-              </select>
-            </label>
 
-            <label className="tasks-filter-field">
-              <span>Sala</span>
-              <select
-                value={selectedRoomId}
-                onChange={(event) => {
-                  setSelectedRoomId(event.target.value);
-                  setSelectedEquipmentId('');
-                }}
-              >
-                <option value="">Todas as salas</option>
+                  {companies.map(
+                    (company) => (
+                      <option
+                        key={company.id}
+                        value={company.id}
+                      >
+                        {company.name}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </label>
 
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.name}
+              <label className="tasks-filter-field">
+                <span>Sala</span>
+
+                <select
+                  value={selectedRoomId}
+                  onChange={(event) => {
+                    setSelectedRoomId(
+                      event.target.value,
+                    );
+                    setSelectedEquipmentId('');
+                  }}
+                >
+                  <option value="">
+                    Todas as salas
                   </option>
-                ))}
-              </select>
-            </label>
 
-            <label className="tasks-filter-field">
-              <span>Equipamento</span>
-              <select
-                value={selectedEquipmentId}
-                onChange={(event) => setSelectedEquipmentId(event.target.value)}
-              >
-                <option value="">Todos os equipamentos</option>
+                  {rooms.map((room) => (
+                    <option
+                      key={room.id}
+                      value={room.id}
+                    >
+                      {room.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-                {equipments.map((equipment) => (
-                  <option key={equipment.id} value={equipment.id}>
-                    {equipment.name}
+              <label className="tasks-filter-field">
+                <span>Equipamento</span>
+
+                <select
+                  value={
+                    selectedEquipmentId
+                  }
+                  onChange={(event) =>
+                    setSelectedEquipmentId(
+                      event.target.value,
+                    )
+                  }
+                >
+                  <option value="">
+                    Todos os equipamentos
                   </option>
-                ))}
-              </select>
-            </label>
 
-            <label className="tasks-filter-field">
-              <span>Status</span>
-              <select
-                value={selectedStatus}
-                onChange={(event) => setSelectedStatus(event.target.value)}
-              >
-                <option value="">Todos os status</option>
-                <option value="OPEN">Aberto</option>
-                <option value="IN_PROGRESS">Em andamento</option>
-                <option value="DONE">Concluído</option>
-                <option value="CANCELED">Cancelado</option>
-                <option value="OVERDUE">Atrasado</option>
-              </select>
-            </label>
+                  {equipments.map(
+                    (equipment) => (
+                      <option
+                        key={equipment.id}
+                        value={equipment.id}
+                      >
+                        {equipment.name}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </label>
 
-            <label className="tasks-filter-field">
-              <span>Prioridade</span>
-              <select
-                value={selectedPriority}
-                onChange={(event) => setSelectedPriority(event.target.value)}
-              >
-                <option value="">Todas as prioridades</option>
-                <option value="LOW">Baixa</option>
-                <option value="MEDIUM">Média</option>
-                <option value="HIGH">Alta</option>
-                <option value="CRITICAL">Crítica</option>
-              </select>
-            </label>
+              <label className="tasks-filter-field">
+                <span>Status</span>
 
-            <label className="tasks-filter-field">
-              <span>Origem</span>
-              <select
-                value={selectedOrigin}
-                onChange={(event) => setSelectedOrigin(event.target.value)}
-              >
-                <option value="">Todas as origens</option>
-                <option value="CRYOMAP">CryoMap</option>
-                <option value="AUVO">Auvo</option>
-                <option value="OTHER">Outro</option>
-              </select>
-            </label>
+                <select
+                  value={selectedStatus}
+                  onChange={(event) =>
+                    setSelectedStatus(
+                      event.target.value,
+                    )
+                  }
+                >
+                  <option value="">
+                    Todos os status
+                  </option>
 
-            <label className="tasks-filter-field tasks-search-field">
-              <span>Busca</span>
-              <input
-                type="search"
-                placeholder="Buscar por título, solicitante, origem..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </label>
+                  <option value="OPEN">
+                    Aberto
+                  </option>
 
-            <div className="tasks-action-buttons">
-              <button type="button" onClick={() => void handleRefresh()}>
-                Aplicar filtros
-              </button>
+                  <option value="IN_PROGRESS">
+                    Em andamento
+                  </option>
+
+                  <option value="DONE">
+                    Concluído
+                  </option>
+
+                  <option value="CANCELED">
+                    Cancelado
+                  </option>
+
+                  <option value="OVERDUE">
+                    Atrasado
+                  </option>
+                </select>
+              </label>
+
+              <label className="tasks-filter-field">
+                <span>Prioridade</span>
+
+                <select
+                  value={selectedPriority}
+                  onChange={(event) =>
+                    setSelectedPriority(
+                      event.target.value,
+                    )
+                  }
+                >
+                  <option value="">
+                    Todas as prioridades
+                  </option>
+
+                  <option value="LOW">
+                    Baixa
+                  </option>
+
+                  <option value="MEDIUM">
+                    Média
+                  </option>
+
+                  <option value="HIGH">
+                    Alta
+                  </option>
+
+                  <option value="CRITICAL">
+                    Crítica
+                  </option>
+                </select>
+              </label>
+
+              <label className="tasks-filter-field">
+                <span>Origem</span>
+
+                <select
+                  value={selectedOrigin}
+                  onChange={(event) =>
+                    setSelectedOrigin(
+                      event.target.value,
+                    )
+                  }
+                >
+                  <option value="">
+                    Todas as origens
+                  </option>
+
+                  <option value="CRYOMAP">
+                    CryoMap
+                  </option>
+
+                  <option value="AUVO">
+                    Auvo
+                  </option>
+
+                  <option value="OTHER">
+                    Outro
+                  </option>
+                </select>
+              </label>
+
+              <label className="tasks-filter-field tasks-search-field">
+                <span>Busca</span>
+
+                <input
+                  type="search"
+                  placeholder="Buscar por título, solicitante, origem..."
+                  value={search}
+                  onChange={(event) =>
+                    setSearch(
+                      event.target.value,
+                    )
+                  }
+                />
+              </label>
+            </div>
+
+            <div className="tasks-filters-footer">
+              <span>
+                Os filtros principais são
+                aplicados automaticamente.
+                A busca textual filtra os
+                registros já carregados.
+              </span>
 
               <button
                 type="button"
                 className="tasks-secondary-action"
                 onClick={handleClearFilters}
+                disabled={
+                  activeFilterCount === 0
+                }
               >
                 Limpar filtros
               </button>
             </div>
           </div>
-        </div>
+        ) : null}
 
-        <div className="tasks-filter-status">
-          <div>
-            <strong>Filtros selecionados</strong>
-            <span>
-              Os filtros principais recarregam a lista. A busca textual filtra
-              os registros já carregados.
-            </span>
-          </div>
+        {activeFilterCount > 0 ? (
+          <div className="tasks-active-filters">
+            <div className="tasks-active-filters-heading">
+              <span>Filtros ativos</span>
 
-          <div className="tasks-filter-chips">
-            {activeFilters.length > 0 ? (
-              activeFilters.map((filter) => (
-                <span key={`${filter.label}-${filter.value}`}>
-                  {filter.label}: <strong>{filter.value}</strong>
-                </span>
-              ))
-            ) : (
-              <span>Sem filtros específicos</span>
-            )}
+              <strong>
+                {activeFilterCount}
+              </strong>
+            </div>
+
+            <div className="tasks-filter-chips">
+              {activeFilters.map(
+                (filter) => (
+                  <span
+                    key={`${filter.label}-${filter.value}`}
+                  >
+                    {filter.label}:{' '}
+                    <strong>
+                      {filter.value}
+                    </strong>
+                  </span>
+                ),
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleClearFilters}
+            >
+              Limpar
+            </button>
           </div>
-        </div>
+        ) : null}
 
         {error ? (
           <div className="tasks-error">
             <strong>{error}</strong>
 
-            <button type="button" onClick={() => void handleRefresh()}>
+            <button
+              type="button"
+              onClick={() =>
+                void handleRefresh()
+              }
+            >
               Tentar novamente
             </button>
           </div>
         ) : null}
 
-        {!error && filteredTasks.length === 0 ? (
+        {!error &&
+        filteredTasks.length === 0 ? (
           <EmptyState
             title="Nenhum chamado encontrado."
             description="Abra um chamado ou ajuste os filtros para visualizar resultados."
           />
         ) : null}
 
-        {!error && filteredTasks.length > 0 ? (
+        {!error &&
+        filteredTasks.length > 0 ? (
           <div className="tasks-table-wrapper">
             <table className="tasks-table">
               <thead>
                 <tr>
                   <th>Chamado</th>
                   <th>Origem</th>
-                  <th>Referência externa</th>
+                  <th>
+                    Referência externa
+                  </th>
                   <th>Empresa</th>
                   <th>Sala</th>
                   <th>Equipamento</th>
@@ -1109,100 +1559,187 @@ export function Tasks() {
               </thead>
 
               <tbody>
-                {filteredTasks.map((task) => (
-                  <tr key={task.id}>
-                    <td>
-                      <strong>{task.title}</strong>
-                      <small>{task.description || task.id}</small>
-                    </td>
+                {filteredTasks.map(
+                  (task) => (
+                    <tr key={task.id}>
+                      <td>
+                        <strong>
+                          {task.title}
+                        </strong>
 
-                    <td>
-                      <TaskOriginBadge origin={task.origin} />
-                    </td>
+                        <small>
+                          {task.description ||
+                            task.id}
+                        </small>
+                      </td>
 
-                    <td>
-                      {task.externalCode ? (
-                        <strong>{task.externalCode}</strong>
-                      ) : (
-                        <span>-</span>
-                      )}
+                      <td>
+                        <TaskOriginBadge
+                          origin={task.origin}
+                        />
+                      </td>
 
-                      {task.externalUrl ? (
-                        <a
-                          className="task-external-link"
-                          href={task.externalUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Abrir referência
-                        </a>
-                      ) : null}
-                    </td>
+                      <td>
+                        {task.externalCode ? (
+                          <strong>
+                            {
+                              task.externalCode
+                            }
+                          </strong>
+                        ) : (
+                          <span>-</span>
+                        )}
 
-                    <td>{task.company?.name ?? task.companyId}</td>
-
-                    <td>{task.room?.name ?? '-'}</td>
-
-                    <td>
-                      <span>{task.equipment?.name ?? '-'}</span>
-
-                      {task.equipment?.code ? (
-                        <small>{task.equipment.code}</small>
-                      ) : null}
-                    </td>
-
-                    <td>
-                      <span>{task.assignedToUser?.name ?? '-'}</span>
-
-                      {task.assignedToUser?.email ? (
-                        <small>{task.assignedToUser.email}</small>
-                      ) : null}
-                    </td>
-
-                    <td>
-                      <span>{task.createdByUser?.name ?? '-'}</span>
-
-                      {task.createdByUser?.email ? (
-                        <small>{task.createdByUser.email}</small>
-                      ) : null}
-                    </td>
-
-                    <td>
-                      <TaskPriorityBadge priority={task.priority} />
-                    </td>
-
-                    <td>
-                      <TaskStatusBadge status={task.status} />
-                    </td>
-
-                    <td>{formatDateTime(task.dueDate)}</td>
-
-                    <td>{formatDateTime(task.completedAt)}</td>
-
-                    <td>{formatDate(task.createdAt)}</td>
-
-                    <td>
-                      {canManageTasks ? (
-                        <div className="task-row-actions">
-                          <button type="button" onClick={() => openEditForm(task)}>
-                            Editar
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => void handleInactivate(task)}
+                        {task.externalUrl ? (
+                          <a
+                            className="task-external-link"
+                            href={
+                              task.externalUrl
+                            }
+                            target="_blank"
+                            rel="noreferrer"
                           >
-                            Remover
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="task-readonly-badge">
-                          Acompanhamento
+                            Abrir referência
+                          </a>
+                        ) : null}
+                      </td>
+
+                      <td>
+                        {task.company?.name ??
+                          task.companyId}
+                      </td>
+
+                      <td>
+                        {task.room?.name ??
+                          '-'}
+                      </td>
+
+                      <td>
+                        <span>
+                          {task.equipment
+                            ?.name ?? '-'}
                         </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+
+                        {task.equipment
+                          ?.code ? (
+                          <small>
+                            {
+                              task
+                                .equipment
+                                .code
+                            }
+                          </small>
+                        ) : null}
+                      </td>
+
+                      <td>
+                        <span>
+                          {task
+                            .assignedToUser
+                            ?.name ?? '-'}
+                        </span>
+
+                        {task
+                          .assignedToUser
+                          ?.email ? (
+                          <small>
+                            {
+                              task
+                                .assignedToUser
+                                .email
+                            }
+                          </small>
+                        ) : null}
+                      </td>
+
+                      <td>
+                        <span>
+                          {task
+                            .createdByUser
+                            ?.name ?? '-'}
+                        </span>
+
+                        {task
+                          .createdByUser
+                          ?.email ? (
+                          <small>
+                            {
+                              task
+                                .createdByUser
+                                .email
+                            }
+                          </small>
+                        ) : null}
+                      </td>
+
+                      <td>
+                        <TaskPriorityBadge
+                          priority={
+                            task.priority
+                          }
+                        />
+                      </td>
+
+                      <td>
+                        <TaskStatusBadge
+                          status={
+                            task.status
+                          }
+                        />
+                      </td>
+
+                      <td>
+                        {formatDateTime(
+                          task.dueDate,
+                        )}
+                      </td>
+
+                      <td>
+                        {formatDateTime(
+                          task.completedAt,
+                        )}
+                      </td>
+
+                      <td>
+                        {formatDate(
+                          task.createdAt,
+                        )}
+                      </td>
+
+                      <td>
+                        {canManageTasks ? (
+                          <div className="task-row-actions">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openEditForm(
+                                  task,
+                                )
+                              }
+                            >
+                              Editar
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void handleInactivate(
+                                  task,
+                                )
+                              }
+                            >
+                              Remover
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="task-readonly-badge">
+                            Acompanhamento
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ),
+                )}
               </tbody>
             </table>
           </div>
@@ -1218,10 +1755,18 @@ type SummaryCardProps = {
   danger?: boolean;
 };
 
-function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
+function SummaryCard({
+  title,
+  value,
+  danger = false,
+}: SummaryCardProps) {
   return (
     <article
-      className={danger ? 'tasks-summary-card danger' : 'tasks-summary-card'}
+      className={
+        danger
+          ? 'tasks-summary-card danger'
+          : 'tasks-summary-card'
+      }
     >
       <span>{title}</span>
       <strong>{value}</strong>
@@ -1233,9 +1778,13 @@ type TaskOriginBadgeProps = {
   origin: TaskOrigin;
 };
 
-function TaskOriginBadge({ origin }: TaskOriginBadgeProps) {
+function TaskOriginBadge({
+  origin,
+}: TaskOriginBadgeProps) {
   return (
-    <span className={`task-origin ${origin.toLowerCase()}`}>
+    <span
+      className={`task-origin ${origin.toLowerCase()}`}
+    >
       {formatTaskOrigin(origin)}
     </span>
   );
@@ -1245,9 +1794,15 @@ type TaskStatusBadgeProps = {
   status: TaskStatus;
 };
 
-function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
+function TaskStatusBadge({
+  status,
+}: TaskStatusBadgeProps) {
   return (
-    <span className={`task-status ${status.toLowerCase().replace('_', '-')}`}>
+    <span
+      className={`task-status ${status
+        .toLowerCase()
+        .replace('_', '-')}`}
+    >
       {formatTaskStatus(status)}
     </span>
   );
@@ -1257,16 +1812,25 @@ type TaskPriorityBadgeProps = {
   priority: TaskPriority;
 };
 
-function TaskPriorityBadge({ priority }: TaskPriorityBadgeProps) {
+function TaskPriorityBadge({
+  priority,
+}: TaskPriorityBadgeProps) {
   return (
-    <span className={`task-priority ${priority.toLowerCase()}`}>
+    <span
+      className={`task-priority ${priority.toLowerCase()}`}
+    >
       {formatTaskPriority(priority)}
     </span>
   );
 }
 
-function formatTaskOrigin(value: TaskOrigin) {
-  const labels: Record<TaskOrigin, string> = {
+function formatTaskOrigin(
+  value: TaskOrigin,
+) {
+  const labels: Record<
+    TaskOrigin,
+    string
+  > = {
     CRYOMAP: 'CryoMap',
     AUVO: 'Auvo',
     OTHER: 'Outro',
@@ -1275,8 +1839,13 @@ function formatTaskOrigin(value: TaskOrigin) {
   return labels[value];
 }
 
-function formatTaskStatus(value: TaskStatus) {
-  const labels: Record<TaskStatus, string> = {
+function formatTaskStatus(
+  value: TaskStatus,
+) {
+  const labels: Record<
+    TaskStatus,
+    string
+  > = {
     OPEN: 'Aberto',
     IN_PROGRESS: 'Em andamento',
     DONE: 'Concluído',
@@ -1287,8 +1856,13 @@ function formatTaskStatus(value: TaskStatus) {
   return labels[value];
 }
 
-function formatTaskPriority(value: TaskPriority) {
-  const labels: Record<TaskPriority, string> = {
+function formatTaskPriority(
+  value: TaskPriority,
+) {
+  const labels: Record<
+    TaskPriority,
+    string
+  > = {
     LOW: 'Baixa',
     MEDIUM: 'Média',
     HIGH: 'Alta',
@@ -1298,23 +1872,33 @@ function formatTaskPriority(value: TaskPriority) {
   return labels[value];
 }
 
-function formatDate(value?: string | null) {
+function formatDate(
+  value?: string | null,
+) {
   if (!value) {
     return '-';
   }
 
-  return new Date(value).toLocaleDateString('pt-BR');
+  return new Date(
+    value,
+  ).toLocaleDateString('pt-BR');
 }
 
-function formatDateTime(value?: string | null) {
+function formatDateTime(
+  value?: string | null,
+) {
   if (!value) {
     return '-';
   }
 
-  return new Date(value).toLocaleString('pt-BR');
+  return new Date(
+    value,
+  ).toLocaleString('pt-BR');
 }
 
-function formatDateTimeInput(value?: string | null) {
+function formatDateTimeInput(
+  value?: string | null,
+) {
   if (!value) {
     return '';
   }
@@ -1326,9 +1910,14 @@ function formatDateTimeInput(value?: string | null) {
   }
 
   const offset = date.getTimezoneOffset();
-  const localDate = new Date(date.getTime() - offset * 60_000);
 
-  return localDate.toISOString().slice(0, 16);
+  const localDate = new Date(
+    date.getTime() - offset * 60_000,
+  );
+
+  return localDate
+    .toISOString()
+    .slice(0, 16);
 }
 
 function optionalValue(value: string) {
@@ -1343,7 +1932,9 @@ function nullableValue(value: string) {
   return normalized || null;
 }
 
-function optionalIsoDateTime(value: string) {
+function optionalIsoDateTime(
+  value: string,
+) {
   if (!value) {
     return undefined;
   }
@@ -1351,7 +1942,9 @@ function optionalIsoDateTime(value: string) {
   return new Date(value).toISOString();
 }
 
-function nullableIsoDateTime(value: string) {
+function nullableIsoDateTime(
+  value: string,
+) {
   if (!value) {
     return null;
   }
@@ -1359,7 +1952,9 @@ function nullableIsoDateTime(value: string) {
   return new Date(value).toISOString();
 }
 
-function normalizeTaskPriority(value: string): TaskPriority {
+function normalizeTaskPriority(
+  value: string,
+): TaskPriority {
   if (
     value === 'LOW' ||
     value === 'MEDIUM' ||
@@ -1372,7 +1967,9 @@ function normalizeTaskPriority(value: string): TaskPriority {
   return 'MEDIUM';
 }
 
-function normalizeClientPriority(value: TaskPriority): TaskPriority {
+function normalizeClientPriority(
+  value: TaskPriority,
+): TaskPriority {
   if (value === 'CRITICAL') {
     return 'HIGH';
   }
@@ -1380,7 +1977,9 @@ function normalizeClientPriority(value: TaskPriority): TaskPriority {
   return value;
 }
 
-function getRequestErrorMessage(error: unknown) {
+function getRequestErrorMessage(
+  error: unknown,
+) {
   if (
     typeof error === 'object' &&
     error !== null &&
@@ -1391,7 +1990,11 @@ function getRequestErrorMessage(error: unknown) {
   ) {
     const data = error.response.data;
 
-    if (typeof data === 'object' && data !== null && 'message' in data) {
+    if (
+      typeof data === 'object' &&
+      data !== null &&
+      'message' in data
+    ) {
       const message = data.message;
 
       if (typeof message === 'string') {
