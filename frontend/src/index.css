@@ -15,6 +15,8 @@
   --color-primary-dark: #12325b;
   --color-primary-medium: #225fae;
   --color-primary-light: #38bdf8;
+  --color-primary-soft: #edf7ff;
+  --color-primary-border: rgba(20, 120, 242, 0.18);
   --color-accent: #42c7f4;
 
   --color-background: #f7faff;
@@ -30,15 +32,25 @@
   --color-border: rgba(20, 91, 166, 0.16);
   --color-border-soft: rgba(20, 91, 166, 0.09);
 
+  --color-info-bg: #edf7ff;
+  --color-info-text: #1766c8;
+  --color-info-border: rgba(20, 120, 242, 0.14);
+
   --color-success-bg: #edf9f4;
   --color-success-text: #167a59;
+  --color-success-border: rgba(22, 122, 89, 0.13);
 
   --color-warning-bg: #fff8e9;
   --color-warning-text: #9a6400;
+  --color-warning-border: rgba(154, 100, 0, 0.14);
 
   --color-danger-bg: #fff2f2;
   --color-danger-text: #c93c35;
+  --color-danger-border: rgba(201, 60, 53, 0.13);
 
+  --shadow-xs:
+    0 2px 8px rgba(31, 72, 119, 0.035),
+    0 1px 2px rgba(31, 72, 119, 0.025);
   --shadow-card:
     0 8px 24px rgba(31, 72, 119, 0.06),
     0 1px 3px rgba(31, 72, 119, 0.04);
@@ -54,7 +66,21 @@
   --radius-xl: 22px;
   --radius-2xl: 28px;
 
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+
+  --transition-fast: 0.16s ease;
+  --transition-base: 0.22s ease;
+
   --focus-ring: 0 0 0 4px rgba(56, 189, 248, 0.18);
+
+  --content-max: 1440px;
 }
 
 *,

@@ -1,5 +1,34 @@
 import { useEffect, useMemo, useState } from 'react';
+import {
+  Activity,
+  BellRing,
+  Building2,
+  CheckCircle2,
+  CircleGauge,
+  Clock3,
+  DoorOpen,
+  Droplets,
+  LayoutDashboard,
+  RefreshCw,
+  Radio,
+  Snowflake,
+  Thermometer,
+  TriangleAlert,
+  Wrench,
+} from 'lucide-react';
 
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetaPill,
+  MetricCard,
+  PageHeader,
+  SectionCard,
+  StatusBadge,
+  type UiTone,
+} from '../../components/ui/CryoUi';
 import { useAuth } from '../../contexts/useAuth';
 import { getDashboardOverview } from '../../services/dashboard';
 import type {
@@ -74,25 +103,31 @@ export function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="dashboard-loading">
-        <span />
-        <strong>Carregando dashboard...</strong>
-      </div>
+      <LoadingState
+        title="Carregando dashboard"
+        description="Buscando indicadores operacionais e térmicos."
+      />
     );
   }
 
   if (error) {
     return (
-      <div className="dashboard-error">
-        <div>
-          <strong>{error}</strong>
-          <p>Verifique se o backend está rodando e tente novamente.</p>
-        </div>
-
-        <button type="button" onClick={handleRefresh}>
-          Tentar novamente
-        </button>
-      </div>
+      <InlineNotice
+        tone="danger"
+        icon={TriangleAlert}
+        title={error}
+        description="Verifique se o backend está rodando e tente novamente."
+        action={
+          <ActionButton
+            type="button"
+            icon={RefreshCw}
+            variant="danger"
+            onClick={handleRefresh}
+          >
+            Tentar novamente
+          </ActionButton>
+        }
+      />
     );
   }
 
@@ -109,76 +144,90 @@ export function Dashboard() {
 
   return (
     <div className="dashboard-page">
-      <header className={`dashboard-hero ${health.tone}`}>
-        <div className="dashboard-hero-content">
-          <span>Visão geral</span>
+      <PageHeader
+        eyebrow="Operação"
+        title="Visão geral"
+        description={getDashboardDescription(user?.role)}
+        icon={LayoutDashboard}
+        actions={
+          <ActionButton
+            type="button"
+            icon={RefreshCw}
+            onClick={handleRefresh}
+          >
+            Atualizar dados
+          </ActionButton>
+        }
+        meta={
+          <>
+            <MetaPill icon={CircleGauge}>{formatRole(user?.role)}</MetaPill>
 
-          <h1>Dashboard operacional</h1>
+            <MetaPill icon={Building2}>
+              {overview.filters?.companyId ? 'Empresa filtrada' : 'Visão geral'}
+            </MetaPill>
 
-          <p>
-            {getDashboardDescription(user?.role)} Última atualização:{' '}
-            <strong>{formatDateTime(overview.generatedAt)}</strong>.
-          </p>
+            <MetaPill icon={Clock3}>
+              Atualizado {formatDateTime(overview.generatedAt)}
+            </MetaPill>
+          </>
+        }
+      />
 
-          <div className="dashboard-hero-tags">
-            <small>{formatRole(user?.role)}</small>
-            <small>{overview.filters?.companyId ? 'Empresa filtrada' : 'Visão geral'}</small>
-            <small>{overview.companies.total} empresa(s)</small>
-          </div>
-        </div>
+      <OperationalHealthCard
+        health={health}
+        generatedAt={overview.generatedAt}
+      />
 
-        <div className="dashboard-hero-status">
-          <span>Status atual</span>
-          <strong>{health.title}</strong>
-          <p>{health.description}</p>
-
-          <button type="button" onClick={handleRefresh}>
-            Atualizar agora
-          </button>
-        </div>
-      </header>
-
-      <section className="dashboard-kpi-grid">
+      <section
+        className="dashboard-kpi-grid"
+        aria-label="Indicadores operacionais"
+      >
         <MetricCard
-          title="Salas monitoradas"
+          label="Salas monitoradas"
           value={overview.rooms.total}
           detail={`${overview.rooms.normal} normais · ${overview.rooms.critical} críticas`}
-          tone={overview.rooms.critical > 0 ? 'critical' : 'stable'}
+          icon={DoorOpen}
+          tone={overview.rooms.critical > 0 ? 'danger' : 'success'}
         />
 
         <MetricCard
-          title="Alertas ativos"
+          label="Alertas ativos"
           value={activeAlerts}
           detail={`${criticalAlerts} críticos · ${overview.thermalAlerts?.warning ?? 0} em atenção`}
-          tone={activeAlerts > 0 ? 'critical' : 'stable'}
+          icon={BellRing}
+          tone={activeAlerts > 0 ? 'danger' : 'success'}
         />
 
         <MetricCard
-          title="Sensores"
+          label="Sensores"
           value={overview.sensors.total}
           detail={`${overview.sensors.active} ativos · ${overview.sensors.offline} offline`}
-          tone={overview.sensors.offline > 0 ? 'attention' : 'stable'}
+          icon={Radio}
+          tone={overview.sensors.offline > 0 ? 'warning' : 'success'}
         />
 
         <MetricCard
-          title="Equipamentos"
+          label="Equipamentos"
           value={overview.equipments.total}
           detail={`${overview.equipments.running} rodando · ${overview.equipments.maintenance} manutenção`}
-          tone={overview.equipments.maintenance > 0 ? 'attention' : 'stable'}
+          icon={Snowflake}
+          tone={overview.equipments.maintenance > 0 ? 'warning' : 'info'}
         />
 
         <MetricCard
-          title="Chamados abertos"
+          label="Chamados abertos"
           value={overview.tasks.open}
           detail={`${overview.tasks.inProgress} em andamento · ${overview.tasks.overdue} atrasados`}
-          tone={overview.tasks.overdue > 0 ? 'attention' : 'stable'}
+          icon={Wrench}
+          tone={overview.tasks.overdue > 0 ? 'warning' : 'info'}
         />
 
         <MetricCard
-          title="Prioridade crítica"
+          label="Prioridade crítica"
           value={overview.tasks.criticalPriority}
           detail={`${overview.tasks.done} tarefas concluídas`}
-          tone={overview.tasks.criticalPriority > 0 ? 'critical' : 'stable'}
+          icon={TriangleAlert}
+          tone={overview.tasks.criticalPriority > 0 ? 'danger' : 'success'}
         />
       </section>
 
@@ -197,25 +246,48 @@ export function Dashboard() {
   );
 }
 
-type MetricCardProps = {
-  title: string;
-  value: number;
-  detail: string;
-  tone?: HealthTone;
+type OperationalHealthCardProps = {
+  health: {
+    tone: HealthTone;
+    title: string;
+    description: string;
+  };
+  generatedAt?: string | null;
 };
 
-function MetricCard({
-  title,
-  value,
-  detail,
-  tone = 'stable',
-}: MetricCardProps) {
+function OperationalHealthCard({
+  health,
+  generatedAt,
+}: OperationalHealthCardProps) {
+  const tone = healthToneToUiTone(health.tone);
+  const HealthIcon =
+    health.tone === 'critical'
+      ? TriangleAlert
+      : health.tone === 'attention'
+        ? Activity
+        : CheckCircle2;
+
   return (
-    <article className={`dashboard-kpi-card ${tone}`}>
-      <span>{title}</span>
-      <strong>{value}</strong>
-      <small>{detail}</small>
-    </article>
+    <section className={`dashboard-health dashboard-health--${health.tone}`}>
+      <div className="dashboard-health__icon" aria-hidden="true">
+        <HealthIcon size={24} strokeWidth={2.15} />
+      </div>
+
+      <div className="dashboard-health__copy">
+        <span>Saúde operacional</span>
+        <strong>{health.title}</strong>
+        <p>{health.description}</p>
+      </div>
+
+      <div className="dashboard-health__meta">
+        <StatusBadge tone={tone}>{formatHealthTone(health.tone)}</StatusBadge>
+
+        <small>
+          <Clock3 size={13} strokeWidth={2} />
+          {formatDateTime(generatedAt)}
+        </small>
+      </div>
+    </section>
   );
 }
 
@@ -225,37 +297,48 @@ type ActiveAlertRoomsPanelProps = {
 
 function ActiveAlertRoomsPanel({ rooms }: ActiveAlertRoomsPanelProps) {
   return (
-    <article className="dashboard-panel highlight">
-      <div className="dashboard-panel-header">
-        <div>
-          <span>Risco térmico</span>
-          <h2>Salas com alerta ativo</h2>
-        </div>
-
-        <strong>{rooms.length}</strong>
-      </div>
-
+    <SectionCard
+      eyebrow="Risco térmico"
+      title="Salas com alerta ativo"
+      description="Ambientes que exigem atenção operacional."
+      icon={TriangleAlert}
+      tone={rooms.length > 0 ? 'danger' : 'success'}
+      action={
+        <StatusBadge tone={rooms.length > 0 ? 'danger' : 'success'}>
+          {rooms.length} {rooms.length === 1 ? 'sala' : 'salas'}
+        </StatusBadge>
+      }
+    >
       {rooms.length > 0 ? (
-        <div className="dashboard-alert-room-list">
+        <div className="dashboard-list">
           {rooms.map((alert) => (
-            <div className="dashboard-alert-room" key={alert.id}>
-              <div>
+            <div className="dashboard-list-item" key={alert.id}>
+              <div className="dashboard-list-item__icon dashboard-list-item__icon--danger">
+                <TriangleAlert size={17} strokeWidth={2.15} />
+              </div>
+
+              <div className="dashboard-list-item__copy">
                 <strong>{alert.room.name}</strong>
                 <span>{alert.message || 'Alerta térmico ativo'}</span>
               </div>
 
-              <div className="dashboard-alert-room-meta">
-                <StatusPill value={alert.severity} />
+              <div className="dashboard-list-item__metrics">
                 <strong>{formatTemperature(alert.temperature)}</strong>
                 <small>{formatDateTime(alert.triggeredAt)}</small>
               </div>
+
+              <StatusPill value={alert.severity} />
             </div>
           ))}
         </div>
       ) : (
-        <EmptyState message="Nenhuma sala com alerta ativo no momento." />
+        <EmptyState
+          icon={CheckCircle2}
+          title="Nenhuma sala em alerta"
+          description="Os ambientes monitorados estão sem alertas térmicos ativos."
+        />
       )}
-    </article>
+    </SectionCard>
   );
 }
 
@@ -265,32 +348,45 @@ type LatestReadingsPanelProps = {
 
 function LatestReadingsPanel({ readings }: LatestReadingsPanelProps) {
   return (
-    <article className="dashboard-panel">
-      <div className="dashboard-panel-header">
-        <div>
-          <span>Tempo real</span>
-          <h2>Últimas leituras</h2>
-        </div>
-
-        <strong>{readings.length}</strong>
-      </div>
-
+    <SectionCard
+      eyebrow="Tempo real"
+      title="Últimas leituras"
+      description="Temperatura e umidade recebidas mais recentemente."
+      icon={Thermometer}
+      tone="info"
+      action={
+        <StatusBadge tone="info">
+          {readings.length} {readings.length === 1 ? 'leitura' : 'leituras'}
+        </StatusBadge>
+      }
+    >
       {readings.length > 0 ? (
-        <div className="dashboard-reading-list">
+        <div className="dashboard-list">
           {readings.slice(0, 8).map((reading) => (
-            <div className="dashboard-reading-item" key={reading.id}>
-              <div>
+            <div className="dashboard-list-item" key={reading.id}>
+              <div className="dashboard-list-item__icon">
+                <Thermometer size={17} strokeWidth={2.15} />
+              </div>
+
+              <div className="dashboard-list-item__copy">
                 <strong>{reading.room?.name ?? 'Sala não informada'}</strong>
-                <small>
+                <span>
                   {reading.sensor?.code
                     ? `Sensor ${reading.sensor.code}`
                     : 'Leitura manual'}
-                </small>
+                </span>
               </div>
 
-              <div className="dashboard-reading-values">
-                <strong>{formatTemperature(reading.temperature)}</strong>
-                <span>{formatHumidity(reading.humidity)}</span>
+              <div className="dashboard-reading-stack">
+                <span className="dashboard-reading-stack__temperature">
+                  {formatTemperature(reading.temperature)}
+                </span>
+
+                <span className="dashboard-reading-stack__humidity">
+                  <Droplets size={13} strokeWidth={2} />
+                  {formatHumidity(reading.humidity)}
+                </span>
+
                 <small>{formatDateTime(reading.readAt)}</small>
               </div>
 
@@ -299,9 +395,13 @@ function LatestReadingsPanel({ readings }: LatestReadingsPanelProps) {
           ))}
         </div>
       ) : (
-        <EmptyState message="Nenhuma leitura recente encontrada." />
+        <EmptyState
+          icon={Thermometer}
+          title="Nenhuma leitura recente"
+          description="As leituras mais recentes aparecerão aqui quando forem recebidas."
+        />
       )}
-    </article>
+    </SectionCard>
   );
 }
 
@@ -311,24 +411,27 @@ type RecentAlertsPanelProps = {
 
 function RecentAlertsPanel({ alerts }: RecentAlertsPanelProps) {
   return (
-    <article className="dashboard-panel">
-      <div className="dashboard-panel-header">
-        <div>
-          <span>Histórico</span>
-          <h2>Últimos alertas</h2>
-        </div>
-      </div>
-
+    <SectionCard
+      eyebrow="Histórico"
+      title="Últimos alertas"
+      description="Eventos térmicos registrados recentemente."
+      icon={BellRing}
+      tone="warning"
+    >
       {alerts.length > 0 ? (
-        <div className="dashboard-compact-list">
+        <div className="dashboard-list dashboard-list--compact">
           {alerts.slice(0, 5).map((alert) => (
-            <div className="dashboard-compact-item" key={alert.id}>
-              <div>
+            <div className="dashboard-list-item" key={alert.id}>
+              <div className="dashboard-list-item__icon dashboard-list-item__icon--warning">
+                <BellRing size={16} strokeWidth={2.15} />
+              </div>
+
+              <div className="dashboard-list-item__copy">
                 <strong>{alert.room?.name ?? 'Sala não informada'}</strong>
                 <span>{alert.message || 'Alerta térmico registrado'}</span>
               </div>
 
-              <div>
+              <div className="dashboard-list-item__side">
                 <StatusPill value={alert.status} />
                 <small>{formatDateTime(alert.triggeredAt)}</small>
               </div>
@@ -336,9 +439,13 @@ function RecentAlertsPanel({ alerts }: RecentAlertsPanelProps) {
           ))}
         </div>
       ) : (
-        <EmptyState message="Nenhum alerta térmico recente." />
+        <EmptyState
+          icon={BellRing}
+          title="Nenhum alerta recente"
+          description="Não há eventos térmicos recentes para exibir."
+        />
       )}
-    </article>
+    </SectionCard>
   );
 }
 
@@ -348,20 +455,26 @@ type RecentServiceRecordsPanelProps = {
 
 function RecentServiceRecordsPanel({ records }: RecentServiceRecordsPanelProps) {
   return (
-    <article className="dashboard-panel">
-      <div className="dashboard-panel-header">
-        <div>
-          <span>Operação</span>
-          <h2>Últimos atendimentos</h2>
-        </div>
-      </div>
-
+    <SectionCard
+      eyebrow="Operação"
+      title="Últimos atendimentos"
+      description="Atividades técnicas registradas mais recentemente."
+      icon={Wrench}
+      tone="info"
+    >
       {records.length > 0 ? (
-        <div className="dashboard-compact-list">
+        <div className="dashboard-list dashboard-list--compact">
           {records.slice(0, 5).map((record) => (
-            <div className="dashboard-compact-item" key={record.id}>
-              <div>
-                <strong>{record.task?.title ?? `Atendimento ${shortId(record.id)}`}</strong>
+            <div className="dashboard-list-item" key={record.id}>
+              <div className="dashboard-list-item__icon">
+                <Wrench size={16} strokeWidth={2.15} />
+              </div>
+
+              <div className="dashboard-list-item__copy">
+                <strong>
+                  {record.task?.title ??
+                    `Atendimento ${shortId(record.id)}`}
+                </strong>
                 <span>
                   {record.equipment?.name ??
                     record.room?.name ??
@@ -369,10 +482,11 @@ function RecentServiceRecordsPanel({ records }: RecentServiceRecordsPanelProps) 
                 </span>
               </div>
 
-              <div>
+              <div className="dashboard-list-item__side">
                 <StatusPill
                   value={record.finishedAt ? 'FINALIZADO' : 'EM_ANDAMENTO'}
                 />
+
                 <small>
                   {formatMinutes(record.downtimeMinutes)} ·{' '}
                   {formatDateTime(record.startedAt)}
@@ -382,9 +496,13 @@ function RecentServiceRecordsPanel({ records }: RecentServiceRecordsPanelProps) 
           ))}
         </div>
       ) : (
-        <EmptyState message="Nenhum atendimento recente." />
+        <EmptyState
+          icon={Wrench}
+          title="Nenhum atendimento recente"
+          description="Os atendimentos técnicos mais recentes aparecerão aqui."
+        />
       )}
-    </article>
+    </SectionCard>
   );
 }
 
@@ -393,21 +511,11 @@ type StatusPillProps = {
 };
 
 function StatusPill({ value }: StatusPillProps) {
-  const normalized = value.toLowerCase();
-
   return (
-    <span className={`dashboard-status-pill ${normalized}`}>
+    <StatusBadge tone={getStatusTone(value)}>
       {formatStatus(value)}
-    </span>
+    </StatusBadge>
   );
-}
-
-type EmptyStateProps = {
-  message: string;
-};
-
-function EmptyState({ message }: EmptyStateProps) {
-  return <p className="dashboard-empty-state">{message}</p>;
 }
 
 function getOperationalHealth(overview: DashboardOverview | null): {
@@ -451,6 +559,61 @@ function getOperationalHealth(overview: DashboardOverview | null): {
     title: 'Operação estável',
     description: 'Nenhuma condição crítica ativa no momento.',
   };
+}
+
+function healthToneToUiTone(tone: HealthTone): UiTone {
+  if (tone === 'critical') {
+    return 'danger';
+  }
+
+  if (tone === 'attention') {
+    return 'warning';
+  }
+
+  return 'success';
+}
+
+function getStatusTone(value: string): UiTone {
+  const normalized = value.toUpperCase();
+
+  if (
+    [
+      'NORMAL',
+      'RESOLVED',
+      'FINALIZADO',
+      'DONE',
+      'ACTIVE',
+    ].includes(normalized)
+  ) {
+    return 'success';
+  }
+
+  if (
+    [
+      'WARNING',
+      'OPEN',
+      'ACKNOWLEDGED',
+      'EM_ANDAMENTO',
+      'IN_PROGRESS',
+      'OVERDUE',
+    ].includes(normalized)
+  ) {
+    return 'warning';
+  }
+
+  if (
+    [
+      'CRITICAL',
+      'OFFLINE',
+      'DISMISSED',
+      'BLOCKED',
+      'INACTIVE',
+    ].includes(normalized)
+  ) {
+    return 'danger';
+  }
+
+  return 'info';
 }
 
 function getDashboardDescription(role?: string) {
@@ -497,6 +660,16 @@ function formatStatus(value: string) {
   return labels[value] ?? value;
 }
 
+function formatHealthTone(tone: HealthTone) {
+  const labels: Record<HealthTone, string> = {
+    stable: 'Estável',
+    attention: 'Atenção',
+    critical: 'Crítico',
+  };
+
+  return labels[tone];
+}
+
 function formatDateTime(value?: string | null) {
   if (!value) {
     return '-';
@@ -508,7 +681,13 @@ function formatDateTime(value?: string | null) {
     return '-';
   }
 
-  return date.toLocaleString('pt-BR');
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 }
 
 function formatTemperature(value?: number | null) {
