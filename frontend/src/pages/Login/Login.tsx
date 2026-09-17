@@ -1,5 +1,7 @@
 import { type FormEvent, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
+
 import cryomapLogo from '../../assets/cryomap-logo.png';
 import { useAuth } from '../../contexts/useAuth';
 import './Login.css';
@@ -12,6 +14,7 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
@@ -35,55 +38,125 @@ export function Login() {
 
   return (
     <main className="login-page">
-      <section className="login-hero">
+      <section className="login-hero" aria-hidden="true">
         <div className="login-hero-card">
-          <span className="login-kicker">CryoMap</span>
+          <div className="login-hero-brand">
+            <img src={cryomapLogo} alt="" />
 
-          <h1>Monitoramento térmico e gestão operacional.</h1>
+            <div>
+              <strong>CryoMap</strong>
+              <span>PCM & Monitoramento Térmico</span>
+            </div>
+          </div>
 
-          <p>
-            Acompanhe salas, sensores, equipamentos, tarefas, atendimentos,
-            alertas e relatórios em uma plataforma única.
-          </p>
+          <div className="login-hero-copy">
+            <span className="login-kicker">Operação inteligente</span>
+
+            <h1>Monitoramento térmico e gestão operacional.</h1>
+
+            <p>
+              Acompanhe ambientes, sensores, equipamentos, tarefas,
+              atendimentos, alertas e relatórios em uma única plataforma.
+            </p>
+          </div>
+
+          <div className="login-hero-footer">
+            <span>Monitoramento</span>
+            <span>Manutenção</span>
+            <span>Operação</span>
+          </div>
         </div>
       </section>
 
       <section className="login-panel">
-        <form className="login-form" onSubmit={handleSubmit} autoComplete="off">
-          <div className="login-logo">
-             <img src={cryomapLogo} alt="CryoMap" />
-              </div>
-          <div>
-            <span className="login-kicker">Acesso</span>
-            <h2>Entrar no CryoMap</h2>
-            <p>Use seu usuário e senha cadastrados.</p>
+        <form
+          className="login-form"
+          onSubmit={handleSubmit}
+          autoComplete="on"
+        >
+          <div className="login-mobile-brand">
+            <div className="login-logo">
+              <img src={cryomapLogo} alt="CryoMap" />
+            </div>
+
+            <div className="login-mobile-brand-copy">
+              <strong>CryoMap</strong>
+              <span>Monitoramento e operação</span>
+            </div>
           </div>
 
-          <label>
-            Email
-            <input
-              type="email"
-              value={email}
-              autoComplete="off"
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </label>
+          <div className="login-heading">
+            <span className="login-kicker">Acesso</span>
+            <h2>Bem-vindo ao CryoMap</h2>
+            <p>Entre com seu usuário e senha para continuar.</p>
+          </div>
 
-          <label>
-            Senha
-            <input
-              type="password"
-              value={password}
-              autoComplete="off"
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
+          <div className="login-fields">
+            <label className="login-field">
+              <span>Email</span>
 
-          {error && <strong className="login-error">{error}</strong>}
+              <input
+                type="email"
+                value={email}
+                autoComplete="email"
+                inputMode="email"
+                placeholder="seu@email.com"
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </label>
 
-          <button type="submit" disabled={isSubmitting}>
+            <label className="login-field">
+              <span>Senha</span>
+
+              <div className="login-password-field">
+                <input
+                  type={isPasswordVisible ? 'text' : 'password'}
+                  value={password}
+                  autoComplete="current-password"
+                  placeholder="Digite sua senha"
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+
+                <button
+                  type="button"
+                  className="login-password-toggle"
+                  aria-label={
+                    isPasswordVisible
+                      ? 'Ocultar senha'
+                      : 'Mostrar senha'
+                  }
+                  aria-pressed={isPasswordVisible}
+                  onClick={() =>
+                    setIsPasswordVisible((current) => !current)
+                  }
+                >
+                  {isPasswordVisible ? (
+                    <EyeOff size={19} strokeWidth={2} />
+                  ) : (
+                    <Eye size={19} strokeWidth={2} />
+                  )}
+                </button>
+              </div>
+            </label>
+          </div>
+
+          {error ? (
+            <strong className="login-error" role="alert">
+              {error}
+            </strong>
+          ) : null}
+
+          <button
+            type="submit"
+            className="login-submit"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? 'Entrando...' : 'Entrar'}
           </button>
+
+          <p className="login-support-copy">
+            Acesso exclusivo para usuários cadastrados no CryoMap.
+          </p>
         </form>
       </section>
     </main>

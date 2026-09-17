@@ -1,74 +1,8 @@
 :root {
-  --color-primary: #096df2;
-  --color-primary-dark: #03143f;
-  --color-primary-medium: #063fa7;
-  --color-primary-light: #22c1ff;
-  --color-accent: #35c7f3;
+  color-scheme: light;
 
-  --color-background: #f5fbff;
-  --color-background-deep: #eaf6ff;
-  --color-surface: #ffffff;
-  --color-surface-soft: #edf7ff;
-  --color-surface-strong: #e3f2ff;
-
-  --color-text: #102033;
-  --color-text-soft: #284558;
-  --color-muted: #6d7f90;
-
-  --color-border: rgba(9, 109, 242, 0.16);
-  --color-border-soft: rgba(9, 109, 242, 0.1);
-
-  --color-success-bg: #e8f8f1;
-  --color-success-text: #0f8f61;
-
-  --color-warning-bg: #fff7e6;
-  --color-warning-text: #a76400;
-
-  --color-danger-bg: #fff1f1;
-  --color-danger-text: #d93025;
-
-  --shadow-card: 0 18px 50px rgba(9, 109, 242, 0.08);
-  --shadow-panel: 0 18px 50px rgba(3, 20, 63, 0.07);
-  --shadow-strong: 0 28px 80px rgba(3, 20, 63, 0.18);
-
-  --radius-sm: 12px;
-  --radius-md: 18px;
-  --radius-lg: 24px;
-  --radius-xl: 30px;
-  --radius-2xl: 36px;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-  background: var(--color-background);
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(34, 193, 255, 0.2),
-      transparent 34rem
-    ),
-    radial-gradient(
-      circle at top right,
-      rgba(9, 109, 242, 0.12),
-      transparent 30rem
-    ),
-    linear-gradient(
-      180deg,
-      var(--color-background) 0%,
-      #ffffff 45%,
-      var(--color-background-deep) 100%
-    );
-  color: var(--color-text);
-  font-family:
+  --font-sans:
+    "Inter Variable",
     Inter,
     ui-sans-serif,
     system-ui,
@@ -76,7 +10,122 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+
+  --color-primary: #1478f2;
+  --color-primary-dark: #12325b;
+  --color-primary-medium: #225fae;
+  --color-primary-light: #38bdf8;
+  --color-accent: #42c7f4;
+
+  --color-background: #f7faff;
+  --color-background-deep: #edf5ff;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f3f8fd;
+  --color-surface-strong: #e9f3fc;
+
+  --color-text: #172b3f;
+  --color-text-soft: #40576b;
+  --color-muted: #718295;
+
+  --color-border: rgba(20, 91, 166, 0.16);
+  --color-border-soft: rgba(20, 91, 166, 0.09);
+
+  --color-success-bg: #edf9f4;
+  --color-success-text: #167a59;
+
+  --color-warning-bg: #fff8e9;
+  --color-warning-text: #9a6400;
+
+  --color-danger-bg: #fff2f2;
+  --color-danger-text: #c93c35;
+
+  --shadow-card:
+    0 8px 24px rgba(31, 72, 119, 0.06),
+    0 1px 3px rgba(31, 72, 119, 0.04);
+  --shadow-panel:
+    0 12px 34px rgba(31, 72, 119, 0.07),
+    0 1px 3px rgba(31, 72, 119, 0.04);
+  --shadow-strong:
+    0 24px 70px rgba(20, 50, 91, 0.16);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --radius-2xl: 28px;
+
+  --focus-ring: 0 0 0 4px rgba(56, 189, 248, 0.18);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--color-background);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(56, 189, 248, 0.08),
+      transparent 28rem
+    ),
+    radial-gradient(
+      circle at 0% 20%,
+      rgba(20, 120, 242, 0.045),
+      transparent 24rem
+    ),
+    linear-gradient(
+      180deg,
+      #fbfdff 0%,
+      var(--color-background) 58%,
+      #f4f8fd 100%
+    );
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 450;
+  line-height: 1.5;
+  letter-spacing: -0.008em;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: inherit;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 button,
@@ -87,22 +136,20 @@ textarea {
 }
 
 button {
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    opacity 0.15s ease,
-    background-color 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
+  color: inherit;
 }
 
-button:not(:disabled):hover {
-  transform: translateY(-1px);
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
 input,
@@ -111,368 +158,291 @@ textarea {
   color: var(--color-text);
 }
 
-input:focus,
-select:focus,
-textarea:focus,
+input::placeholder,
+textarea::placeholder {
+  color: #8b9aaa;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid rgba(34, 193, 255, 0.34);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 a {
   color: inherit;
 }
 
+img,
+svg {
+  display: block;
+}
+
+img {
+  max-width: 100%;
+}
+
+table {
+  font-variant-numeric: tabular-nums;
+}
+
 ::selection {
-  background: rgba(34, 193, 255, 0.28);
+  background: rgba(56, 189, 248, 0.22);
   color: var(--color-primary-dark);
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(237, 247, 255, 0.8);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(9, 109, 242, 0.28);
+  border: 2px solid transparent;
   border-radius: 999px;
-  border: 2px solid rgba(237, 247, 255, 0.8);
+  background:
+    linear-gradient(
+      rgba(84, 119, 153, 0.28),
+      rgba(84, 119, 153, 0.28)
+    )
+    padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(9, 109, 242, 0.46);
+  background:
+    linear-gradient(
+      rgba(20, 120, 242, 0.4),
+      rgba(20, 120, 242, 0.4)
+    )
+    padding-box;
 }
 
 .page-center {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
+  padding: 24px;
   background:
     radial-gradient(
       circle at top left,
-      rgba(34, 193, 255, 0.2),
-      transparent 34rem
+      rgba(56, 189, 248, 0.1),
+      transparent 28rem
     ),
     radial-gradient(
       circle at bottom right,
-      rgba(9, 109, 242, 0.14),
-      transparent 32rem
+      rgba(20, 120, 242, 0.07),
+      transparent 26rem
     ),
     var(--color-background);
   color: var(--color-text);
-  padding: 24px;
 }
 
-/* Ajuste compacto para telas de cadastro */
+/*
+ * Compatibilidade temporária para Empresas.
+ * Rooms, Equipments e Sensors já possuem responsividade própria e
+ * não são mais sobrescritos globalmente por !important.
+ */
 @media (max-width: 1000px) {
-  .companies-page,
-  .rooms-page,
-  .equipments-page,
-  .sensors-page,
-  .tasks-page {
+  .companies-page {
     display: grid;
     gap: 16px;
   }
 
-  .companies-header,
-  .rooms-header,
-  .equipments-header,
-  .sensors-header {
-    gap: 14px !important;
-    align-items: flex-start !important;
+  .companies-header {
+    gap: 14px;
+    align-items: flex-start;
   }
 
-  .companies-header h1,
-  .rooms-header h1,
-  .equipments-header h1,
-  .sensors-header h1 {
-    font-size: 28px !important;
+  .companies-header h1 {
+    font-size: 28px;
     line-height: 1.1;
   }
 
-  .companies-header p,
-  .rooms-header p,
-  .equipments-header p,
-  .sensors-header p {
-    font-size: 14px !important;
-    line-height: 1.5;
+  .companies-header p {
     max-width: 100%;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
-  .companies-header button,
-  .rooms-header button,
-  .equipments-header button,
-  .sensors-header button {
-    width: auto !important;
-    min-height: 40px !important;
-    padding: 10px 14px !important;
-    border-radius: 14px !important;
-    font-size: 14px !important;
+  .companies-header button {
+    min-height: 40px;
+    padding: 10px 14px;
+    border-radius: 13px;
+    font-size: 14px;
     align-self: flex-start;
   }
 
-  .companies-summary,
-  .rooms-summary,
-  .equipments-summary,
-  .sensors-summary {
-    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)) !important;
-    gap: 10px !important;
+  .companies-summary {
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 10px;
   }
 
-  .companies-summary-card,
-  .rooms-summary-card,
-  .equipments-summary-card,
-  .sensors-summary-card {
-    min-height: auto !important;
-    padding: 12px 14px !important;
-    border-radius: 16px !important;
+  .companies-summary-card {
+    min-height: auto;
+    padding: 12px 14px;
+    border-radius: 16px;
   }
 
-  .companies-summary-card span,
-  .rooms-summary-card span,
-  .equipments-summary-card span,
-  .sensors-summary-card span {
-    font-size: 12px !important;
+  .companies-summary-card span {
+    font-size: 12px;
   }
 
-  .companies-summary-card strong,
-  .rooms-summary-card strong,
-  .equipments-summary-card strong,
-  .sensors-summary-card strong {
-    font-size: 24px !important;
-    line-height: 1 !important;
+  .companies-summary-card strong {
+    font-size: 24px;
+    line-height: 1;
   }
 
-  .companies-panel,
-  .rooms-panel,
-  .equipments-panel,
-  .sensors-panel {
-    padding: 14px !important;
-    border-radius: 20px !important;
+  .companies-panel {
+    padding: 14px;
+    border-radius: 20px;
     overflow: hidden;
   }
 
-  .companies-panel-header,
-  .rooms-panel-header,
-  .equipments-panel-header,
-  .sensors-panel-header {
-    gap: 12px !important;
-    align-items: stretch !important;
+  .companies-panel-header {
+    gap: 12px;
+    align-items: stretch;
   }
 
-  .companies-panel-header h2,
-  .rooms-panel-header h2,
-  .equipments-panel-header h2,
-  .sensors-panel-header h2 {
-    font-size: 20px !important;
+  .companies-panel-header h2 {
+    font-size: 20px;
   }
 
-  .companies-panel-header p,
-  .rooms-panel-header p,
-  .equipments-panel-header p,
-  .sensors-panel-header p {
-    font-size: 13px !important;
+  .companies-panel-header p {
+    font-size: 13px;
   }
 
-  .companies-actions,
-  .rooms-actions,
-  .equipments-actions,
-  .sensors-actions {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
-    gap: 8px !important;
-    align-items: center !important;
+  .companies-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    align-items: center;
   }
 
   .companies-actions input,
-  .companies-actions select,
-  .rooms-actions input,
-  .rooms-actions select,
-  .equipments-actions input,
-  .equipments-actions select,
-  .sensors-actions input,
-  .sensors-actions select {
-    width: 100% !important;
-    min-height: 38px !important;
-    padding: 8px 10px !important;
-    border-radius: 12px !important;
-    font-size: 13px !important;
+  .companies-actions select {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    font-size: 13px;
   }
 
-  .companies-actions button,
-  .rooms-actions button,
-  .equipments-actions button,
-  .sensors-actions button {
-    width: auto !important;
-    min-height: 38px !important;
-    padding: 8px 12px !important;
-    border-radius: 12px !important;
-    font-size: 13px !important;
+  .companies-actions button {
+    min-height: 38px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 13px;
   }
 
-  .companies-table-wrapper,
-  .rooms-table-wrapper,
-  .equipments-table-wrapper,
-  .sensors-table-wrapper {
+  .companies-table-wrapper {
     width: 100%;
     overflow-x: auto;
     border-radius: 16px;
   }
 
-  .companies-table,
-  .rooms-table,
-  .equipments-table,
-  .sensors-table {
+  .companies-table {
     min-width: 860px;
-    font-size: 13px !important;
+    font-size: 13px;
   }
 
   .companies-table th,
-  .companies-table td,
-  .rooms-table th,
-  .rooms-table td,
-  .equipments-table th,
-  .equipments-table td,
-  .sensors-table th,
-  .sensors-table td {
-    padding: 10px 12px !important;
+  .companies-table td {
+    padding: 10px 12px;
     vertical-align: top;
   }
 
   .company-row-actions,
-  .companies-row-actions,
-  .room-row-actions,
-  .equipment-row-actions,
-  .sensor-row-actions {
-    gap: 6px !important;
+  .companies-row-actions {
+    gap: 6px;
   }
 
   .company-row-actions button,
-  .companies-row-actions button,
-  .room-row-actions button,
-  .equipment-row-actions button,
-  .sensor-row-actions button {
-    min-height: 34px !important;
-    padding: 7px 10px !important;
-    border-radius: 10px !important;
-    font-size: 12px !important;
+  .companies-row-actions button {
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: 12px;
   }
 }
 
 @media (max-width: 700px) {
-  .companies-page,
-  .rooms-page,
-  .equipments-page,
-  .sensors-page {
+  body {
+    font-size: 14px;
+  }
+
+  .companies-page {
     gap: 14px;
   }
 
-  .companies-header h1,
-  .rooms-header h1,
-  .equipments-header h1,
-  .sensors-header h1 {
-    font-size: 24px !important;
+  .companies-header h1 {
+    font-size: 24px;
   }
 
-  .companies-header button,
-  .rooms-header button,
-  .equipments-header button,
-  .sensors-header button {
-    min-height: 38px !important;
-    padding: 9px 12px !important;
-    font-size: 13px !important;
+  .companies-header button {
+    min-height: 38px;
+    padding: 9px 12px;
+    font-size: 13px;
   }
 
-  .companies-summary,
-  .rooms-summary,
-  .equipments-summary,
-  .sensors-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px !important;
+  .companies-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 
-  .companies-summary-card,
-  .rooms-summary-card,
-  .equipments-summary-card,
-  .sensors-summary-card {
-    padding: 10px !important;
-    border-radius: 14px !important;
+  .companies-summary-card {
+    padding: 10px;
+    border-radius: 14px;
   }
 
-  .companies-summary-card span,
-  .rooms-summary-card span,
-  .equipments-summary-card span,
-  .sensors-summary-card span {
-    font-size: 11px !important;
+  .companies-summary-card span {
+    font-size: 11px;
   }
 
-  .companies-summary-card strong,
-  .rooms-summary-card strong,
-  .equipments-summary-card strong,
-  .sensors-summary-card strong {
-    font-size: 21px !important;
+  .companies-summary-card strong {
+    font-size: 21px;
   }
 
-  .companies-panel,
-  .rooms-panel,
-  .equipments-panel,
-  .sensors-panel {
-    padding: 12px !important;
-    border-radius: 18px !important;
+  .companies-panel {
+    padding: 12px;
+    border-radius: 18px;
   }
 
-  .companies-actions,
-  .rooms-actions,
-  .equipments-actions,
-  .sensors-actions {
-    grid-template-columns: 1fr 1fr !important;
+  .companies-actions {
+    grid-template-columns: 1fr 1fr;
   }
 
-  .companies-actions input,
-  .rooms-actions input,
-  .equipments-actions input,
-  .sensors-actions input {
+  .companies-actions input {
     grid-column: 1 / -1;
   }
 
-  .companies-actions button,
-  .rooms-actions button,
-  .equipments-actions button,
-  .sensors-actions button {
-    width: 100% !important;
+  .companies-actions button {
+    width: 100%;
   }
 
-  .companies-table,
-  .rooms-table,
-  .equipments-table,
-  .sensors-table {
+  .companies-table {
     min-width: 760px;
-    font-size: 12px !important;
+    font-size: 12px;
   }
 }
 
 @media (max-width: 430px) {
-  .companies-summary,
-  .rooms-summary,
-  .equipments-summary,
-  .sensors-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  .companies-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .companies-actions,
-  .rooms-actions,
-  .equipments-actions,
-  .sensors-actions {
-    grid-template-columns: 1fr !important;
+  .companies-actions {
+    grid-template-columns: 1fr;
   }
 }
 
-/* Formulários em formato de painel flutuante */
+/* Painéis flutuantes de cadastro ainda usados pelas telas atuais. */
 .company-form-panel,
 .companies-form-panel,
 .room-form-panel,
@@ -480,14 +450,14 @@ a {
 .sensor-form-panel {
   position: fixed !important;
   inset: 24px !important;
-  z-index: 70 !important;
+  z-index: 160 !important;
+  width: min(980px, calc(100vw - 48px)) !important;
   max-width: 980px !important;
-  width: calc(100vw - 48px) !important;
-  max-height: calc(100vh - 48px) !important;
+  max-height: calc(100dvh - 48px) !important;
   margin: auto !important;
   overflow-y: auto !important;
-  border-radius: 28px !important;
-  box-shadow: 0 30px 90px rgba(3, 20, 63, 0.22) !important;
+  border-radius: 24px !important;
+  box-shadow: var(--shadow-strong) !important;
   animation: formPanelEnter 0.18s ease-out;
 }
 
@@ -499,19 +469,40 @@ a {
   .sensor-form-panel {
     inset: 10px !important;
     width: calc(100vw - 20px) !important;
-    max-height: calc(100vh - 20px) !important;
-    border-radius: 22px !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 20px !important;
+    padding-bottom:
+      max(
+        14px,
+        env(safe-area-inset-bottom)
+      ) !important;
   }
 }
 
 @keyframes formPanelEnter {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.98);
+    transform: translateY(8px) scale(0.985);
   }
 
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+
+  .company-form-panel,
+  .companies-form-panel,
+  .room-form-panel,
+  .equipment-form-panel,
+  .sensor-form-panel {
+    animation: none;
   }
 }
