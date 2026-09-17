@@ -1,8 +1,34 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  CalendarClock,
+  CheckCircle2,
+  CircleDot,
+  ClipboardList,
+  Clock3,
+  DoorOpen,
+  ExternalLink,
+  Layers3,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  Snowflake,
+  Trash2,
+  TriangleAlert,
+  UserRound,
+} from 'lucide-react';
 
 import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
-import { EmptyState } from '../../components/Feedback/EmptyState';
-import { LoadingState } from '../../components/Feedback/LoadingState';
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetricCard,
+  PageHeader,
+  StatusBadge,
+  type UiTone,
+} from '../../components/ui/CryoUi';
 import { useAuth } from '../../contexts/useAuth';
 import { getCompanies } from '../../services/companies';
 import { getEquipments } from '../../services/equipments';
@@ -737,40 +763,48 @@ export function Tasks() {
   if (isLoading) {
     return (
       <LoadingState
-        title="Carregando chamados..."
+        title="Carregando chamados"
         description="Buscando chamados e pendências operacionais."
       />
     );
   }
 
+  const isTechnician = user?.role === 'TECHNICIAN';
+  const pageTitle = isClientUser
+    ? 'Meus chamados'
+    : isTechnician
+      ? 'Tarefas'
+      : 'Chamados';
+  const createLabel = isClientUser
+    ? 'Abrir chamado'
+    : isTechnician
+      ? 'Nova tarefa'
+      : 'Novo chamado';
+
   return (
     <div className="tasks-page">
-      <header className="tasks-header">
-        <div>
-          <span>Operação</span>
-
-          <h1>
-            {isClientUser
-              ? 'Meus chamados'
-              : 'Chamados'}
-          </h1>
-
-          <p>
-            {isClientUser
-              ? 'Abra chamados para sua empresa e acompanhe o andamento das solicitações técnicas.'
-              : 'Acompanhe chamados técnicos por empresa, sala, equipamento, origem, status e prioridade.'}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={openCreateForm}
-        >
-          {isClientUser
-            ? 'Abrir chamado'
-            : 'Novo chamado'}
-        </button>
-      </header>
+      <PageHeader
+        eyebrow="Operação"
+        title={pageTitle}
+        description={
+          isClientUser
+            ? 'Abra solicitações para sua empresa e acompanhe o andamento do atendimento técnico.'
+            : isTechnician
+              ? 'Acompanhe as tarefas operacionais, prioridades, vencimentos e responsáveis.'
+              : 'Acompanhe chamados técnicos por empresa, local, equipamento, origem, status e prioridade.'
+        }
+        icon={ClipboardList}
+        actions={
+          <ActionButton
+            type="button"
+            variant="primary"
+            icon={Plus}
+            onClick={openCreateForm}
+          >
+            {createLabel}
+          </ActionButton>
+        }
+      />
 
       <CollapsibleSection
         title="Resumo dos chamados"
@@ -785,35 +819,52 @@ export function Tasks() {
         contentClassName="tasks-summary"
         variant="section"
       >
-        <SummaryCard
-          title="Total"
+        <MetricCard
+          label="Total"
           value={tasks.length}
+          detail="Chamados carregados"
+          icon={Layers3}
+          tone="info"
         />
 
-        <SummaryCard
-          title="Abertos"
+        <MetricCard
+          label="Abertos"
           value={openTasks}
+          detail="Aguardando andamento"
+          icon={CircleDot}
+          tone="info"
         />
 
-        <SummaryCard
-          title="Em andamento"
+        <MetricCard
+          label="Em andamento"
           value={inProgressTasks}
+          detail="Em atendimento"
+          icon={Clock3}
+          tone={inProgressTasks > 0 ? 'warning' : 'neutral'}
         />
 
-        <SummaryCard
-          title="Concluídos"
+        <MetricCard
+          label="Concluídos"
           value={doneTasks}
+          detail="Finalizados"
+          icon={CheckCircle2}
+          tone="success"
         />
 
-        <SummaryCard
-          title="Externos"
+        <MetricCard
+          label="Externos"
           value={externalTasks}
+          detail="Auvo ou outra origem"
+          icon={ExternalLink}
+          tone={externalTasks > 0 ? 'warning' : 'neutral'}
         />
 
-        <SummaryCard
-          title="Atrasados"
+        <MetricCard
+          label="Atrasados"
           value={overdueTasks}
-          danger
+          detail="Vencimento excedido"
+          icon={TriangleAlert}
+          tone={overdueTasks > 0 ? 'danger' : 'success'}
         />
       </CollapsibleSection>
 
@@ -1223,32 +1274,33 @@ export function Tasks() {
 
       <section className="tasks-panel">
         <div className="tasks-panel-header">
-          <div>
-            <h2>
-              Lista de chamados
-            </h2>
+          <div className="tasks-panel-heading">
+            <span className="tasks-panel-icon" aria-hidden="true">
+              <ClipboardList size={19} strokeWidth={2.15} />
+            </span>
 
-            <p>
-              {filteredTasks.length}{' '}
-              registro(s) exibido(s) de{' '}
-              {tasks.length} carregado(s)
-            </p>
+            <div>
+              <span className="tasks-panel-kicker">Registros</span>
+              <h2>{isTechnician ? 'Lista de tarefas' : 'Lista de chamados'}</h2>
+              <p>
+                {filteredTasks.length} de {tasks.length} registro(s) exibido(s).
+              </p>
+            </div>
           </div>
 
-          <button
+          <ActionButton
             type="button"
-            className="tasks-refresh-action"
-            onClick={() =>
-              void handleRefresh()
-            }
+            variant="secondary"
+            icon={RefreshCw}
+            onClick={() => void handleRefresh()}
           >
             Atualizar
-          </button>
+          </ActionButton>
         </div>
 
         <CollapsibleSection
           title="Filtros"
-          openDescription="Ajuste os filtros para refinar a lista de chamados."
+          openDescription="Ajuste os filtros para refinar os registros exibidos."
           closedDescription={
             activeFilterCount > 0
               ? `${activeFilterCount} filtro(s) ativo(s).`
@@ -1264,285 +1316,156 @@ export function Tasks() {
           contentClassName="tasks-filters-panel"
           variant="toolbar"
         >
-            <div className="tasks-actions">
-              <label className="tasks-filter-field">
-                <span>
-                  Empresa
-                </span>
-
-                <select
-                  value={
-                    selectedCompanyId
-                  }
-                  onChange={(event) => {
-                    setSelectedCompanyId(
-                      event.target.value,
-                    );
-                    setSelectedRoomId('');
-                    setSelectedEquipmentId('');
-                  }}
-                >
-                  <option value="">
-                    Todas as empresas
+          <div className="tasks-actions">
+            <label className="tasks-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => {
+                  setSelectedCompanyId(event.target.value);
+                  setSelectedRoomId('');
+                  setSelectedEquipmentId('');
+                }}
+              >
+                <option value="">Todas as empresas</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
                   </option>
+                ))}
+              </select>
+            </label>
 
-                  {companies.map(
-                    (company) => (
-                      <option
-                        key={company.id}
-                        value={company.id}
-                      >
-                        {company.name}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </label>
-
-              <label className="tasks-filter-field">
-                <span>
-                  Sala
-                </span>
-
-                <select
-                  value={selectedRoomId}
-                  onChange={(event) => {
-                    setSelectedRoomId(
-                      event.target.value,
-                    );
-                    setSelectedEquipmentId('');
-                  }}
-                >
-                  <option value="">
-                    Todas as salas
+            <label className="tasks-filter-field">
+              <span>Sala</span>
+              <select
+                value={selectedRoomId}
+                onChange={(event) => {
+                  setSelectedRoomId(event.target.value);
+                  setSelectedEquipmentId('');
+                }}
+              >
+                <option value="">Todas as salas</option>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
                   </option>
+                ))}
+              </select>
+            </label>
 
-                  {rooms.map(
-                    (room) => (
-                      <option
-                        key={room.id}
-                        value={room.id}
-                      >
-                        {room.name}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </label>
-
-              <label className="tasks-filter-field">
-                <span>
-                  Equipamento
-                </span>
-
-                <select
-                  value={
-                    selectedEquipmentId
-                  }
-                  onChange={(event) =>
-                    setSelectedEquipmentId(
-                      event.target.value,
-                    )
-                  }
-                >
-                  <option value="">
-                    Todos os equipamentos
+            <label className="tasks-filter-field">
+              <span>Equipamento</span>
+              <select
+                value={selectedEquipmentId}
+                onChange={(event) =>
+                  setSelectedEquipmentId(event.target.value)
+                }
+              >
+                <option value="">Todos os equipamentos</option>
+                {equipments.map((equipment) => (
+                  <option key={equipment.id} value={equipment.id}>
+                    {equipment.name}
                   </option>
+                ))}
+              </select>
+            </label>
 
-                  {equipments.map(
-                    (equipment) => (
-                      <option
-                        key={equipment.id}
-                        value={equipment.id}
-                      >
-                        {equipment.name}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </label>
+            <label className="tasks-filter-field">
+              <span>Status</span>
+              <select
+                value={selectedStatus}
+                onChange={(event) => setSelectedStatus(event.target.value)}
+              >
+                <option value="">Todos os status</option>
+                <option value="OPEN">Aberto</option>
+                <option value="IN_PROGRESS">Em andamento</option>
+                <option value="DONE">Concluído</option>
+                <option value="CANCELED">Cancelado</option>
+                <option value="OVERDUE">Atrasado</option>
+              </select>
+            </label>
 
-              <label className="tasks-filter-field">
-                <span>
-                  Status
-                </span>
+            <label className="tasks-filter-field">
+              <span>Prioridade</span>
+              <select
+                value={selectedPriority}
+                onChange={(event) => setSelectedPriority(event.target.value)}
+              >
+                <option value="">Todas as prioridades</option>
+                <option value="LOW">Baixa</option>
+                <option value="MEDIUM">Média</option>
+                <option value="HIGH">Alta</option>
+                <option value="CRITICAL">Crítica</option>
+              </select>
+            </label>
 
-                <select
-                  value={selectedStatus}
-                  onChange={(event) =>
-                    setSelectedStatus(
-                      event.target.value,
-                    )
-                  }
-                >
-                  <option value="">
-                    Todos os status
-                  </option>
+            <label className="tasks-filter-field">
+              <span>Origem</span>
+              <select
+                value={selectedOrigin}
+                onChange={(event) => setSelectedOrigin(event.target.value)}
+              >
+                <option value="">Todas as origens</option>
+                <option value="CRYOMAP">CryoMap</option>
+                <option value="AUVO">Auvo</option>
+                <option value="OTHER">Outro</option>
+              </select>
+            </label>
 
-                  <option value="OPEN">
-                    Aberto
-                  </option>
+            <label className="tasks-filter-field tasks-search-field">
+              <span>Busca</span>
 
-                  <option value="IN_PROGRESS">
-                    Em andamento
-                  </option>
-
-                  <option value="DONE">
-                    Concluído
-                  </option>
-
-                  <option value="CANCELED">
-                    Cancelado
-                  </option>
-
-                  <option value="OVERDUE">
-                    Atrasado
-                  </option>
-                </select>
-              </label>
-
-              <label className="tasks-filter-field">
-                <span>
-                  Prioridade
-                </span>
-
-                <select
-                  value={
-                    selectedPriority
-                  }
-                  onChange={(event) =>
-                    setSelectedPriority(
-                      event.target.value,
-                    )
-                  }
-                >
-                  <option value="">
-                    Todas as prioridades
-                  </option>
-
-                  <option value="LOW">
-                    Baixa
-                  </option>
-
-                  <option value="MEDIUM">
-                    Média
-                  </option>
-
-                  <option value="HIGH">
-                    Alta
-                  </option>
-
-                  <option value="CRITICAL">
-                    Crítica
-                  </option>
-                </select>
-              </label>
-
-              <label className="tasks-filter-field">
-                <span>
-                  Origem
-                </span>
-
-                <select
-                  value={selectedOrigin}
-                  onChange={(event) =>
-                    setSelectedOrigin(
-                      event.target.value,
-                    )
-                  }
-                >
-                  <option value="">
-                    Todas as origens
-                  </option>
-
-                  <option value="CRYOMAP">
-                    CryoMap
-                  </option>
-
-                  <option value="AUVO">
-                    Auvo
-                  </option>
-
-                  <option value="OTHER">
-                    Outro
-                  </option>
-                </select>
-              </label>
-
-              <label className="tasks-filter-field tasks-search-field">
-                <span>
-                  Busca
-                </span>
+              <div className="tasks-search-input">
+                <Search size={16} strokeWidth={2.1} aria-hidden="true" />
 
                 <input
                   type="search"
-                  placeholder="Buscar por título, solicitante, origem..."
+                  placeholder="Título, solicitante, equipamento, origem..."
                   value={search}
-                  onChange={(event) =>
-                    setSearch(
-                      event.target.value,
-                    )
-                  }
+                  onChange={(event) => setSearch(event.target.value)}
                 />
-              </label>
-            </div>
+              </div>
+            </label>
+          </div>
 
-            <div className="tasks-filters-footer">
-              <span>
-                Os filtros principais são
-                aplicados automaticamente.
-                A busca textual filtra os
-                registros já carregados.
-              </span>
+          <div className="tasks-filters-footer">
+            <span>
+              Os filtros estruturados consultam a API. A busca textual refina
+              os registros já carregados.
+            </span>
 
-              <button
-                type="button"
-                className="tasks-secondary-action"
-                onClick={
-                  handleClearFilters
-                }
-                disabled={
-                  activeFilterCount ===
-                  0
-                }
-              >
-                Limpar filtros
-              </button>
-            </div>
+            <ActionButton
+              type="button"
+              variant="ghost"
+              onClick={handleClearFilters}
+              disabled={activeFilterCount === 0}
+            >
+              Limpar filtros
+            </ActionButton>
+          </div>
         </CollapsibleSection>
 
         {activeFilterCount > 0 ? (
           <div className="tasks-active-filters">
             <div className="tasks-active-filters-heading">
-              <span>
-                Filtros ativos
-              </span>
-
-              <strong>
-                {activeFilterCount}
-              </strong>
+              <span>Filtros ativos</span>
+              <strong>{activeFilterCount}</strong>
             </div>
 
             <div className="tasks-filter-chips">
-              {activeFilters.map(
-                (filter) => (
-                  <span
-                    key={`${filter.label}-${filter.value}`}
-                  >
-                    {filter.label}:{' '}
-                    <strong>
-                      {filter.value}
-                    </strong>
-                  </span>
-                ),
-              )}
+              {activeFilters.map((filter) => (
+                <span key={`${filter.label}-${filter.value}`}>
+                  {filter.label}
+                  <strong>{filter.value}</strong>
+                </span>
+              ))}
             </div>
 
             <button
               type="button"
-              onClick={
-                handleClearFilters
-              }
+              className="tasks-clear-filter-button"
+              onClick={handleClearFilters}
             >
               Limpar
             </button>
@@ -1550,305 +1473,305 @@ export function Tasks() {
         ) : null}
 
         {error ? (
-          <div className="tasks-error">
-            <strong>
-              {error}
-            </strong>
-
-            <button
-              type="button"
-              onClick={() =>
-                void handleRefresh()
-              }
-            >
-              Tentar novamente
-            </button>
-          </div>
-        ) : null}
-
-        {!error &&
-        filteredTasks.length === 0 ? (
-          <EmptyState
-            title="Nenhum chamado encontrado."
-            description="Abra um chamado ou ajuste os filtros para visualizar resultados."
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Tente atualizar os dados ou revise a conexão com o backend."
+            action={
+              <ActionButton
+                type="button"
+                variant="danger"
+                icon={RefreshCw}
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
           />
         ) : null}
 
-        {!error &&
-        filteredTasks.length > 0 ? (
-          <div className="tasks-table-wrapper">
-            <table className="tasks-table">
-              <thead>
-                <tr>
-                  <th>
-                    Chamado
-                  </th>
-                  <th>
-                    Origem
-                  </th>
-                  <th>
-                    Referência externa
-                  </th>
-                  <th>
-                    Empresa
-                  </th>
-                  <th>
-                    Sala
-                  </th>
-                  <th>
-                    Equipamento
-                  </th>
-                  <th>
-                    Responsável
-                  </th>
-                  <th>
-                    Aberto por
-                  </th>
-                  <th>
-                    Prioridade
-                  </th>
-                  <th>
-                    Status
-                  </th>
-                  <th>
-                    Vencimento
-                  </th>
-                  <th>
-                    Concluído em
-                  </th>
-                  <th>
-                    Criado em
-                  </th>
-                  <th>
-                    Ações
-                  </th>
-                </tr>
-              </thead>
+        {!error && filteredTasks.length === 0 ? (
+          <EmptyState
+            icon={ClipboardList}
+            title="Nenhum chamado encontrado"
+            description="Abra um novo chamado ou ajuste os filtros para visualizar resultados."
+          />
+        ) : null}
 
-              <tbody>
-                {filteredTasks.map(
-                  (task) => (
-                    <tr key={task.id}>
-                      <td>
-                        <strong>
-                          {task.title}
-                        </strong>
-
-                        <small>
-                          {task.description ||
-                            task.id}
-                        </small>
-                      </td>
-
-                      <td>
-                        <TaskOriginBadge
-                          origin={
-                            task.origin
-                          }
-                        />
-                      </td>
-
-                      <td>
-                        {task.externalCode ? (
-                          <strong>
-                            {
-                              task.externalCode
-                            }
-                          </strong>
-                        ) : (
-                          <span>
-                            -
-                          </span>
-                        )}
-
-                        {task.externalUrl ? (
-                          <a
-                            className="task-external-link"
-                            href={
-                              task.externalUrl
-                            }
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Abrir referência
-                          </a>
-                        ) : null}
-                      </td>
-
-                      <td>
-                        {task.company
-                          ?.name ??
-                          task.companyId}
-                      </td>
-
-                      <td>
-                        {task.room?.name ??
-                          '-'}
-                      </td>
-
-                      <td>
-                        <span>
-                          {task
-                            .equipment
-                            ?.name ?? '-'}
-                        </span>
-
-                        {task
-                          .equipment
-                          ?.code ? (
-                          <small>
-                            {
-                              task
-                                .equipment
-                                .code
-                            }
-                          </small>
-                        ) : null}
-                      </td>
-
-                      <td>
-                        <span>
-                          {task
-                            .assignedToUser
-                            ?.name ?? '-'}
-                        </span>
-
-                        {task
-                          .assignedToUser
-                          ?.email ? (
-                          <small>
-                            {
-                              task
-                                .assignedToUser
-                                .email
-                            }
-                          </small>
-                        ) : null}
-                      </td>
-
-                      <td>
-                        <span>
-                          {task
-                            .createdByUser
-                            ?.name ?? '-'}
-                        </span>
-
-                        {task
-                          .createdByUser
-                          ?.email ? (
-                          <small>
-                            {
-                              task
-                                .createdByUser
-                                .email
-                            }
-                          </small>
-                        ) : null}
-                      </td>
-
-                      <td>
-                        <TaskPriorityBadge
-                          priority={
-                            task.priority
-                          }
-                        />
-                      </td>
-
-                      <td>
-                        <TaskStatusBadge
-                          status={
-                            task.status
-                          }
-                        />
-                      </td>
-
-                      <td>
-                        {formatDateTime(
-                          task.dueDate,
-                        )}
-                      </td>
-
-                      <td>
-                        {formatDateTime(
-                          task.completedAt,
-                        )}
-                      </td>
-
-                      <td>
-                        {formatDate(
-                          task.createdAt,
-                        )}
-                      </td>
-
-                      <td>
-                        {canManageTasks ? (
-                          <div className="task-row-actions">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openEditForm(
-                                  task,
-                                )
-                              }
-                            >
-                              Editar
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                void handleInactivate(
-                                  task,
-                                )
-                              }
-                            >
-                              Remover
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="task-readonly-badge">
-                            Acompanhamento
-                          </span>
-                        )}
-                      </td>
+        {!error && filteredTasks.length > 0 ? (
+          <>
+            <div className="tasks-desktop-table">
+              <div className="tasks-table-wrapper">
+                <table className="tasks-table">
+                  <thead>
+                    <tr>
+                      <th>Chamado</th>
+                      <th>Local</th>
+                      <th>Responsável</th>
+                      <th>Prioridade</th>
+                      <th>Status</th>
+                      <th>Vencimento</th>
+                      <th>Origem</th>
+                      <th>Ações</th>
                     </tr>
-                  ),
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+
+                  <tbody>
+                    {filteredTasks.map((task) => (
+                      <tr key={task.id}>
+                        <td>
+                          <div className="task-table-title">
+                            <strong>{task.title}</strong>
+                            <span>
+                              {task.description || 'Sem descrição informada'}
+                            </span>
+                            <small>
+                              Aberto por {task.createdByUser?.name ?? '-'} ·{' '}
+                              {formatDate(task.createdAt)}
+                            </small>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="task-table-stack">
+                            <strong>
+                              {task.company?.name ?? task.companyId}
+                            </strong>
+
+                            <span>
+                              <DoorOpen size={13} strokeWidth={2} />
+                              {task.room?.name ?? 'Sem sala'}
+                            </span>
+
+                            <span>
+                              <Snowflake size={13} strokeWidth={2} />
+                              {task.equipment?.name ?? 'Sem equipamento'}
+                              {task.equipment?.code
+                                ? ` · ${task.equipment.code}`
+                                : ''}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="task-table-stack">
+                            <strong>
+                              {task.assignedToUser?.name ?? 'Não definido'}
+                            </strong>
+                            <span>{task.assignedToUser?.email ?? '-'}</span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <TaskPriorityBadge priority={task.priority} />
+                        </td>
+
+                        <td>
+                          <TaskStatusBadge status={task.status} />
+                        </td>
+
+                        <td>
+                          <div className="task-table-stack">
+                            <strong>{formatDateTime(task.dueDate)}</strong>
+                            {task.completedAt ? (
+                              <span>
+                                Concluído {formatDateTime(task.completedAt)}
+                              </span>
+                            ) : null}
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="task-table-origin">
+                            <TaskOriginBadge origin={task.origin} />
+
+                            {task.externalCode ? (
+                              <small>{task.externalCode}</small>
+                            ) : null}
+
+                            {task.externalUrl ? (
+                              <a
+                                href={task.externalUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <ExternalLink
+                                  size={13}
+                                  strokeWidth={2.1}
+                                  aria-hidden="true"
+                                />
+                                Abrir referência
+                              </a>
+                            ) : null}
+                          </div>
+                        </td>
+
+                        <td>
+                          {canManageTasks ? (
+                            <div className="task-row-actions">
+                              <button
+                                type="button"
+                                className="task-row-action"
+                                onClick={() => openEditForm(task)}
+                                title="Editar chamado"
+                              >
+                                <Pencil size={15} strokeWidth={2.1} />
+                                <span>Editar</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                className="task-row-action task-row-action--danger"
+                                onClick={() => void handleInactivate(task)}
+                                title="Remover chamado"
+                              >
+                                <Trash2 size={15} strokeWidth={2.1} />
+                                <span>Remover</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <StatusBadge tone="neutral">
+                              Acompanhamento
+                            </StatusBadge>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="tasks-mobile-list">
+              {filteredTasks.map((task) => (
+                <TaskMobileCard
+                  key={task.id}
+                  task={task}
+                  canManageTasks={canManageTasks}
+                  onEdit={openEditForm}
+                  onRemove={(selectedTask) =>
+                    void handleInactivate(selectedTask)
+                  }
+                />
+              ))}
+            </div>
+          </>
         ) : null}
       </section>
     </div>
   );
 }
 
-type SummaryCardProps = {
-  title: string;
-  value: number;
-  danger?: boolean;
+type TaskMobileCardProps = {
+  task: Task;
+  canManageTasks: boolean;
+  onEdit: (task: Task) => void;
+  onRemove: (task: Task) => void;
 };
 
-function SummaryCard({
-  title,
-  value,
-  danger = false,
-}: SummaryCardProps) {
+function TaskMobileCard({
+  task,
+  canManageTasks,
+  onEdit,
+  onRemove,
+}: TaskMobileCardProps) {
   return (
-    <article
-      className={
-        danger
-          ? 'tasks-summary-card danger'
-          : 'tasks-summary-card'
-      }
-    >
-      <span>
-        {title}
-      </span>
+    <article className="task-mobile-card">
+      <div className="task-mobile-card__header">
+        <div className="task-mobile-card__title">
+          <span className="task-mobile-card__eyebrow">
+            {task.company?.name ?? 'Empresa não informada'}
+          </span>
+          <h3>{task.title}</h3>
+        </div>
 
-      <strong>
-        {value}
-      </strong>
+        <TaskStatusBadge status={task.status} />
+      </div>
+
+      {task.description ? (
+        <p className="task-mobile-card__description">{task.description}</p>
+      ) : null}
+
+      <div className="task-mobile-card__badges">
+        <TaskPriorityBadge priority={task.priority} />
+        <TaskOriginBadge origin={task.origin} />
+      </div>
+
+      <div className="task-mobile-card__meta">
+        <div>
+          <DoorOpen size={15} strokeWidth={2.1} />
+          <span>{task.room?.name ?? 'Sem sala específica'}</span>
+        </div>
+
+        <div>
+          <Snowflake size={15} strokeWidth={2.1} />
+          <span>
+            {task.equipment?.name ?? 'Sem equipamento específico'}
+          </span>
+        </div>
+
+        <div>
+          <UserRound size={15} strokeWidth={2.1} />
+          <span>{task.assignedToUser?.name ?? 'Sem responsável'}</span>
+        </div>
+
+        <div>
+          <CalendarClock size={15} strokeWidth={2.1} />
+          <span>
+            {task.dueDate
+              ? `Vence ${formatDateTime(task.dueDate)}`
+              : 'Sem vencimento definido'}
+          </span>
+        </div>
+      </div>
+
+      {task.externalCode || task.externalUrl ? (
+        <div className="task-mobile-card__external">
+          <ExternalLink size={14} strokeWidth={2.1} />
+          <span>{task.externalCode ?? 'Referência externa'}</span>
+
+          {task.externalUrl ? (
+            <a href={task.externalUrl} target="_blank" rel="noreferrer">
+              Abrir
+            </a>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="task-mobile-card__footer">
+        <small>
+          Criado {formatDate(task.createdAt)}
+          {task.createdByUser?.name
+            ? ` · ${task.createdByUser.name}`
+            : ''}
+        </small>
+
+        {canManageTasks ? (
+          <div className="task-mobile-card__actions">
+            <button
+              type="button"
+              onClick={() => onEdit(task)}
+              aria-label={`Editar ${task.title}`}
+            >
+              <Pencil size={16} strokeWidth={2.1} />
+              Editar
+            </button>
+
+            <button
+              type="button"
+              className="danger"
+              onClick={() => onRemove(task)}
+              aria-label={`Remover ${task.title}`}
+            >
+              <Trash2 size={16} strokeWidth={2.1} />
+              Remover
+            </button>
+          </div>
+        ) : (
+          <StatusBadge tone="neutral">Acompanhamento</StatusBadge>
+        )}
+      </div>
     </article>
   );
 }
@@ -1857,15 +1780,11 @@ type TaskOriginBadgeProps = {
   origin: TaskOrigin;
 };
 
-function TaskOriginBadge({
-  origin,
-}: TaskOriginBadgeProps) {
+function TaskOriginBadge({ origin }: TaskOriginBadgeProps) {
   return (
-    <span
-      className={`task-origin ${origin.toLowerCase()}`}
-    >
+    <StatusBadge tone={getTaskOriginTone(origin)}>
       {formatTaskOrigin(origin)}
-    </span>
+    </StatusBadge>
   );
 }
 
@@ -1873,17 +1792,11 @@ type TaskStatusBadgeProps = {
   status: TaskStatus;
 };
 
-function TaskStatusBadge({
-  status,
-}: TaskStatusBadgeProps) {
+function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
   return (
-    <span
-      className={`task-status ${status
-        .toLowerCase()
-        .replace('_', '-')}`}
-    >
+    <StatusBadge tone={getTaskStatusTone(status)}>
       {formatTaskStatus(status)}
-    </span>
+    </StatusBadge>
   );
 }
 
@@ -1891,16 +1804,60 @@ type TaskPriorityBadgeProps = {
   priority: TaskPriority;
 };
 
-function TaskPriorityBadge({
-  priority,
-}: TaskPriorityBadgeProps) {
+function TaskPriorityBadge({ priority }: TaskPriorityBadgeProps) {
   return (
-    <span
-      className={`task-priority ${priority.toLowerCase()}`}
-    >
+    <StatusBadge tone={getTaskPriorityTone(priority)}>
       {formatTaskPriority(priority)}
-    </span>
+    </StatusBadge>
   );
+}
+
+function getTaskOriginTone(origin: TaskOrigin): UiTone {
+  if (origin === 'AUVO') {
+    return 'warning';
+  }
+
+  if (origin === 'CRYOMAP') {
+    return 'info';
+  }
+
+  return 'neutral';
+}
+
+function getTaskStatusTone(status: TaskStatus): UiTone {
+  if (status === 'DONE') {
+    return 'success';
+  }
+
+  if (status === 'OVERDUE') {
+    return 'danger';
+  }
+
+  if (status === 'IN_PROGRESS') {
+    return 'warning';
+  }
+
+  if (status === 'OPEN') {
+    return 'info';
+  }
+
+  return 'neutral';
+}
+
+function getTaskPriorityTone(priority: TaskPriority): UiTone {
+  if (priority === 'CRITICAL') {
+    return 'danger';
+  }
+
+  if (priority === 'HIGH') {
+    return 'warning';
+  }
+
+  if (priority === 'MEDIUM') {
+    return 'info';
+  }
+
+  return 'neutral';
 }
 
 function formatTaskOrigin(
