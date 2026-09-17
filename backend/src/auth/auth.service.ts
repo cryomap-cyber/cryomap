@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+
 import { PrismaService } from '../prisma/prisma.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import type { AuthUser } from './types/auth-user.type.js';
@@ -19,6 +20,26 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: {
         email: loginDto.email,
+      },
+      select: {
+        id: true,
+        companyId: true,
+        name: true,
+        email: true,
+        passwordHash: true,
+        phone: true,
+        jobTitle: true,
+        profileImagePath: true,
+        role: true,
+        status: true,
+        company: {
+          select: {
+            id: true,
+            name: true,
+            cnpj: true,
+            status: true,
+          },
+        },
       },
     });
 
@@ -66,14 +87,7 @@ export class AuthService {
     return {
       accessToken,
       tokenType: 'Bearer',
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        companyId: user.companyId,
-      } satisfies AuthUser,
+      user: this.toAuthUser(user),
     };
   }
 
@@ -84,11 +98,22 @@ export class AuthService {
       },
       select: {
         id: true,
+        companyId: true,
         name: true,
         email: true,
+        phone: true,
+        jobTitle: true,
+        profileImagePath: true,
         role: true,
         status: true,
-        companyId: true,
+        company: {
+          select: {
+            id: true,
+            name: true,
+            cnpj: true,
+            status: true,
+          },
+        },
       },
     });
 
@@ -100,6 +125,32 @@ export class AuthService {
       throw new UnauthorizedException('Usuário inativo ou bloqueado');
     }
 
-    return user;
+    return this.toAuthUser(user);
+  }
+
+  private toAuthUser(user: {
+    id: string;
+    companyId: string | null;
+    name: string;
+    email: string;
+    phone: string | null;
+    jobTitle: string | null;
+    profileImagePath: string | null;
+    role: AuthUser['role'];
+    status: AuthUser['status'];
+    company: AuthUser['company'];
+  }): AuthUser {
+    return {
+      id: user.id,
+      companyId: user.companyId,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      jobTitle: user.jobTitle,
+      role: user.role,
+      status: user.status,
+      hasProfileImage: Boolean(user.profileImagePath),
+      company: user.company,
+    };
   }
 }

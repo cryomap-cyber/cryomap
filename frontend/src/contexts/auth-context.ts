@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+
 import type { AuthUser } from '../types/auth';
 
 export type AuthContextData = {
@@ -8,6 +9,7 @@ export type AuthContextData = {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<AuthUser>;
 };
 
 export const AuthContext = createContext<AuthContextData | undefined>(

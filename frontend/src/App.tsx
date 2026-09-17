@@ -17,6 +17,7 @@ import { Rooms } from './pages/Rooms/Rooms';
 import { Sensors } from './pages/Sensors/Sensors';
 import { ServiceProblemSuggestions } from './pages/ServiceProblemSuggestions/ServiceProblemSuggestions';
 import { ServiceRecords } from './pages/ServiceRecords/ServiceRecords';
+import { SettingsPage } from './pages/Settings/Settings';
 import { Tasks } from './pages/Tasks/Tasks';
 import { TemperatureReadings } from './pages/TemperatureReadings/TemperatureReadings';
 import { ThermalAlerts } from './pages/ThermalAlerts/ThermalAlerts';
@@ -32,6 +33,7 @@ export function App() {
         <Route element={<AppLayout />}>
           <Route element={<ProtectedRoute allowedRoles={allRoles} />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/rooms" element={<Rooms />} />
             <Route path="/equipments" element={<Equipments />} />
             <Route

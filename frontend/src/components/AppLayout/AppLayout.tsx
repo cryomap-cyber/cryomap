@@ -40,6 +40,7 @@ import {
   getAllowedNavigationItems,
   type NavigationItem,
 } from '../../permissions/role-permissions';
+import { getOwnProfileImage } from '../../services/profile';
 import './AppLayout.css';
 
 type NavigationGroup = {
@@ -111,6 +112,7 @@ export function AppLayout() {
 
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
   const allowedNavigationItems = useMemo(
     () =>
@@ -168,6 +170,43 @@ export function AppLayout() {
     setIsMoreOpen(false);
     setIsProfileOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    let isMounted = true;
+    let objectUrl: string | null = null;
+
+    if (!user?.hasProfileImage) {
+      setProfileImageUrl(null);
+      return;
+    }
+
+    setProfileImageUrl(null);
+
+    getOwnProfileImage()
+      .then((blob) => {
+        if (!isMounted) {
+          return;
+        }
+
+        objectUrl = URL.createObjectURL(blob);
+        setProfileImageUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+
+        setProfileImageUrl(null);
+      });
+
+    return () => {
+      isMounted = false;
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [user]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -237,10 +276,21 @@ export function AppLayout() {
         </nav>
 
         <div className="sidebar-user">
-          <UserAvatar
-            initials={userInitials}
-            name={user?.name}
-          />
+          <NavLink
+            to="/settings"
+            aria-label="Abrir configurações do perfil"
+            title="Configurações"
+            style={{
+              display: 'inline-flex',
+              textDecoration: 'none',
+            }}
+          >
+            <UserAvatar
+              initials={userInitials}
+              name={user?.name}
+              imageUrl={profileImageUrl}
+            />
+          </NavLink>
 
           <div className="sidebar-user-copy">
             <span>{user?.name ?? 'Usuário CryoMap'}</span>
@@ -296,6 +346,7 @@ export function AppLayout() {
             <UserAvatar
               initials={userInitials}
               name={user?.name}
+              imageUrl={profileImageUrl}
               compact
             />
           </button>
@@ -319,6 +370,7 @@ export function AppLayout() {
               <UserAvatar
                 initials={userInitials}
                 name={user?.name}
+                imageUrl={profileImageUrl}
               />
 
               <div>
@@ -328,19 +380,19 @@ export function AppLayout() {
               </div>
             </div>
 
-            <button
-              type="button"
+            <NavLink
+              to="/settings"
               className="mobile-profile-option"
-              disabled
-              title="Configurações serão habilitadas na próxima etapa."
+              style={{ textDecoration: 'none' }}
+              onClick={closeOverlays}
             >
               <Settings size={18} strokeWidth={2.1} />
 
               <span>
                 <strong>Configurações</strong>
-                <small>Em breve</small>
+                <small>Perfil e conta</small>
               </span>
-            </button>
+            </NavLink>
 
             <button
               type="button"
@@ -406,6 +458,7 @@ export function AppLayout() {
               <UserAvatar
                 initials={userInitials}
                 name={user?.name}
+                imageUrl={profileImageUrl}
               />
 
               <div className="mobile-more-user-copy">
@@ -601,12 +654,14 @@ function Brand({ compact = false }: BrandProps) {
 type UserAvatarProps = {
   initials: string;
   name?: string | null;
+  imageUrl?: string | null;
   compact?: boolean;
 };
 
 function UserAvatar({
   initials,
   name,
+  imageUrl,
   compact = false,
 }: UserAvatarProps) {
   return (
@@ -619,7 +674,20 @@ function UserAvatar({
       aria-label={name ?? 'Usuário CryoMap'}
       title={name ?? 'Usuário CryoMap'}
     >
-      {initials}
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt=""
+          aria-hidden="true"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+      ) : (
+        initials
+      )}
     </span>
   );
 }

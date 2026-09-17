@@ -164,19 +164,20 @@ model Company {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  companyId    String?    @map("company_id")
-  name         String
-  email        String     @unique
-  passwordHash String     @map("password_hash")
-  phone        String?
-  jobTitle     String?    @map("job_title")
-  role         UserRole   @default(TECHNICIAN)
-  status       UserStatus @default(ACTIVE)
-  lastLoginAt  DateTime?  @map("last_login_at")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
-  deletedAt    DateTime?  @map("deleted_at")
+  id               String     @id @default(uuid())
+  companyId        String?    @map("company_id")
+  name             String
+  email            String     @unique
+  passwordHash     String     @map("password_hash")
+  phone            String?
+  jobTitle         String?    @map("job_title")
+  profileImagePath String?    @map("profile_image_path")
+  role             UserRole   @default(TECHNICIAN)
+  status           UserStatus @default(ACTIVE)
+  lastLoginAt      DateTime?  @map("last_login_at")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+  deletedAt        DateTime?  @map("deleted_at")
 
   company                     Company?                      @relation(fields: [companyId], references: [id], onDelete: SetNull)
   assignedTasks               Task[]                        @relation("AssignedTasks")
@@ -257,7 +258,7 @@ model Sensor {
   type            SensorType   @default(TEMPERATURE_HUMIDITY)
   location        String?
   status          SensorStatus @default(ACTIVE)
-  lastSeenAt      DateTime?    @map("last_seen_at")
+  lastSeenAt      DateTime?     @map("last_seen_at")
   lastTemperature Float?       @map("last_temperature")
   lastHumidity    Float?       @map("last_humidity")
   createdAt       DateTime     @default(now()) @map("created_at")
@@ -314,7 +315,7 @@ model EquipmentTemperatureReading {
   source                 EquipmentTemperatureSource @default(MANUAL)
   notes                  String?
   measuredAt             DateTime                   @default(now()) @map("measured_at")
-  createdAt              DateTime                   @default(now()) @map("created_at")
+  createdAt               DateTime                   @default(now()) @map("created_at")
 
   company       Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
   room          Room?     @relation(fields: [roomId], references: [id], onDelete: SetNull)
@@ -389,7 +390,7 @@ model ThermalAlert {
   resolvedAt           DateTime?            @map("resolved_at")
   createdAt            DateTime             @default(now()) @map("created_at")
   updatedAt            DateTime             @updatedAt @map("updated_at")
-  deletedAt            DateTime?            @map("deleted_at")
+  deletedAt            DateTime?             @map("deleted_at")
 
   company            Company                 @relation(fields: [companyId], references: [id], onDelete: Restrict)
   room               Room                    @relation(fields: [roomId], references: [id], onDelete: Restrict)

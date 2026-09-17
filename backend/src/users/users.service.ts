@@ -3,15 +3,27 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { existsSync } from 'node:fs';
+import { unlink } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 
+import type { AuthUser } from '../auth/types/auth-user.type.js';
 import { Prisma, UserRole, UserStatus } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { AuthUser } from '../auth/types/auth-user.type.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
+import { UpdateOwnProfileDto } from './dto/update-own-profile.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
+
+const companySelect = {
+  id: true,
+  name: true,
+  cnpj: true,
+  status: true,
+} satisfies Prisma.CompanySelect;
 
 const userSelect = {
   id: true,
@@ -27,12 +39,25 @@ const userSelect = {
   updatedAt: true,
   deletedAt: true,
   company: {
-    select: {
-      id: true,
-      name: true,
-      cnpj: true,
-      status: true,
-    },
+    select: companySelect,
+  },
+} satisfies Prisma.UserSelect;
+
+const ownProfileSelect = {
+  id: true,
+  companyId: true,
+  name: true,
+  email: true,
+  phone: true,
+  jobTitle: true,
+  profileImagePath: true,
+  role: true,
+  status: true,
+  lastLoginAt: true,
+  createdAt: true,
+  updatedAt: true,
+  company: {
+    select: companySelect,
   },
 } satisfies Prisma.UserSelect;
 
@@ -40,8 +65,14 @@ type SelectedUser = Prisma.UserGetPayload<{
   select: typeof userSelect;
 }>;
 
+type SelectedOwnProfile = Prisma.UserGetPayload<{
+  select: typeof ownProfileSelect;
+}>;
+
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto, actor: AuthUser) {
@@ -70,6 +101,191 @@ export class UsersService {
       },
       select: userSelect,
     });
+  }
+
+  async findOwnProfile(actor: AuthUser) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: actor.id,
+        deletedAt: null,
+      },
+      select: ownProfileSelect,
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    return this.toOwnProfile(user);
+  }
+
+  async updateOwnProfile(
+    updateOwnProfileDto: UpdateOwnProfileDto,
+    actor: AuthUser,
+  ) {
+    this.ensureActorCanEditOwnProfile(actor);
+
+    await this.findOwnProfile(actor);
+
+    const data: Prisma.UserUpdateInput = {};
+
+    if (updateOwnProfileDto.name !== undefined) {
+      const name = updateOwnProfileDto.name.trim();
+
+      if (name.length < 2) {
+        throw new BadRequestException(
+          'O nome deve ter pelo menos 2 caracteres',
+        );
+      }
+
+      data.name = name;
+    }
+
+    if (updateOwnProfileDto.email !== undefined) {
+      const normalizedEmail = this.normalizeEmail(updateOwnProfileDto.email);
+
+      await this.ensureEmailIsAvailable(normalizedEmail, actor.id);
+
+      data.email = normalizedEmail;
+    }
+
+    if (updateOwnProfileDto.phone !== undefined) {
+      data.phone = updateOwnProfileDto.phone?.trim() || null;
+    }
+
+    if (updateOwnProfileDto.jobTitle !== undefined) {
+      data.jobTitle = updateOwnProfileDto.jobTitle?.trim() || null;
+    }
+
+    const user = await this.prisma.user.update({
+      where: {
+        id: actor.id,
+      },
+      data,
+      select: ownProfileSelect,
+    });
+
+    return this.toOwnProfile(user);
+  }
+
+  async updateOwnProfileImage(
+    file: Express.Multer.File | undefined,
+    actor: AuthUser,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Imagem de perfil não enviada');
+    }
+
+    const currentUser = await this.prisma.user.findFirst({
+      where: {
+        id: actor.id,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        profileImagePath: true,
+      },
+    });
+
+    if (!currentUser) {
+      await this.removeProfileImageFileByName(file.filename);
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    const newProfileImagePath = `uploads/profile-images/${file.filename}`;
+
+    let updatedUser: SelectedOwnProfile;
+
+    try {
+      updatedUser = await this.prisma.user.update({
+        where: {
+          id: actor.id,
+        },
+        data: {
+          profileImagePath: newProfileImagePath,
+        },
+        select: ownProfileSelect,
+      });
+    } catch (error) {
+      await this.removeProfileImageFileByName(file.filename);
+      throw error;
+    }
+
+    if (
+      currentUser.profileImagePath &&
+      currentUser.profileImagePath !== newProfileImagePath
+    ) {
+      await this.removeProfileImageFile(currentUser.profileImagePath);
+    }
+
+    return this.toOwnProfile(updatedUser);
+  }
+
+  async getOwnProfileImage(actor: AuthUser) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: actor.id,
+        deletedAt: null,
+      },
+      select: {
+        profileImagePath: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    if (!user.profileImagePath) {
+      throw new NotFoundException('Foto de perfil não encontrada');
+    }
+
+    const absolutePath = this.getProfileImageAbsolutePath(
+      user.profileImagePath,
+    );
+
+    if (!existsSync(absolutePath)) {
+      throw new NotFoundException('Arquivo da foto de perfil não encontrado');
+    }
+
+    return {
+      absolutePath,
+    };
+  }
+
+  async removeOwnProfileImage(actor: AuthUser) {
+    const currentUser = await this.prisma.user.findFirst({
+      where: {
+        id: actor.id,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        profileImagePath: true,
+      },
+    });
+
+    if (!currentUser) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    const oldProfileImagePath = currentUser.profileImagePath;
+
+    const updatedUser = await this.prisma.user.update({
+      where: {
+        id: actor.id,
+      },
+      data: {
+        profileImagePath: null,
+      },
+      select: ownProfileSelect,
+    });
+
+    if (oldProfileImagePath) {
+      await this.removeProfileImageFile(oldProfileImagePath);
+    }
+
+    return this.toOwnProfile(updatedUser);
   }
 
   async findAll() {
@@ -179,6 +395,68 @@ export class UsersService {
       },
       select: userSelect,
     });
+  }
+
+  private toOwnProfile(user: SelectedOwnProfile) {
+    return {
+      id: user.id,
+      companyId: user.companyId,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      jobTitle: user.jobTitle,
+      role: user.role,
+      status: user.status,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      hasProfileImage: Boolean(user.profileImagePath),
+      company: user.company,
+    };
+  }
+
+  private getProfileImageAbsolutePath(profileImagePath: string) {
+    const fileName = basename(profileImagePath);
+
+    return join(process.cwd(), '..', 'uploads', 'profile-images', fileName);
+  }
+
+  private async removeProfileImageFile(profileImagePath: string) {
+    const absolutePath = this.getProfileImageAbsolutePath(profileImagePath);
+
+    try {
+      await unlink(absolutePath);
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        return;
+      }
+
+      this.logger.warn(
+        `Não foi possível remover a foto de perfil antiga: ${absolutePath}`,
+      );
+    }
+  }
+
+  private async removeProfileImageFileByName(fileName: string) {
+    await this.removeProfileImageFile(
+      `uploads/profile-images/${basename(fileName)}`,
+    );
+  }
+
+  private ensureActorCanEditOwnProfile(actor: AuthUser) {
+    if (
+      actor.role !== UserRole.MASTER_ADMIN &&
+      actor.role !== UserRole.SUPERVISOR
+    ) {
+      throw new ForbiddenException(
+        'Somente administradores master e supervisores podem alterar dados de perfil',
+      );
+    }
   }
 
   private async ensureActorCanCreateUser(
