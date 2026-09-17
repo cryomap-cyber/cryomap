@@ -1,8 +1,34 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  Activity,
+  Building2,
+  Clock3,
+  Droplets,
+  Gauge,
+  MapPin,
+  Pencil,
+  Plus,
+  Power,
+  Radio,
+  RefreshCw,
+  Search,
+  Thermometer,
+  TriangleAlert,
+  Wrench,
+} from 'lucide-react';
 
 import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
-import { EmptyState } from '../../components/Feedback/EmptyState';
-import { LoadingState } from '../../components/Feedback/LoadingState';
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetaPill,
+  MetricCard,
+  PageHeader,
+  StatusBadge,
+  type UiTone,
+} from '../../components/ui/CryoUi';
 import { getCompanies } from '../../services/companies';
 import { getRooms } from '../../services/rooms';
 import {
@@ -232,6 +258,13 @@ export function Sensors() {
     (sensor) => sensor.status === 'INACTIVE',
   ).length;
 
+  const sensorsWithTelemetry = sensors.filter(
+    (sensor) =>
+      sensor.lastTemperature !== null ||
+      sensor.lastHumidity !== null ||
+      Boolean(sensor.lastSeenAt),
+  ).length;
+
   function openCreateForm() {
     setEditingSensor(null);
     setFormData({
@@ -352,7 +385,7 @@ export function Sensors() {
   if (isLoading) {
     return (
       <LoadingState
-        title="Carregando sensores..."
+        title="Carregando sensores"
         description="Buscando sensores vinculados às salas."
       />
     );
@@ -360,20 +393,40 @@ export function Sensors() {
 
   return (
     <div className="sensors-page">
-      <header className="sensors-header">
-        <div>
-          <span>Cadastros</span>
-          <h1>Sensores</h1>
-          <p>
-            Visualize sensores vinculados às salas. Sensores não são vinculados
-            diretamente aos equipamentos.
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Cadastros"
+        title="Sensores"
+        description="Gerencie os sensores ambientais instalados nas salas e acompanhe a última telemetria recebida. Sensores não são vinculados diretamente aos equipamentos."
+        icon={Radio}
+        actions={
+          <ActionButton
+            type="button"
+            icon={Plus}
+            variant="primary"
+            onClick={openCreateForm}
+          >
+            Novo sensor
+          </ActionButton>
+        }
+        meta={
+          <>
+            <MetaPill icon={Radio}>{sensors.length} sensor(es)</MetaPill>
 
-        <button type="button" onClick={openCreateForm}>
-          Novo sensor
-        </button>
-      </header>
+            <MetaPill
+              icon={offlineSensors > 0 ? TriangleAlert : Activity}
+              tone={offlineSensors > 0 ? 'warning' : 'success'}
+            >
+              {offlineSensors > 0
+                ? `${offlineSensors} offline`
+                : 'Sem sensores offline'}
+            </MetaPill>
+
+            <MetaPill icon={Gauge}>
+              {sensorsWithTelemetry} com telemetria
+            </MetaPill>
+          </>
+        }
+      />
 
       <CollapsibleSection
         title="Resumo dos sensores"
@@ -388,11 +441,53 @@ export function Sensors() {
         contentClassName="sensors-summary"
         variant="section"
       >
-        <SummaryCard title="Total" value={sensors.length} />
-        <SummaryCard title="Ativos" value={activeSensors} />
-        <SummaryCard title="Offline" value={offlineSensors} danger />
-        <SummaryCard title="Manutenção" value={maintenanceSensors} />
-        <SummaryCard title="Inativos" value={inactiveSensors} />
+        <MetricCard
+          label="Total"
+          value={sensors.length}
+          detail="Sensores carregados"
+          icon={Radio}
+          tone="info"
+        />
+
+        <MetricCard
+          label="Ativos"
+          value={activeSensors}
+          detail="Disponíveis para operação"
+          icon={Activity}
+          tone="success"
+        />
+
+        <MetricCard
+          label="Offline"
+          value={offlineSensors}
+          detail="Sem operação disponível"
+          icon={Power}
+          tone={offlineSensors > 0 ? 'danger' : 'success'}
+        />
+
+        <MetricCard
+          label="Manutenção"
+          value={maintenanceSensors}
+          detail="Em intervenção"
+          icon={Wrench}
+          tone={maintenanceSensors > 0 ? 'warning' : 'neutral'}
+        />
+
+        <MetricCard
+          label="Inativos"
+          value={inactiveSensors}
+          detail="Fora do cadastro ativo"
+          icon={Power}
+          tone="neutral"
+        />
+
+        <MetricCard
+          label="Com telemetria"
+          value={sensorsWithTelemetry}
+          detail="Com leitura ou comunicação registrada"
+          icon={Gauge}
+          tone="info"
+        />
       </CollapsibleSection>
 
       {isFormOpen ? (
@@ -401,12 +496,23 @@ export function Sensors() {
             <div>
               <span>Sensor</span>
               <h2>{editingSensor ? 'Editar sensor' : 'Novo sensor'}</h2>
+              <p>
+                Vincule o sensor à empresa e à sala correta e configure seu tipo
+                de medição.
+              </p>
             </div>
 
-            <button type="button" onClick={closeForm}>
+            <ActionButton type="button" variant="ghost" onClick={closeForm}>
               Fechar
-            </button>
+            </ActionButton>
           </div>
+
+          <InlineNotice
+            tone="info"
+            icon={MapPin}
+            title="Vínculo ambiental"
+            description="Todo sensor pertence a uma sala. Equipamentos não recebem vínculo direto com sensores."
+          />
 
           <form className="sensor-form" onSubmit={handleSubmit}>
             <label>
@@ -508,17 +614,25 @@ export function Sensors() {
             ) : null}
 
             <div className="sensor-form-actions">
-              <button type="button" onClick={closeForm}>
+              <ActionButton
+                type="button"
+                variant="secondary"
+                onClick={closeForm}
+              >
                 Cancelar
-              </button>
+              </ActionButton>
 
-              <button type="submit" disabled={isSaving}>
+              <ActionButton
+                type="submit"
+                variant="primary"
+                disabled={isSaving}
+              >
                 {isSaving
                   ? 'Salvando...'
                   : editingSensor
                     ? 'Salvar alterações'
                     : 'Cadastrar sensor'}
-              </button>
+              </ActionButton>
             </div>
           </form>
         </section>
@@ -527,17 +641,21 @@ export function Sensors() {
       <section className="sensors-panel">
         <div className="sensors-panel-header">
           <div>
+            <span>Monitoramento ambiental</span>
             <h2>Lista de sensores</h2>
-            <p>{filteredSensors.length} registro(s) encontrado(s)</p>
+            <p>
+              {filteredSensors.length} registro(s) exibido(s) de {sensors.length}{' '}
+              carregado(s)
+            </p>
           </div>
 
-          <button
+          <ActionButton
             type="button"
-            className="sensors-refresh-action"
+            icon={RefreshCw}
             onClick={() => void handleRefresh()}
           >
             Atualizar
-          </button>
+          </ActionButton>
         </div>
 
         <CollapsibleSection
@@ -591,8 +709,11 @@ export function Sensors() {
               </select>
             </label>
 
-            <label className="sensors-filter-field">
-              <span>Busca</span>
+            <label className="sensors-filter-field sensors-search-field">
+              <span>
+                <Search size={13} strokeWidth={2.1} aria-hidden="true" />
+                Busca
+              </span>
               <input
                 type="search"
                 placeholder="Buscar por código, localização, sala..."
@@ -604,120 +725,249 @@ export function Sensors() {
         </CollapsibleSection>
 
         {error ? (
-          <div className="sensors-error">
-            <strong>{error}</strong>
-
-            <button type="button" onClick={handleRefresh}>
-              Tentar novamente
-            </button>
-          </div>
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Tente atualizar os sensores ou reveja os filtros selecionados."
+            action={
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="danger"
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {!error && filteredSensors.length === 0 ? (
           <EmptyState
-            title="Nenhum sensor encontrado."
+            icon={Radio}
+            title="Nenhum sensor encontrado"
             description="Cadastre um sensor ou ajuste os filtros para visualizar resultados."
           />
         ) : null}
 
         {!error && filteredSensors.length > 0 ? (
-          <div className="sensors-table-wrapper">
-            <table className="sensors-table">
-              <thead>
-                <tr>
-                  <th>Sensor</th>
-                  <th>Código</th>
-                  <th>Empresa</th>
-                  <th>Sala</th>
-                  <th>Tipo</th>
-                  <th>Última temperatura</th>
-                  <th>Última umidade</th>
-                  <th>Última comunicação</th>
-                  <th>Status</th>
-                  <th>Criado em</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+          <>
+            <div className="sensors-mobile-list">
+              {filteredSensors.map((sensor) => (
+                <SensorMobileCard
+                  key={sensor.id}
+                  sensor={sensor}
+                  onEdit={openEditForm}
+                  onInactivate={handleInactivate}
+                />
+              ))}
+            </div>
 
-              <tbody>
-                {filteredSensors.map((sensor) => (
-                  <tr key={sensor.id}>
-                    <td>
-                      <strong>{sensor.code}</strong>
-                      <small>{sensor.location || sensor.id}</small>
-                    </td>
-
-                    <td>{sensor.code}</td>
-
-                    <td>{sensor.company?.name ?? sensor.companyId}</td>
-
-                    <td>{sensor.room?.name ?? sensor.roomId}</td>
-
-                    <td>{formatSensorType(sensor.type)}</td>
-
-                    <td>
-                      <strong>
-                        {formatTemperature(sensor.lastTemperature)}
-                      </strong>
-                    </td>
-
-                    <td>
-                      <strong>{formatHumidity(sensor.lastHumidity)}</strong>
-                    </td>
-
-                    <td>{formatDateTime(sensor.lastSeenAt)}</td>
-
-                    <td>
-                      <SensorStatusBadge status={sensor.status} />
-                    </td>
-
-                    <td>{formatDate(sensor.createdAt)}</td>
-
-                    <td>
-                      <div className="sensor-row-actions">
-                        <button
-                          type="button"
-                          onClick={() => openEditForm(sensor)}
-                        >
-                          Editar
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={sensor.status === 'INACTIVE'}
-                          onClick={() => handleInactivate(sensor)}
-                        >
-                          Inativar
-                        </button>
-                      </div>
-                    </td>
+            <div className="sensors-table-wrapper">
+              <table className="sensors-table">
+                <thead>
+                  <tr>
+                    <th>Sensor</th>
+                    <th>Local</th>
+                    <th>Tipo</th>
+                    <th>Telemetria</th>
+                    <th>Comunicação</th>
+                    <th>Status</th>
+                    <th>Cadastro</th>
+                    <th>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {filteredSensors.map((sensor) => (
+                    <tr key={sensor.id}>
+                      <td>
+                        <div className="sensor-table-primary">
+                          <strong>{sensor.code}</strong>
+                          <span>{sensor.location || 'Local não informado'}</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="sensor-table-location">
+                          <span>
+                            <Building2 size={13} strokeWidth={2} />
+                            {sensor.company?.name ?? sensor.companyId}
+                          </span>
+
+                          <span>
+                            <MapPin size={13} strokeWidth={2} />
+                            {sensor.room?.name ?? sensor.roomId}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <SensorTypeBadge type={sensor.type} />
+                      </td>
+
+                      <td>
+                        <SensorTelemetry sensor={sensor} />
+                      </td>
+
+                      <td>
+                        <div className="sensor-table-communication">
+                          <Clock3 size={13} strokeWidth={2} />
+
+                          <div>
+                            <strong>{formatDateTime(sensor.lastSeenAt)}</strong>
+                            <small>Última comunicação</small>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td>
+                        <SensorStatusBadge status={sensor.status} />
+                      </td>
+
+                      <td>
+                        <div className="sensor-table-created">
+                          <span>{formatDate(sensor.createdAt)}</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="sensor-row-actions">
+                          <button
+                            type="button"
+                            className="sensor-icon-action"
+                            title="Editar sensor"
+                            aria-label={`Editar sensor ${sensor.code}`}
+                            onClick={() => openEditForm(sensor)}
+                          >
+                            <Pencil size={15} strokeWidth={2} />
+                          </button>
+
+                          <button
+                            type="button"
+                            className="sensor-icon-action sensor-icon-action--danger"
+                            title="Inativar sensor"
+                            aria-label={`Inativar sensor ${sensor.code}`}
+                            disabled={sensor.status === 'INACTIVE'}
+                            onClick={() => void handleInactivate(sensor)}
+                          >
+                            <Power size={15} strokeWidth={2} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
       </section>
     </div>
   );
 }
 
-type SummaryCardProps = {
-  title: string;
-  value: number;
-  danger?: boolean;
+type SensorMobileCardProps = {
+  sensor: Sensor;
+  onEdit: (sensor: Sensor) => void;
+  onInactivate: (sensor: Sensor) => Promise<void>;
 };
 
-function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
+function SensorMobileCard({
+  sensor,
+  onEdit,
+  onInactivate,
+}: SensorMobileCardProps) {
   return (
     <article
-      className={
-        danger ? 'sensors-summary-card danger' : 'sensors-summary-card'
-      }
+      className={`sensor-mobile-card sensor-mobile-card--${sensor.status.toLowerCase()}`}
     >
-      <span>{title}</span>
-      <strong>{value}</strong>
+      <div className="sensor-mobile-card-header">
+        <div>
+          <span>{formatSensorType(sensor.type)}</span>
+          <strong>{sensor.code}</strong>
+          <small>{sensor.location || 'Local não informado'}</small>
+        </div>
+
+        <SensorStatusBadge status={sensor.status} />
+      </div>
+
+      <div className="sensor-mobile-card-telemetry">
+        <div>
+          <span>Temperatura</span>
+          <strong>{formatTemperature(sensor.lastTemperature)}</strong>
+        </div>
+
+        <div>
+          <span>Umidade</span>
+          <strong>{formatHumidity(sensor.lastHumidity)}</strong>
+        </div>
+      </div>
+
+      <div className="sensor-mobile-card-meta">
+        <div>
+          <span>Empresa</span>
+          <strong>{sensor.company?.name ?? sensor.companyId}</strong>
+        </div>
+
+        <div>
+          <span>Sala</span>
+          <strong>{sensor.room?.name ?? sensor.roomId}</strong>
+        </div>
+
+        <div>
+          <span>Última comunicação</span>
+          <strong>{formatDateTime(sensor.lastSeenAt)}</strong>
+        </div>
+
+        <div>
+          <span>Criado em</span>
+          <strong>{formatDate(sensor.createdAt)}</strong>
+        </div>
+      </div>
+
+      <div className="sensor-mobile-card-actions">
+        <ActionButton
+          type="button"
+          icon={Pencil}
+          variant="secondary"
+          onClick={() => onEdit(sensor)}
+        >
+          Editar
+        </ActionButton>
+
+        <ActionButton
+          type="button"
+          icon={Power}
+          variant="danger"
+          disabled={sensor.status === 'INACTIVE'}
+          onClick={() => void onInactivate(sensor)}
+        >
+          Inativar
+        </ActionButton>
+      </div>
     </article>
+  );
+}
+
+type SensorTelemetryProps = {
+  sensor: Sensor;
+};
+
+function SensorTelemetry({ sensor }: SensorTelemetryProps) {
+  return (
+    <div className="sensor-telemetry">
+      <div>
+        <Thermometer size={14} strokeWidth={2.1} />
+        <span>{formatTemperature(sensor.lastTemperature)}</span>
+      </div>
+
+      <div>
+        <Droplets size={14} strokeWidth={2.1} />
+        <span>{formatHumidity(sensor.lastHumidity)}</span>
+      </div>
+    </div>
   );
 }
 
@@ -734,9 +984,37 @@ function SensorStatusBadge({ status }: SensorStatusBadgeProps) {
   };
 
   return (
-    <span className={`sensor-status ${status.toLowerCase()}`}>
+    <StatusBadge tone={getSensorStatusTone(status)}>
       {labels[status]}
-    </span>
+    </StatusBadge>
+  );
+}
+
+function getSensorStatusTone(status: SensorStatus): UiTone {
+  if (status === 'ACTIVE') {
+    return 'success';
+  }
+
+  if (status === 'OFFLINE') {
+    return 'danger';
+  }
+
+  if (status === 'MAINTENANCE') {
+    return 'warning';
+  }
+
+  return 'neutral';
+}
+
+type SensorTypeBadgeProps = {
+  type: SensorType;
+};
+
+function SensorTypeBadge({ type }: SensorTypeBadgeProps) {
+  return (
+    <StatusBadge tone="info">
+      {formatSensorType(type)}
+    </StatusBadge>
   );
 }
 
@@ -779,7 +1057,13 @@ function formatDateTime(value?: string | null) {
     return '-';
   }
 
-  return new Date(value).toLocaleString('pt-BR');
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
 }
 
 function optionalValue(value: string) {

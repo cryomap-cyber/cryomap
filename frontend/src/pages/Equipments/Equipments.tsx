@@ -1,8 +1,33 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  Activity,
+  Building2,
+  CirclePause,
+  Fan,
+  Gauge,
+  MapPin,
+  Pencil,
+  Plus,
+  Power,
+  RefreshCw,
+  Search,
+  Thermometer,
+  TriangleAlert,
+  Wrench,
+} from 'lucide-react';
 
 import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
-import { EmptyState } from '../../components/Feedback/EmptyState';
-import { LoadingState } from '../../components/Feedback/LoadingState';
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetaPill,
+  MetricCard,
+  PageHeader,
+  StatusBadge,
+  type UiTone,
+} from '../../components/ui/CryoUi';
 import { getCompanies } from '../../services/companies';
 import {
   createEquipment,
@@ -429,29 +454,51 @@ export function Equipments() {
   if (isLoading) {
     return (
       <LoadingState
-        title="Carregando equipamentos..."
-        description="Buscando equipamentos cadastrados."
+        title="Carregando equipamentos"
+        description="Buscando equipamentos cadastrados e medições técnicas recentes."
       />
     );
   }
 
+  const attentionEquipments =
+    stoppedEquipments + maintenanceEquipments + offlineEquipments;
+
   return (
     <div className="equipments-page">
-      <header className="equipments-header">
-        <div>
-          <span>Cadastros</span>
-          <h1>Equipamentos</h1>
-          <p>
-            Visualize máquinas e equipamentos cadastrados, com resumo da última
-            medição técnica registrada. Sensores ficam vinculados às salas, não
-            aos equipamentos.
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Cadastros"
+        title="Equipamentos"
+        description="Gerencie máquinas e equipamentos e consulte a última medição técnica registrada. Sensores permanecem vinculados às salas, nunca aos equipamentos."
+        icon={Wrench}
+        actions={
+          <ActionButton
+            type="button"
+            icon={Plus}
+            variant="primary"
+            onClick={openCreateForm}
+          >
+            Novo equipamento
+          </ActionButton>
+        }
+        meta={
+          <>
+            <MetaPill icon={Wrench}>{equipments.length} equipamento(s)</MetaPill>
 
-        <button type="button" onClick={openCreateForm}>
-          Novo equipamento
-        </button>
-      </header>
+            <MetaPill
+              icon={attentionEquipments > 0 ? TriangleAlert : Activity}
+              tone={attentionEquipments > 0 ? 'warning' : 'success'}
+            >
+              {attentionEquipments > 0
+                ? `${attentionEquipments} requer(em) atenção`
+                : 'Operação estável'}
+            </MetaPill>
+
+            <MetaPill icon={Gauge}>
+              {equipmentsWithMeasurement} com medição técnica
+            </MetaPill>
+          </>
+        }
+      />
 
       <CollapsibleSection
         title="Resumo dos equipamentos"
@@ -466,14 +513,69 @@ export function Equipments() {
         contentClassName="equipments-summary"
         variant="section"
       >
-        <SummaryCard title="Total" value={equipments.length} />
-        <SummaryCard title="Ativos" value={activeEquipments} />
-        <SummaryCard title="Rodando" value={runningEquipments} />
-        <SummaryCard title="Parados" value={stoppedEquipments} danger />
-        <SummaryCard title="Manutenção" value={maintenanceEquipments} />
-        <SummaryCard title="Offline" value={offlineEquipments} />
-        <SummaryCard title="Inativos" value={inactiveEquipments} />
-        <SummaryCard title="Com medição" value={equipmentsWithMeasurement} />
+        <MetricCard
+          label="Total"
+          value={equipments.length}
+          detail="Equipamentos carregados"
+          icon={Wrench}
+          tone="info"
+        />
+
+        <MetricCard
+          label="Ativos"
+          value={activeEquipments}
+          detail="Cadastro operacional"
+          icon={Activity}
+          tone="success"
+        />
+
+        <MetricCard
+          label="Rodando"
+          value={runningEquipments}
+          detail="Em operação"
+          icon={Fan}
+          tone="success"
+        />
+
+        <MetricCard
+          label="Parados"
+          value={stoppedEquipments}
+          detail="Equipamentos interrompidos"
+          icon={CirclePause}
+          tone={stoppedEquipments > 0 ? 'danger' : 'success'}
+        />
+
+        <MetricCard
+          label="Manutenção"
+          value={maintenanceEquipments}
+          detail="Em intervenção"
+          icon={Wrench}
+          tone={maintenanceEquipments > 0 ? 'warning' : 'neutral'}
+        />
+
+        <MetricCard
+          label="Offline"
+          value={offlineEquipments}
+          detail="Sem operação disponível"
+          icon={Power}
+          tone="neutral"
+        />
+
+        <MetricCard
+          label="Inativos"
+          value={inactiveEquipments}
+          detail="Fora do cadastro ativo"
+          icon={Power}
+          tone="neutral"
+        />
+
+        <MetricCard
+          label="Com medição"
+          value={equipmentsWithMeasurement}
+          detail="Última medição técnica disponível"
+          icon={Thermometer}
+          tone="info"
+        />
       </CollapsibleSection>
 
       {isFormOpen ? (
@@ -486,12 +588,27 @@ export function Equipments() {
                   ? 'Editar equipamento'
                   : 'Novo equipamento'}
               </h2>
+              <p>
+                Configure identificação, vínculo, fluido refrigerante e
+                parâmetros operacionais do equipamento.
+              </p>
             </div>
 
-            <button type="button" onClick={closeForm}>
+            <ActionButton
+              type="button"
+              variant="ghost"
+              onClick={closeForm}
+            >
               Fechar
-            </button>
+            </ActionButton>
           </div>
+
+          <InlineNotice
+            tone="info"
+            icon={Thermometer}
+            title="Medições técnicas"
+            description="Equipamentos não possuem sensores próprios. Temperaturas, pressões e demais parâmetros técnicos são registrados manualmente."
+          />
 
           <form className="equipment-form" onSubmit={handleSubmit}>
             <label>
@@ -670,17 +787,25 @@ export function Equipments() {
             ) : null}
 
             <div className="equipment-form-actions">
-              <button type="button" onClick={closeForm}>
+              <ActionButton
+                type="button"
+                variant="secondary"
+                onClick={closeForm}
+              >
                 Cancelar
-              </button>
+              </ActionButton>
 
-              <button type="submit" disabled={isSaving}>
+              <ActionButton
+                type="submit"
+                variant="primary"
+                disabled={isSaving}
+              >
                 {isSaving
                   ? 'Salvando...'
                   : editingEquipment
                     ? 'Salvar alterações'
                     : 'Cadastrar equipamento'}
-              </button>
+              </ActionButton>
             </div>
           </form>
         </section>
@@ -689,17 +814,21 @@ export function Equipments() {
       <section className="equipments-panel">
         <div className="equipments-panel-header">
           <div>
+            <span>Cadastro técnico</span>
             <h2>Lista de equipamentos</h2>
-            <p>{filteredEquipments.length} registro(s) encontrado(s)</p>
+            <p>
+              {filteredEquipments.length} registro(s) exibido(s) de{' '}
+              {equipments.length} carregado(s)
+            </p>
           </div>
 
-          <button
+          <ActionButton
             type="button"
-            className="equipments-refresh-action"
+            icon={RefreshCw}
             onClick={() => void handleRefresh()}
           >
             Atualizar
-          </button>
+          </ActionButton>
         </div>
 
         <CollapsibleSection
@@ -754,7 +883,10 @@ export function Equipments() {
             </label>
 
             <label className="equipments-filter-field equipments-search-field">
-              <span>Busca</span>
+              <span>
+                <Search size={13} strokeWidth={2.1} aria-hidden="true" />
+                Busca
+              </span>
               <input
                 type="search"
                 placeholder="Buscar por nome, código, fluido, pressão..."
@@ -766,174 +898,367 @@ export function Equipments() {
         </CollapsibleSection>
 
         {error ? (
-          <div className="equipments-error">
-            <strong>{error}</strong>
-
-            <button type="button" onClick={() => void handleRefresh()}>
-              Tentar novamente
-            </button>
-          </div>
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Tente atualizar os equipamentos ou reveja os filtros selecionados."
+            action={
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="danger"
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {!error && filteredEquipments.length === 0 ? (
           <EmptyState
-            title="Nenhum equipamento encontrado."
+            icon={Wrench}
+            title="Nenhum equipamento encontrado"
             description="Cadastre um equipamento ou ajuste os filtros para visualizar resultados."
           />
         ) : null}
 
         {!error && filteredEquipments.length > 0 ? (
-          <div className="equipments-table-wrapper">
-            <table className="equipments-table">
-              <thead>
-                <tr>
-                  <th>Equipamento</th>
-                  <th>Código</th>
-                  <th>Empresa</th>
-                  <th>Sala</th>
-                  <th>Fabricante / Modelo</th>
-                  <th>Nº de série</th>
-                  <th>Fluido</th>
-                  <th>Setpoint / Delta</th>
-                  <th>Última medição</th>
-                  <th>Pressões</th>
-                  <th>Super/Sub</th>
-                  <th>Vazão</th>
-                  <th>Status</th>
-                  <th>Criado em</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+          <>
+            <div className="equipments-mobile-list">
+              {filteredEquipments.map((equipment) => (
+                <EquipmentMobileCard
+                  key={equipment.id}
+                  equipment={equipment}
+                  onEdit={openEditForm}
+                  onInactivate={handleInactivate}
+                />
+              ))}
+            </div>
 
-              <tbody>
-                {filteredEquipments.map((equipment) => {
-                  const latestMeasurement = getLatestMeasurement(equipment);
+            <div className="equipments-table-wrapper">
+              <table className="equipments-table">
+                <thead>
+                  <tr>
+                    <th>Equipamento</th>
+                    <th>Local</th>
+                    <th>Especificação</th>
+                    <th>Configuração</th>
+                    <th>Última medição</th>
+                    <th>Pressões</th>
+                    <th>Operação</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
 
-                  return (
-                    <tr key={equipment.id}>
-                      <td>
-                        <strong>{equipment.name}</strong>
-                        <small>{equipment.notes || equipment.id}</small>
-                      </td>
+                <tbody>
+                  {filteredEquipments.map((equipment) => {
+                    const latestMeasurement = getLatestMeasurement(equipment);
 
-                      <td>{equipment.code}</td>
+                    return (
+                      <tr key={equipment.id}>
+                        <td>
+                          <div className="equipment-table-primary">
+                            <strong>{equipment.name}</strong>
+                            <span>{equipment.code}</span>
+                            <small>
+                              {equipment.notes || 'Sem observações'}
+                            </small>
+                          </div>
+                        </td>
 
-                      <td>{equipment.company?.name ?? equipment.companyId}</td>
+                        <td>
+                          <div className="equipment-table-location">
+                            <span>
+                              <Building2 size={13} strokeWidth={2} />
+                              {equipment.company?.name ?? equipment.companyId}
+                            </span>
 
-                      <td>{equipment.room?.name ?? '-'}</td>
+                            <span>
+                              <MapPin size={13} strokeWidth={2} />
+                              {equipment.room?.name ?? 'Sem sala vinculada'}
+                            </span>
+                          </div>
+                        </td>
 
-                      <td>
-                        <span>{equipment.manufacturer ?? '-'}</span>
-                        <small>{equipment.model ?? '-'}</small>
-                      </td>
+                        <td>
+                          <div className="equipment-table-spec">
+                            <strong>
+                              {equipment.manufacturer ?? 'Fabricante não informado'}
+                            </strong>
+                            <span>{equipment.model ?? 'Modelo não informado'}</span>
+                            <small>
+                              Série: {equipment.serialNumber ?? '-'} · Fluido:{' '}
+                              {formatRefrigerantFluid(
+                                equipment.refrigerantFluid,
+                              )}
+                            </small>
+                          </div>
+                        </td>
 
-                      <td>{equipment.serialNumber ?? '-'}</td>
+                        <td>
+                          <div className="equipment-table-config">
+                            <span>
+                              Setpoint{' '}
+                              <strong>
+                                {formatTemperature(equipment.setpoint)}
+                              </strong>
+                            </span>
 
-                      <td>
-                        {formatRefrigerantFluid(equipment.refrigerantFluid)}
-                      </td>
+                            <span>
+                              Delta{' '}
+                              <strong>{formatTemperature(equipment.delta)}</strong>
+                            </span>
+                          </div>
+                        </td>
 
-                      <td>
-                        <span>
-                          Setpoint: {formatTemperature(equipment.setpoint)}
-                        </span>
-                        <small>
-                          Delta: {formatTemperature(equipment.delta)}
-                        </small>
-                      </td>
+                        <td>
+                          <EquipmentMeasurementSummary
+                            equipment={equipment}
+                            measurement={latestMeasurement}
+                          />
+                        </td>
 
-                      <td>
-                        <strong>
-                          {formatTemperature(
-                            latestMeasurement?.temperature ??
-                              equipment.currentTemperature,
-                          )}
-                        </strong>
-                        <small>
-                          {latestMeasurement
-                            ? formatDateTime(latestMeasurement.measuredAt)
-                            : 'Sem medição técnica'}
-                        </small>
-                      </td>
+                        <td>
+                          <div className="equipment-table-pressures">
+                            <span>
+                              Descarga{' '}
+                              <strong>
+                                {formatPressure(
+                                  latestMeasurement?.dischargePressure,
+                                )}
+                              </strong>
+                            </span>
 
-                      <td>
-                        <span>
-                          Descarga:{' '}
-                          {formatPressure(
-                            latestMeasurement?.dischargePressure,
-                          )}
-                        </span>
-                        <small>
-                          Sucção:{' '}
-                          {formatPressure(latestMeasurement?.suctionPressure)}
-                        </small>
-                      </td>
+                            <span>
+                              Sucção{' '}
+                              <strong>
+                                {formatPressure(
+                                  latestMeasurement?.suctionPressure,
+                                )}
+                              </strong>
+                            </span>
 
-                      <td>
-                        <span>
-                          Super:{' '}
-                          {formatTemperature(latestMeasurement?.superheating)}
-                        </span>
-                        <small>
-                          Sub:{' '}
-                          {formatTemperature(latestMeasurement?.subcooling)}
-                        </small>
-                      </td>
+                            <small>
+                              Super{' '}
+                              {formatTemperature(latestMeasurement?.superheating)}
+                              {' · '}
+                              Sub{' '}
+                              {formatTemperature(latestMeasurement?.subcooling)}
+                            </small>
+                          </div>
+                        </td>
 
-                      <td>{formatAirFlow(latestMeasurement?.airFlow)}</td>
+                        <td>
+                          <div className="equipment-table-operation">
+                            <EquipmentStatusBadge status={equipment.status} />
 
-                      <td>
-                        <EquipmentStatusBadge status={equipment.status} />
-                      </td>
+                            <span>
+                              <Fan size={13} strokeWidth={2} />
+                              {formatAirFlow(latestMeasurement?.airFlow)}
+                            </span>
 
-                      <td>{formatDate(equipment.createdAt)}</td>
+                            <small>
+                              Criado em {formatDate(equipment.createdAt)}
+                            </small>
+                          </div>
+                        </td>
 
-                      <td>
-                        <div className="equipment-row-actions">
-                          <button
-                            type="button"
-                            onClick={() => openEditForm(equipment)}
-                          >
-                            Editar
-                          </button>
+                        <td>
+                          <div className="equipment-row-actions">
+                            <button
+                              type="button"
+                              className="equipment-icon-action"
+                              title="Editar equipamento"
+                              aria-label={`Editar equipamento ${equipment.name}`}
+                              onClick={() => openEditForm(equipment)}
+                            >
+                              <Pencil size={15} strokeWidth={2} />
+                            </button>
 
-                          <button
-                            type="button"
-                            disabled={equipment.status === 'INACTIVE'}
-                            onClick={() => void handleInactivate(equipment)}
-                          >
-                            Inativar
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                            <button
+                              type="button"
+                              className="equipment-icon-action equipment-icon-action--danger"
+                              title="Inativar equipamento"
+                              aria-label={`Inativar equipamento ${equipment.name}`}
+                              disabled={equipment.status === 'INACTIVE'}
+                              onClick={() => void handleInactivate(equipment)}
+                            >
+                              <Power size={15} strokeWidth={2} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
       </section>
     </div>
   );
 }
 
-type SummaryCardProps = {
-  title: string;
-  value: number;
-  danger?: boolean;
+type EquipmentMobileCardProps = {
+  equipment: Equipment;
+  onEdit: (equipment: Equipment) => void;
+  onInactivate: (equipment: Equipment) => Promise<void>;
 };
 
-function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
+function EquipmentMobileCard({
+  equipment,
+  onEdit,
+  onInactivate,
+}: EquipmentMobileCardProps) {
+  const latestMeasurement = getLatestMeasurement(equipment);
+
   return (
     <article
-      className={
-        danger ? 'equipments-summary-card danger' : 'equipments-summary-card'
-      }
+      className={`equipment-mobile-card equipment-mobile-card--${equipment.status.toLowerCase()}`}
     >
-      <span>{title}</span>
-      <strong>{value}</strong>
+      <div className="equipment-mobile-card-header">
+        <div>
+          <span>{equipment.code}</span>
+          <strong>{equipment.name}</strong>
+          <small>{equipment.company?.name ?? equipment.companyId}</small>
+        </div>
+
+        <EquipmentStatusBadge status={equipment.status} />
+      </div>
+
+      <div className="equipment-mobile-card-measurement">
+        <span>Última temperatura técnica</span>
+        <strong>
+          {formatTemperature(
+            latestMeasurement?.temperature ?? equipment.currentTemperature,
+          )}
+        </strong>
+        <small>
+          {latestMeasurement
+            ? formatDateTime(latestMeasurement.measuredAt)
+            : 'Sem medição técnica registrada'}
+        </small>
+      </div>
+
+      <div className="equipment-mobile-card-meta">
+        <div>
+          <span>Sala</span>
+          <strong>{equipment.room?.name ?? 'Sem sala vinculada'}</strong>
+        </div>
+
+        <div>
+          <span>Fabricante / modelo</span>
+          <strong>
+            {[equipment.manufacturer, equipment.model]
+              .filter(Boolean)
+              .join(' · ') || '-'}
+          </strong>
+        </div>
+
+        <div>
+          <span>Setpoint / delta</span>
+          <strong>
+            {formatTemperature(equipment.setpoint)} /{' '}
+            {formatTemperature(equipment.delta)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Fluido</span>
+          <strong>{formatRefrigerantFluid(equipment.refrigerantFluid)}</strong>
+        </div>
+      </div>
+
+      <div className="equipment-mobile-card-technical">
+        <div>
+          <span>Descarga</span>
+          <strong>
+            {formatPressure(latestMeasurement?.dischargePressure)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Sucção</span>
+          <strong>{formatPressure(latestMeasurement?.suctionPressure)}</strong>
+        </div>
+
+        <div>
+          <span>Super / Sub</span>
+          <strong>
+            {formatTemperature(latestMeasurement?.superheating)} /{' '}
+            {formatTemperature(latestMeasurement?.subcooling)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Vazão</span>
+          <strong>{formatAirFlow(latestMeasurement?.airFlow)}</strong>
+        </div>
+      </div>
+
+      {equipment.notes ? (
+        <p className="equipment-mobile-card-notes">{equipment.notes}</p>
+      ) : null}
+
+      <div className="equipment-mobile-card-actions">
+        <ActionButton
+          type="button"
+          icon={Pencil}
+          variant="secondary"
+          onClick={() => onEdit(equipment)}
+        >
+          Editar
+        </ActionButton>
+
+        <ActionButton
+          type="button"
+          icon={Power}
+          variant="danger"
+          disabled={equipment.status === 'INACTIVE'}
+          onClick={() => void onInactivate(equipment)}
+        >
+          Inativar
+        </ActionButton>
+      </div>
     </article>
+  );
+}
+
+type EquipmentMeasurementSummaryProps = {
+  equipment: Equipment;
+  measurement: EquipmentLatestMeasurement | null;
+};
+
+function EquipmentMeasurementSummary({
+  equipment,
+  measurement,
+}: EquipmentMeasurementSummaryProps) {
+  const temperature = measurement?.temperature ?? equipment.currentTemperature;
+
+  return (
+    <div className="equipment-measurement-summary">
+      <Thermometer size={15} strokeWidth={2.1} />
+
+      <div>
+        <strong>{formatTemperature(temperature)}</strong>
+        <small>
+          {measurement
+            ? formatDateTime(measurement.measuredAt)
+            : 'Sem medição técnica'}
+        </small>
+
+        {measurement ? (
+          <span>
+            Linha líquida{' '}
+            {formatTemperature(measurement.liquidLineTemperature)} · Evap.{' '}
+            {formatTemperature(measurement.evaporationTemperature)}
+          </span>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -952,10 +1277,26 @@ function EquipmentStatusBadge({ status }: EquipmentStatusBadgeProps) {
   };
 
   return (
-    <span className={`equipment-status ${status.toLowerCase()}`}>
+    <StatusBadge tone={getEquipmentStatusTone(status)}>
       {labels[status]}
-    </span>
+    </StatusBadge>
   );
+}
+
+function getEquipmentStatusTone(status: EquipmentStatus): UiTone {
+  if (status === 'ACTIVE' || status === 'RUNNING') {
+    return 'success';
+  }
+
+  if (status === 'STOPPED') {
+    return 'danger';
+  }
+
+  if (status === 'MAINTENANCE') {
+    return 'warning';
+  }
+
+  return 'neutral';
 }
 
 function getLatestMeasurement(
@@ -1013,7 +1354,13 @@ function formatDateTime(value?: string | null) {
     return '-';
   }
 
-  return new Date(value).toLocaleString('pt-BR');
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
 }
 
 function formatNumberForInput(value?: number | null) {

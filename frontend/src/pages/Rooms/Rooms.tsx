@@ -16,10 +16,43 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import {
+  Activity,
+  ArrowDown,
+  ArrowUp,
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  CircleAlert,
+  Clock3,
+  DoorOpen,
+  Eye,
+  MapPin,
+  Pencil,
+  Plus,
+  Power,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  ShieldCheck,
+  Thermometer,
+  TriangleAlert,
+  WifiOff,
+} from 'lucide-react';
 
 import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
-import { EmptyState } from '../../components/Feedback/EmptyState';
-import { LoadingState } from '../../components/Feedback/LoadingState';
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetaPill,
+  MetricCard,
+  PageHeader,
+  SectionCard,
+  StatusBadge,
+  type UiTone,
+} from '../../components/ui/CryoUi';
 import { useAuth } from '../../contexts/useAuth';
 import { getCompanies } from '../../services/companies';
 import {
@@ -669,37 +702,64 @@ export function Rooms() {
   if (isLoading) {
     return (
       <LoadingState
-        title="Carregando salas..."
+        title="Carregando salas"
         description="Buscando salas, status térmico e leituras recentes."
       />
     );
   }
 
+  const monitoringTone: UiTone =
+    criticalRooms > 0 ? 'danger' : warningRooms > 0 ? 'warning' : 'success';
+
   return (
     <div className="rooms-page">
-      <header className="rooms-header">
-        <div>
-          <span>Cadastros</span>
-          <h1>Salas</h1>
-          <p>
-            Visualize os ambientes monitorados por sensores no CryoMap. As
-            leituras podem vir de sensores ou registros manuais de contingência.
-          </p>
+      <PageHeader
+        eyebrow="Cadastros"
+        title="Salas"
+        description="Visualize os ambientes monitorados pelo CryoMap, acompanhe a condição térmica e consulte o histórico de temperatura e umidade."
+        icon={DoorOpen}
+        actions={
+          canManageRooms ? (
+            <ActionButton
+              type="button"
+              icon={Plus}
+              variant="primary"
+              onClick={openCreateForm}
+            >
+              Nova sala
+            </ActionButton>
+          ) : undefined
+        }
+        meta={
+          <>
+            <MetaPill icon={Building2}>{rooms.length} sala(s)</MetaPill>
 
-          {!canManageRooms ? (
-            <p>
-              Seu acesso é somente leitura para salas. Alterações cadastrais
-              ficam restritas à administração.
-            </p>
-          ) : null}
-        </div>
+            <MetaPill
+              icon={criticalRooms > 0 ? TriangleAlert : CheckCircle2}
+              tone={monitoringTone}
+            >
+              {criticalRooms > 0
+                ? `${criticalRooms} crítica(s)`
+                : warningRooms > 0
+                  ? `${warningRooms} em atenção`
+                  : 'Monitoramento normal'}
+            </MetaPill>
 
-        {canManageRooms ? (
-          <button type="button" onClick={openCreateForm}>
-            Nova sala
-          </button>
-        ) : null}
-      </header>
+            <MetaPill icon={ShieldCheck}>
+              {canManageRooms ? 'Gestão habilitada' : 'Somente consulta'}
+            </MetaPill>
+          </>
+        }
+      />
+
+      {!canManageRooms ? (
+        <InlineNotice
+          tone="info"
+          icon={Eye}
+          title="Modo de consulta"
+          description="Alterações cadastrais de salas ficam restritas ao Master Admin e Supervisor."
+        />
+      ) : null}
 
       <CollapsibleSection
         title="Resumo das salas"
@@ -714,46 +774,81 @@ export function Rooms() {
         contentClassName="rooms-summary"
         variant="section"
       >
-        <SummaryCard title="Total" value={rooms.length} />
-        <SummaryCard title="Com temperatura" value={roomsWithTemperature} />
-        <SummaryCard title="Normal" value={normalRooms} />
-        <SummaryCard title="Atenção" value={warningRooms} />
-        <SummaryCard title="Críticas" value={criticalRooms} danger />
-        <SummaryCard title="Offline" value={offlineRooms} />
+        <MetricCard
+          label="Total"
+          value={rooms.length}
+          detail="Salas carregadas"
+          icon={DoorOpen}
+          tone="info"
+        />
+
+        <MetricCard
+          label="Com temperatura"
+          value={roomsWithTemperature}
+          detail="Com valor atual disponível"
+          icon={Thermometer}
+          tone="info"
+        />
+
+        <MetricCard
+          label="Normal"
+          value={normalRooms}
+          detail="Dentro da condição esperada"
+          icon={CheckCircle2}
+          tone="success"
+        />
+
+        <MetricCard
+          label="Atenção"
+          value={warningRooms}
+          detail="Requer acompanhamento"
+          icon={TriangleAlert}
+          tone={warningRooms > 0 ? 'warning' : 'neutral'}
+        />
+
+        <MetricCard
+          label="Críticas"
+          value={criticalRooms}
+          detail="Fora da condição térmica"
+          icon={CircleAlert}
+          tone={criticalRooms > 0 ? 'danger' : 'success'}
+        />
+
+        <MetricCard
+          label="Offline"
+          value={offlineRooms}
+          detail="Sem condição térmica ativa"
+          icon={WifiOff}
+          tone="neutral"
+        />
       </CollapsibleSection>
 
-      <section className="rooms-temperature-chart-panel">
-        <div className="rooms-temperature-chart-header">
-          <div>
-            <span>Gráfico térmico</span>
-            <h2>{chartMetricConfig.label}</h2>
-            <p>
-              Acompanhe a evolução térmica por sala. A tela recarrega o gráfico
-              automaticamente a cada 1 hora para reduzir carga no sistema.
-            </p>
-          </div>
+      <SectionCard
+        eyebrow="Gráfico térmico"
+        title={chartMetricConfig.label}
+        description="Acompanhe a evolução térmica da sala selecionada. O gráfico é recarregado automaticamente a cada 1 hora para reduzir carga no sistema."
+        icon={Activity}
+        className="rooms-temperature-chart-panel"
+        action={
+          <label className="rooms-temperature-chart-room">
+            <span>Sala</span>
+            <select
+              value={activeChartRoomId}
+              onChange={(event) =>
+                void handleChartRoomChange(event.target.value)
+              }
+            >
+              <option value="">Selecione uma sala</option>
 
-          <div className="rooms-temperature-chart-actions">
-            <label>
-              Sala
-              <select
-                value={activeChartRoomId}
-                onChange={(event) =>
-                  void handleChartRoomChange(event.target.value)
-                }
-              >
-                <option value="">Selecione uma sala</option>
-
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.name} — {room.company?.name ?? room.companyId}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </div>
-
+              {rooms.map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name} — {room.company?.name ?? room.companyId}
+                </option>
+              ))}
+            </select>
+          </label>
+        }
+      >
         <div className="rooms-temperature-chart-controls">
           <div>
             <strong>Indicador</strong>
@@ -820,51 +915,71 @@ export function Rooms() {
 
         {chartStats ? (
           <section className="rooms-temperature-chart-summary">
-            <ChartSummaryCard
-              title="Último ponto"
+            <MetricCard
+              label="Último ponto"
               value={formatMetricValue(chartStats.latest.value, chartMetric)}
-              description={chartStats.latest.label}
+              detail={chartStats.latest.label}
+              icon={Clock3}
+              tone="info"
             />
-            <ChartSummaryCard
-              title="Média"
+
+            <MetricCard
+              label="Média"
               value={formatMetricValue(chartStats.average, chartMetric)}
-              description={`${chartStats.totalMeasurements} leitura(s)`}
+              detail={`${chartStats.totalMeasurements} leitura(s)`}
+              icon={Activity}
+              tone="info"
             />
-            <ChartSummaryCard
-              title="Mínimo"
+
+            <MetricCard
+              label="Mínimo"
               value={formatMetricValue(chartStats.minimum, chartMetric)}
-              description="Menor valor do período"
+              detail="Menor valor do período"
+              icon={ArrowDown}
+              tone="success"
             />
-            <ChartSummaryCard
-              title="Máximo"
+
+            <MetricCard
+              label="Máximo"
               value={formatMetricValue(chartStats.maximum, chartMetric)}
-              description="Maior valor do período"
+              detail="Maior valor do período"
+              icon={ArrowUp}
+              tone="warning"
             />
           </section>
         ) : null}
 
         {chartStats ? (
-          <p className="rooms-temperature-chart-insight">
-            {getChartTrendText(chartStats, chartMetric)}
-          </p>
+          <InlineNotice
+            tone="info"
+            icon={Activity}
+            title="Tendência do período"
+            description={getChartTrendText(chartStats, chartMetric)}
+          />
         ) : null}
 
         {chartError ? (
-          <div className="rooms-error">
-            <strong>{chartError}</strong>
-
-            <button
-              type="button"
-              onClick={() => void loadTemperatureChartData()}
-            >
-              Tentar novamente
-            </button>
-          </div>
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={chartError}
+            description="Tente carregar novamente as leituras da sala selecionada."
+            action={
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="danger"
+                onClick={() => void loadTemperatureChartData()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {isChartLoading ? (
           <LoadingState
-            title="Carregando gráfico..."
+            title="Carregando gráfico"
             description="Buscando leituras térmicas da sala selecionada."
           />
         ) : null}
@@ -928,11 +1043,12 @@ export function Rooms() {
 
         {!isChartLoading && !chartError && chartData.length === 0 ? (
           <EmptyState
-            title="Sem dados para o gráfico."
+            icon={Activity}
+            title="Sem dados para o gráfico"
             description="Selecione outra sala, período ou indicador para visualizar leituras."
           />
         ) : null}
-      </section>
+      </SectionCard>
 
       {isFormOpen && canManageRooms ? (
         <section className="room-form-panel">
@@ -940,11 +1056,14 @@ export function Rooms() {
             <div>
               <span>Sala</span>
               <h2>{editingRoom ? 'Editar sala' : 'Nova sala'}</h2>
+              <p>
+                Configure identificação, faixa térmica e posição do ambiente.
+              </p>
             </div>
 
-            <button type="button" onClick={closeForm}>
+            <ActionButton type="button" variant="ghost" onClick={closeForm}>
               Fechar
-            </button>
+            </ActionButton>
           </div>
 
           <form className="room-form" onSubmit={handleSubmit}>
@@ -1058,17 +1177,25 @@ export function Rooms() {
             ) : null}
 
             <div className="room-form-actions">
-              <button type="button" onClick={closeForm}>
+              <ActionButton
+                type="button"
+                variant="secondary"
+                onClick={closeForm}
+              >
                 Cancelar
-              </button>
+              </ActionButton>
 
-              <button type="submit" disabled={isSaving}>
+              <ActionButton
+                type="submit"
+                variant="primary"
+                disabled={isSaving}
+              >
                 {isSaving
                   ? 'Salvando...'
                   : editingRoom
                     ? 'Salvar alterações'
                     : 'Cadastrar sala'}
-              </button>
+              </ActionButton>
             </div>
           </form>
         </section>
@@ -1077,6 +1204,7 @@ export function Rooms() {
       <section className="rooms-panel">
         <div className="rooms-panel-header">
           <div>
+            <span>Ambientes cadastrados</span>
             <h2>Lista de salas</h2>
             <p>
               {filteredRooms.length} registro(s) exibido(s) de {rooms.length}{' '}
@@ -1084,13 +1212,13 @@ export function Rooms() {
             </p>
           </div>
 
-          <button
+          <ActionButton
             type="button"
-            className="rooms-refresh-action"
+            icon={RefreshCw}
             onClick={() => void handleRefresh()}
           >
             Atualizar
-          </button>
+          </ActionButton>
         </div>
 
         <CollapsibleSection
@@ -1112,37 +1240,54 @@ export function Rooms() {
           variant="toolbar"
         >
           <div className="rooms-actions">
-            <select
-              value={selectedCompanyId}
-              onChange={(event) => setSelectedCompanyId(event.target.value)}
-            >
-              <option value="">Todas as empresas</option>
+            <label className="rooms-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => setSelectedCompanyId(event.target.value)}
+              >
+                <option value="">Todas as empresas</option>
 
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <input
-              type="search"
-              placeholder="Buscar por sala, empresa, status..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
+            <label className="rooms-filter-field rooms-search-field">
+              <span>
+                <Search size={13} strokeWidth={2.1} aria-hidden="true" />
+                Busca
+              </span>
+              <input
+                type="search"
+                placeholder="Buscar por sala, empresa, status..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
 
-            <button type="button" onClick={() => void handleApplyFilters()}>
-              Aplicar filtros
-            </button>
+            <div className="rooms-action-buttons">
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="primary"
+                onClick={() => void handleApplyFilters()}
+              >
+                Aplicar filtros
+              </ActionButton>
 
-            <button
-              type="button"
-              className="rooms-secondary-action"
-              onClick={() => void handleClearFilters()}
-            >
-              Limpar filtros
-            </button>
+              <ActionButton
+                type="button"
+                icon={RotateCcw}
+                variant="secondary"
+                onClick={() => void handleClearFilters()}
+              >
+                Limpar filtros
+              </ActionButton>
+            </div>
           </div>
         </CollapsibleSection>
 
@@ -1150,8 +1295,8 @@ export function Rooms() {
           <div>
             <strong>Filtros ativos</strong>
             <span>
-              Tabela e gráfico usam os filtros aplicados. O gráfico também
-              considera a sala e o período selecionados.
+              Lista e gráfico usam a empresa aplicada. O gráfico também considera
+              sala, período e indicador selecionados.
             </span>
           </div>
 
@@ -1165,139 +1310,298 @@ export function Rooms() {
         </div>
 
         {error ? (
-          <div className="rooms-error">
-            <strong>{error}</strong>
-
-            <button type="button" onClick={() => void handleRefresh()}>
-              Tentar novamente
-            </button>
-          </div>
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Tente recarregar as salas ou rever os filtros aplicados."
+            action={
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="danger"
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {!error && filteredRooms.length === 0 ? (
           <EmptyState
-            title="Nenhuma sala encontrada."
+            icon={DoorOpen}
+            title="Nenhuma sala encontrada"
             description="Cadastre uma sala ou ajuste os filtros para visualizar resultados."
           />
         ) : null}
 
         {!error && filteredRooms.length > 0 ? (
-          <div className="rooms-table-wrapper">
-            <table className="rooms-table">
-              <thead>
-                <tr>
-                  <th>Sala</th>
-                  <th>Empresa</th>
-                  <th>Temperatura atual</th>
-                  <th>Limites</th>
-                  <th>Status térmico</th>
-                  <th>Status cadastro</th>
-                  <th>Mapa</th>
-                  <th>Criada em</th>
-                  {canManageRooms ? <th>Ações</th> : null}
-                </tr>
-              </thead>
+          <>
+            <div className="rooms-mobile-list">
+              {filteredRooms.map((room) => (
+                <RoomMobileCard
+                  key={room.id}
+                  room={room}
+                  canManage={canManageRooms}
+                  onEdit={openEditForm}
+                  onInactivate={handleInactivate}
+                />
+              ))}
+            </div>
 
-              <tbody>
-                {filteredRooms.map((room) => (
-                  <tr key={room.id}>
-                    <td>
-                      <strong>{room.name}</strong>
-                      <small>{room.notes || room.id}</small>
-                    </td>
+            <div className="rooms-table-wrapper">
+              <table className="rooms-table">
+                <thead>
+                  <tr>
+                    <th>Sala</th>
+                    <th>Empresa</th>
+                    <th>Temperatura</th>
+                    <th>Faixa</th>
+                    <th>Status</th>
+                    <th>Cadastro</th>
+                    {canManageRooms ? <th>Ações</th> : null}
+                  </tr>
+                </thead>
 
-                    <td>{room.company?.name ?? room.companyId}</td>
-
-                    <td>
-                      <strong>{formatTemperature(room.currentTemperature)}</strong>
-                    </td>
-
-                    <td>
-                      <span>Mín: {formatTemperature(room.minTemperature)}</span>
-                      <small>Máx: {formatTemperature(room.maxTemperature)}</small>
-                    </td>
-
-                    <td>
-                      <ThermalBadge status={room.thermalStatus} />
-                    </td>
-
-                    <td>
-                      <span
-                        className={
-                          room.status === 'ACTIVE'
-                            ? 'rooms-status active'
-                            : 'rooms-status inactive'
-                        }
-                      >
-                        {room.status === 'ACTIVE' ? 'Ativa' : 'Inativa'}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span>X: {formatCoordinate(room.mapX)}</span>
-                      <small>Y: {formatCoordinate(room.mapY)}</small>
-                    </td>
-
-                    <td>{formatDateTime(room.createdAt)}</td>
-
-                    {canManageRooms ? (
+                <tbody>
+                  {filteredRooms.map((room) => (
+                    <tr key={room.id}>
                       <td>
-                        <div className="room-row-actions">
-                          <button type="button" onClick={() => openEditForm(room)}>
-                            Editar
-                          </button>
+                        <div className="room-table-primary">
+                          <strong>{room.name}</strong>
+                          <span>{room.notes || 'Sem descrição'}</span>
 
-                          <button
-                            type="button"
-                            disabled={room.status === 'INACTIVE'}
-                            onClick={() => void handleInactivate(room)}
-                          >
-                            Inativar
-                          </button>
+                          <small>
+                            <MapPin size={12} strokeWidth={2} />
+                            X {formatCoordinate(room.mapX)} · Y{' '}
+                            {formatCoordinate(room.mapY)}
+                          </small>
                         </div>
                       </td>
-                    ) : null}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+                      <td>
+                        <div className="room-table-company">
+                          <Building2 size={14} strokeWidth={2} />
+                          <span>{room.company?.name ?? room.companyId}</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <RoomTemperature
+                          value={room.currentTemperature}
+                          status={room.thermalStatus}
+                        />
+                      </td>
+
+                      <td>
+                        <div className="room-table-range">
+                          <span>
+                            Mín. {formatTemperature(room.minTemperature)}
+                          </span>
+                          <span>
+                            Máx. {formatTemperature(room.maxTemperature)}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="room-table-statuses">
+                          <RoomThermalBadge status={room.thermalStatus} />
+                          <RoomRegistrationBadge status={room.status} />
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="room-table-created">
+                          <CalendarDays size={13} strokeWidth={2} />
+                          <span>{formatDateTime(room.createdAt)}</span>
+                        </div>
+                      </td>
+
+                      {canManageRooms ? (
+                        <td>
+                          <div className="room-row-actions">
+                            <button
+                              type="button"
+                              className="room-icon-action"
+                              title="Editar sala"
+                              aria-label={`Editar sala ${room.name}`}
+                              onClick={() => openEditForm(room)}
+                            >
+                              <Pencil size={15} strokeWidth={2} />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="room-icon-action room-icon-action--danger"
+                              title="Inativar sala"
+                              aria-label={`Inativar sala ${room.name}`}
+                              disabled={room.status === 'INACTIVE'}
+                              onClick={() => void handleInactivate(room)}
+                            >
+                              <Power size={15} strokeWidth={2} />
+                            </button>
+                          </div>
+                        </td>
+                      ) : null}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
       </section>
     </div>
   );
 }
 
-type SummaryCardProps = {
-  title: string;
-  value: number;
-  danger?: boolean;
+type RoomMobileCardProps = {
+  room: Room;
+  canManage: boolean;
+  onEdit: (room: Room) => void;
+  onInactivate: (room: Room) => Promise<void>;
 };
 
-function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
+function RoomMobileCard({
+  room,
+  canManage,
+  onEdit,
+  onInactivate,
+}: RoomMobileCardProps) {
   return (
     <article
-      className={danger ? 'rooms-summary-card danger' : 'rooms-summary-card'}
+      className={`room-mobile-card room-mobile-card--${room.thermalStatus.toLowerCase()}`}
     >
-      <span>{title}</span>
-      <strong>{value}</strong>
+      <div className="room-mobile-card-header">
+        <div>
+          <span>{room.company?.name ?? room.companyId}</span>
+          <strong>{room.name}</strong>
+          {room.notes ? <small>{room.notes}</small> : null}
+        </div>
+
+        <RoomThermalBadge status={room.thermalStatus} />
+      </div>
+
+      <div className="room-mobile-card-temperature">
+        <span>Temperatura atual</span>
+        <strong>{formatTemperature(room.currentTemperature)}</strong>
+      </div>
+
+      <div className="room-mobile-card-meta">
+        <div>
+          <span>Faixa configurada</span>
+          <strong>
+            {formatTemperature(room.minTemperature)} até{' '}
+            {formatTemperature(room.maxTemperature)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Cadastro</span>
+          <RoomRegistrationBadge status={room.status} />
+        </div>
+
+        <div>
+          <span>Mapa</span>
+          <strong>
+            X {formatCoordinate(room.mapX)} · Y {formatCoordinate(room.mapY)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Criada em</span>
+          <strong>{formatDateTime(room.createdAt)}</strong>
+        </div>
+      </div>
+
+      {canManage ? (
+        <div className="room-mobile-card-actions">
+          <ActionButton
+            type="button"
+            icon={Pencil}
+            variant="secondary"
+            onClick={() => onEdit(room)}
+          >
+            Editar
+          </ActionButton>
+
+          <ActionButton
+            type="button"
+            icon={Power}
+            variant="danger"
+            disabled={room.status === 'INACTIVE'}
+            onClick={() => void onInactivate(room)}
+          >
+            Inativar
+          </ActionButton>
+        </div>
+      ) : null}
     </article>
   );
 }
 
-type ChartSummaryCardProps = {
-  title: string;
-  value: string;
-  description: string;
+type RoomTemperatureProps = {
+  value?: number | null;
+  status: ThermalStatus;
 };
 
-function ChartSummaryCard({ title, value, description }: ChartSummaryCardProps) {
+function RoomTemperature({ value, status }: RoomTemperatureProps) {
   return (
-    <article className="rooms-temperature-chart-summary-card">
-      <span>{title}</span>
-      <strong>{value}</strong>
-      <small>{description}</small>
-    </article>
+    <span
+      className={`room-temperature room-temperature--${status.toLowerCase()}`}
+    >
+      <Thermometer size={15} strokeWidth={2.1} />
+      {formatTemperature(value)}
+    </span>
+  );
+}
+
+type RoomThermalBadgeProps = {
+  status: ThermalStatus;
+};
+
+function RoomThermalBadge({ status }: RoomThermalBadgeProps) {
+  const labels: Record<ThermalStatus, string> = {
+    NORMAL: 'Normal',
+    WARNING: 'Atenção',
+    CRITICAL: 'Crítica',
+    OFFLINE: 'Offline',
+  };
+
+  return (
+    <StatusBadge tone={getThermalTone(status)}>
+      {labels[status]}
+    </StatusBadge>
+  );
+}
+
+function getThermalTone(status: ThermalStatus): UiTone {
+  if (status === 'NORMAL') {
+    return 'success';
+  }
+
+  if (status === 'WARNING') {
+    return 'warning';
+  }
+
+  if (status === 'CRITICAL') {
+    return 'danger';
+  }
+
+  return 'neutral';
+}
+
+type RoomRegistrationBadgeProps = {
+  status: Room['status'];
+};
+
+function RoomRegistrationBadge({ status }: RoomRegistrationBadgeProps) {
+  return (
+    <StatusBadge tone={status === 'ACTIVE' ? 'success' : 'neutral'}>
+      {status === 'ACTIVE' ? 'Ativa' : 'Inativa'}
+    </StatusBadge>
   );
 }
 
@@ -1328,25 +1632,6 @@ function ChartTooltip({ active, payload, label, metric }: ChartTooltipProps) {
         <small>Origem: {formatSource(item.latestSource)}</small>
       ) : null}
     </div>
-  );
-}
-
-type ThermalBadgeProps = {
-  status: ThermalStatus;
-};
-
-function ThermalBadge({ status }: ThermalBadgeProps) {
-  const labels: Record<ThermalStatus, string> = {
-    NORMAL: 'Normal',
-    WARNING: 'Atenção',
-    CRITICAL: 'Crítica',
-    OFFLINE: 'Offline',
-  };
-
-  return (
-    <span className={`thermal-badge ${status.toLowerCase()}`}>
-      {labels[status]}
-    </span>
   );
 }
 
