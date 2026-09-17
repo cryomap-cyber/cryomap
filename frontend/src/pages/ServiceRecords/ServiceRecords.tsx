@@ -1,8 +1,38 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  Activity,
+  Building2,
+  CalendarClock,
+  CheckCircle2,
+  ClipboardList,
+  Eye,
+  FileUp,
+  Filter,
+  MapPin,
+  Pencil,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Snowflake,
+  Timer,
+  Trash2,
+  TriangleAlert,
+  UserRound,
+  Wrench,
+  X,
+} from 'lucide-react';
 
 import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
-import { EmptyState } from '../../components/Feedback/EmptyState';
-import { LoadingState } from '../../components/Feedback/LoadingState';
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetaPill,
+  MetricCard,
+  PageHeader,
+  StatusBadge,
+} from '../../components/ui/CryoUi';
 import { useAuth } from '../../contexts/useAuth';
 import { createAttachment } from '../../services/attachments';
 import { getCompanies } from '../../services/companies';
@@ -827,29 +857,47 @@ export function ServiceRecords() {
 
   return (
     <div className="service-records-page">
-      <header className="service-records-header">
-        <div>
-          <span>Operação</span>
-          <h1>Atendimentos</h1>
-          <p>
-            Acompanhe registros de atendimento técnico, tempo parado,
-            equipamentos afetados, problema padronizado e responsáveis.
-          </p>
+      <PageHeader
+        eyebrow="Operação"
+        title="Atendimentos"
+        description="Acompanhe registros técnicos, tempo parado, equipamentos afetados, problemas encontrados e responsáveis."
+        icon={Wrench}
+        actions={
+          canManageServiceRecords ? (
+            <ActionButton
+              type="button"
+              variant="primary"
+              icon={Plus}
+              onClick={openCreateForm}
+            >
+              Novo atendimento
+            </ActionButton>
+          ) : null
+        }
+        meta={
+          <>
+            <MetaPill icon={ClipboardList}>
+              {serviceRecords.length} atendimento(s)
+            </MetaPill>
 
-          {!canManageServiceRecords ? (
-            <p>
-              Seu acesso é somente consulta. Registros e finalizações ficam
-              restritos à equipe técnica.
-            </p>
-          ) : null}
-        </div>
+            <MetaPill
+              icon={canManageServiceRecords ? Wrench : Eye}
+              tone={canManageServiceRecords ? 'info' : 'neutral'}
+            >
+              {canManageServiceRecords ? 'Operação técnica' : 'Somente consulta'}
+            </MetaPill>
+          </>
+        }
+      />
 
-        {canManageServiceRecords ? (
-          <button type="button" onClick={openCreateForm}>
-            Novo atendimento
-          </button>
-        ) : null}
-      </header>
+      {!canManageServiceRecords ? (
+        <InlineNotice
+          tone="info"
+          icon={Eye}
+          title="Acesso somente consulta"
+          description="Você pode acompanhar os atendimentos da empresa, mas criação, edição e finalização permanecem restritas à equipe técnica."
+        />
+      ) : null}
 
       <CollapsibleSection
         title="Resumo dos atendimentos"
@@ -864,14 +912,44 @@ export function ServiceRecords() {
         contentClassName="service-records-summary"
         variant="section"
       >
-        <SummaryCard title="Total" value={serviceRecords.length} />
-        <SummaryCard title="Em andamento" value={runningRecords} />
-        <SummaryCard title="Finalizados" value={finishedRecords} />
-        <SummaryCard title="Com tempo parado" value={recordsWithDowntime} />
-        <SummaryCard
-          title="Tempo parado"
+        <MetricCard
+          label="Total"
+          value={serviceRecords.length}
+          detail="Atendimentos carregados"
+          icon={ClipboardList}
+          tone="info"
+        />
+
+        <MetricCard
+          label="Em andamento"
+          value={runningRecords}
+          detail="Registros ainda não finalizados"
+          icon={Activity}
+          tone={runningRecords > 0 ? 'warning' : 'neutral'}
+        />
+
+        <MetricCard
+          label="Finalizados"
+          value={finishedRecords}
+          detail="Atendimentos concluídos"
+          icon={CheckCircle2}
+          tone="success"
+        />
+
+        <MetricCard
+          label="Com tempo parado"
+          value={recordsWithDowntime}
+          detail="Atendimentos com indisponibilidade"
+          icon={Timer}
+          tone={recordsWithDowntime > 0 ? 'warning' : 'neutral'}
+        />
+
+        <MetricCard
+          label="Tempo parado"
           value={formatMinutes(totalDowntimeMinutes)}
-          danger={totalDowntimeMinutes > 0}
+          detail="Indisponibilidade acumulada"
+          icon={CalendarClock}
+          tone={totalDowntimeMinutes > 0 ? 'danger' : 'success'}
         />
       </CollapsibleSection>
 
@@ -885,9 +963,14 @@ export function ServiceRecords() {
               </h2>
             </div>
 
-            <button type="button" onClick={closeForm}>
+            <ActionButton
+              type="button"
+              variant="ghost"
+              icon={X}
+              onClick={closeForm}
+            >
               Fechar
-            </button>
+            </ActionButton>
           </div>
 
           <div className="service-record-form-tip">
@@ -1063,17 +1146,27 @@ export function ServiceRecords() {
             ) : null}
 
             <div className="service-record-form-actions">
-              <button type="button" onClick={closeForm}>
+              <ActionButton
+                type="button"
+                variant="secondary"
+                icon={X}
+                onClick={closeForm}
+              >
                 Cancelar
-              </button>
+              </ActionButton>
 
-              <button type="submit" disabled={isSaving}>
+              <ActionButton
+                type="submit"
+                variant="primary"
+                icon={editingRecord ? Pencil : Plus}
+                disabled={isSaving}
+              >
                 {isSaving
                   ? 'Salvando...'
                   : editingRecord
                     ? 'Salvar alterações'
                     : 'Cadastrar atendimento'}
-              </button>
+              </ActionButton>
             </div>
           </form>
         </section>
@@ -1091,9 +1184,14 @@ export function ServiceRecords() {
               </p>
             </div>
 
-            <button type="button" onClick={closeFinishAttachmentPanel}>
+            <ActionButton
+              type="button"
+              variant="ghost"
+              icon={X}
+              onClick={closeFinishAttachmentPanel}
+            >
               Agora não
-            </button>
+            </ActionButton>
           </div>
 
           <div className="service-record-attachment-context">
@@ -1180,15 +1278,25 @@ export function ServiceRecords() {
             ) : null}
 
             <div className="service-record-attachment-actions">
-              <button type="button" onClick={closeFinishAttachmentPanel}>
+              <ActionButton
+                type="button"
+                variant="secondary"
+                icon={X}
+                onClick={closeFinishAttachmentPanel}
+              >
                 Pular anexos
-              </button>
+              </ActionButton>
 
-              <button type="submit" disabled={isUploadingFinishAttachments}>
+              <ActionButton
+                type="submit"
+                variant="primary"
+                icon={FileUp}
+                disabled={isUploadingFinishAttachments}
+              >
                 {isUploadingFinishAttachments
                   ? 'Enviando anexos...'
                   : 'Enviar anexos'}
-              </button>
+              </ActionButton>
             </div>
           </form>
         </section>
@@ -1204,13 +1312,14 @@ export function ServiceRecords() {
             </p>
           </div>
 
-          <button
+          <ActionButton
             type="button"
-            className="service-records-refresh-action"
+            variant="secondary"
+            icon={RefreshCw}
             onClick={() => void handleRefresh()}
           >
             Atualizar
-          </button>
+          </ActionButton>
         </div>
 
         <CollapsibleSection
@@ -1354,17 +1463,23 @@ export function ServiceRecords() {
             </label>
 
             <div className="service-records-action-buttons">
-              <button type="button" onClick={() => void handleRefresh()}>
-                Aplicar filtros
-              </button>
-
-              <button
+              <ActionButton
                 type="button"
-                className="service-records-secondary-action"
+                variant="primary"
+                icon={Filter}
+                onClick={() => void handleRefresh()}
+              >
+                Aplicar filtros
+              </ActionButton>
+
+              <ActionButton
+                type="button"
+                variant="secondary"
+                icon={X}
                 onClick={handleClearFilters}
               >
                 Limpar filtros
-              </button>
+              </ActionButton>
             </div>
           </div>
 
@@ -1392,18 +1507,28 @@ export function ServiceRecords() {
         </CollapsibleSection>
 
         {error ? (
-          <div className="service-records-error">
-            <strong>{error}</strong>
-
-            <button type="button" onClick={() => void handleRefresh()}>
-              Tentar novamente
-            </button>
-          </div>
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Tente atualizar os dados novamente."
+            action={
+              <ActionButton
+                type="button"
+                variant="danger"
+                icon={RefreshCw}
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {!error && filteredServiceRecords.length === 0 ? (
           <EmptyState
-            title="Nenhum atendimento encontrado."
+            icon={Wrench}
+            title="Nenhum atendimento encontrado"
             description="Registre um atendimento ou ajuste os filtros para visualizar resultados."
           />
         ) : null}
@@ -1429,18 +1554,12 @@ export function ServiceRecords() {
                 <thead>
                   <tr>
                     <th>Atendimento</th>
-                    <th>Tarefa</th>
-                    <th>Empresa</th>
-                    <th>Sala</th>
-                    <th>Equipamento</th>
+                    <th>Local</th>
                     <th>Técnico</th>
                     <th>Status</th>
-                    <th>Início</th>
-                    <th>Fim</th>
+                    <th>Período</th>
                     <th>Tempo parado</th>
-                    <th>Problema padrão</th>
-                    <th>Problema detalhado</th>
-                    <th>Serviço</th>
+                    <th>Diagnóstico / serviço</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -1449,41 +1568,59 @@ export function ServiceRecords() {
                   {filteredServiceRecords.map((serviceRecord) => (
                     <tr key={serviceRecord.id}>
                       <td>
-                        <strong>{shortId(serviceRecord.id)}</strong>
-                        <small>{formatDate(serviceRecord.createdAt)}</small>
-                      </td>
+                        <div className="service-record-table-primary">
+                          <strong>
+                            {serviceRecord.task?.title ??
+                              `Atendimento ${shortId(serviceRecord.id)}`}
+                          </strong>
 
-                      <td>
-                        <strong>{serviceRecord.task?.title ?? '-'}</strong>
+                          <span>#{shortId(serviceRecord.id)}</span>
 
-                        {serviceRecord.task?.priority ? (
                           <small>
-                            Prioridade:{' '}
-                            {formatTaskPriority(serviceRecord.task.priority)}
+                            Criado em {formatDate(serviceRecord.createdAt) || '-'}
                           </small>
-                        ) : null}
+
+                          {serviceRecord.task?.priority ? (
+                            <small>
+                              Prioridade:{' '}
+                              {formatTaskPriority(serviceRecord.task.priority)}
+                            </small>
+                          ) : null}
+                        </div>
                       </td>
 
                       <td>
-                        {serviceRecord.company?.name ?? serviceRecord.companyId}
+                        <div className="service-record-table-stack">
+                          <strong>
+                            {serviceRecord.company?.name ??
+                              serviceRecord.companyId}
+                          </strong>
+
+                          <span>
+                            <MapPin size={13} strokeWidth={2} />
+                            {serviceRecord.room?.name ?? 'Sem sala'}
+                          </span>
+
+                          <span>
+                            <Snowflake size={13} strokeWidth={2} />
+                            {serviceRecord.equipment?.name ?? 'Sem equipamento'}
+                            {serviceRecord.equipment?.code
+                              ? ` · ${serviceRecord.equipment.code}`
+                              : ''}
+                          </span>
+                        </div>
                       </td>
 
-                      <td>{serviceRecord.room?.name ?? '-'}</td>
-
                       <td>
-                        <span>{serviceRecord.equipment?.name ?? '-'}</span>
+                        <div className="service-record-table-stack">
+                          <strong>
+                            {serviceRecord.technician?.name ?? 'Não definido'}
+                          </strong>
 
-                        {serviceRecord.equipment?.code ? (
-                          <small>{serviceRecord.equipment.code}</small>
-                        ) : null}
-                      </td>
-
-                      <td>
-                        <span>{serviceRecord.technician?.name ?? '-'}</span>
-
-                        {serviceRecord.technician?.email ? (
-                          <small>{serviceRecord.technician.email}</small>
-                        ) : null}
+                          {serviceRecord.technician?.email ? (
+                            <small>{serviceRecord.technician.email}</small>
+                          ) : null}
+                        </div>
                       </td>
 
                       <td>
@@ -1492,69 +1629,111 @@ export function ServiceRecords() {
                         />
                       </td>
 
-                      <td>{formatDateTime(serviceRecord.startedAt)}</td>
-
-                      <td>{formatDateTime(serviceRecord.finishedAt)}</td>
+                      <td>
+                        <div className="service-record-table-stack">
+                          <span>
+                            Início: {formatDateTime(serviceRecord.startedAt)}
+                          </span>
+                          <span>
+                            Fim: {formatDateTime(serviceRecord.finishedAt)}
+                          </span>
+                        </div>
+                      </td>
 
                       <td>
-                        <strong>
+                        <span
+                          className={
+                            (serviceRecord.downtimeMinutes ?? 0) > 0
+                              ? 'service-record-downtime service-record-downtime--active'
+                              : 'service-record-downtime'
+                          }
+                        >
+                          <Timer size={14} strokeWidth={2} />
                           {formatMinutes(serviceRecord.downtimeMinutes)}
-                        </strong>
+                        </span>
                       </td>
 
                       <td>
-                        {serviceRecord.standardizedProblem ? (
-                          <strong className="service-record-standardized-problem">
-                            {serviceRecord.standardizedProblem}
-                          </strong>
-                        ) : (
-                          '-'
-                        )}
+                        <div className="service-record-table-detail">
+                          {serviceRecord.standardizedProblem ? (
+                            <strong className="service-record-standardized-problem">
+                              {serviceRecord.standardizedProblem}
+                            </strong>
+                          ) : null}
+
+                          {serviceRecord.problemFound ? (
+                            <p>
+                              <strong>Problema:</strong>{' '}
+                              {serviceRecord.problemFound}
+                            </p>
+                          ) : null}
+
+                          {serviceRecord.servicePerformed ? (
+                            <p>
+                              <strong>Serviço:</strong>{' '}
+                              {serviceRecord.servicePerformed}
+                            </p>
+                          ) : null}
+
+                          {!serviceRecord.standardizedProblem &&
+                          !serviceRecord.problemFound &&
+                          !serviceRecord.servicePerformed ? (
+                            <span className="service-record-no-detail">
+                              Sem detalhes técnicos
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
-
-                      <td>{serviceRecord.problemFound || '-'}</td>
-
-                      <td>{serviceRecord.servicePerformed || '-'}</td>
 
                       <td>
                         {canManageServiceRecords ? (
                           <div className="service-record-row-actions">
                             <button
                               type="button"
+                              className="service-record-icon-action"
                               onClick={() => openEditForm(serviceRecord)}
+                              aria-label={`Editar ${serviceRecord.task?.title ?? 'atendimento'}`}
+                              title="Editar"
                             >
-                              Editar
+                              <Pencil size={15} strokeWidth={2.1} />
                             </button>
 
                             {!serviceRecord.finishedAt ? (
                               <button
                                 type="button"
-                                className="service-record-row-action-finish"
+                                className="service-record-icon-action service-record-icon-action--finish"
                                 onClick={() => void handleFinish(serviceRecord)}
+                                aria-label={`Finalizar ${serviceRecord.task?.title ?? 'atendimento'}`}
+                                title="Finalizar"
                               >
-                                Finalizar
+                                <CheckCircle2 size={15} strokeWidth={2.1} />
                               </button>
                             ) : (
                               <button
                                 type="button"
+                                className="service-record-icon-action service-record-icon-action--reopen"
                                 onClick={() => void handleReopen(serviceRecord)}
+                                aria-label={`Reabrir ${serviceRecord.task?.title ?? 'atendimento'}`}
+                                title="Reabrir"
                               >
-                                Reabrir
+                                <RotateCcw size={15} strokeWidth={2.1} />
                               </button>
                             )}
 
                             <button
                               type="button"
-                              className="service-record-row-action-remove"
+                              className="service-record-icon-action service-record-icon-action--remove"
                               onClick={() => void handleRemove(serviceRecord)}
+                              aria-label={`Remover ${serviceRecord.task?.title ?? 'atendimento'}`}
+                              title="Remover"
                             >
-                              Remover
+                              <Trash2 size={15} strokeWidth={2.1} />
                             </button>
                           </div>
                         ) : (
-                          <span className="service-record-readonly-badge">
+                          <StatusBadge tone="neutral">
                             Somente consulta
-                          </span>
+                          </StatusBadge>
                         )}
                       </td>
                     </tr>
@@ -1569,27 +1748,6 @@ export function ServiceRecords() {
   );
 }
 
-type SummaryCardProps = {
-  title: string;
-  value: number | string;
-  danger?: boolean;
-};
-
-function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
-  return (
-    <article
-      className={
-        danger
-          ? 'service-records-summary-card danger'
-          : 'service-records-summary-card'
-      }
-    >
-      <span>{title}</span>
-      <strong>{value}</strong>
-    </article>
-  );
-}
-
 type ServiceRecordStatusBadgeProps = {
   finishedAt?: string | null;
 };
@@ -1597,11 +1755,11 @@ type ServiceRecordStatusBadgeProps = {
 function ServiceRecordStatusBadge({
   finishedAt,
 }: ServiceRecordStatusBadgeProps) {
-  if (finishedAt) {
-    return <span className="service-record-status finished">Finalizado</span>;
-  }
-
-  return <span className="service-record-status running">Em andamento</span>;
+  return (
+    <StatusBadge tone={finishedAt ? 'success' : 'warning'}>
+      {finishedAt ? 'Finalizado' : 'Em andamento'}
+    </StatusBadge>
+  );
 }
 
 type ServiceRecordMobileCardProps = {
@@ -1624,42 +1782,68 @@ function ServiceRecordMobileCard({
   return (
     <article className="service-record-mobile-card">
       <div className="service-record-mobile-card-header">
-        <div>
-          <span>Atendimento {shortId(serviceRecord.id)}</span>
-          <strong>{serviceRecord.task?.title ?? 'Tarefa não informada'}</strong>
+        <div className="service-record-mobile-card-title">
+          <span>Atendimento #{shortId(serviceRecord.id)}</span>
+          <strong>
+            {serviceRecord.task?.title ?? 'Tarefa não informada'}
+          </strong>
         </div>
 
         <ServiceRecordStatusBadge finishedAt={serviceRecord.finishedAt} />
       </div>
 
-      <div className="service-record-mobile-card-main">
-        <div>
-          <span>Sala</span>
-          <strong>{serviceRecord.room?.name ?? '-'}</strong>
-        </div>
+      <div className="service-record-mobile-card-meta">
+        <span>
+          <Building2 size={14} strokeWidth={2} />
+          {serviceRecord.company?.name ?? serviceRecord.companyId}
+        </span>
 
-        <div>
-          <span>Equipamento</span>
-          <strong>{serviceRecord.equipment?.name ?? '-'}</strong>
-          {serviceRecord.equipment?.code ? (
-            <small>{serviceRecord.equipment.code}</small>
-          ) : null}
-        </div>
+        <span>
+          <MapPin size={14} strokeWidth={2} />
+          {serviceRecord.room?.name ?? 'Sem sala'}
+        </span>
 
-        <div>
-          <span>Técnico</span>
-          <strong>{serviceRecord.technician?.name ?? '-'}</strong>
-        </div>
+        <span>
+          <Snowflake size={14} strokeWidth={2} />
+          {serviceRecord.equipment?.name ?? 'Sem equipamento'}
+        </span>
 
-        <div>
-          <span>Tempo parado</span>
-          <strong>{formatMinutes(serviceRecord.downtimeMinutes)}</strong>
-        </div>
+        <span>
+          <UserRound size={14} strokeWidth={2} />
+          {serviceRecord.technician?.name ?? 'Técnico não definido'}
+        </span>
       </div>
 
-      <div className="service-record-mobile-card-dates">
-        <span>Início: {formatDateTime(serviceRecord.startedAt)}</span>
-        <span>Fim: {formatDateTime(serviceRecord.finishedAt)}</span>
+      <div className="service-record-mobile-card-timing">
+        <div>
+          <CalendarClock size={16} strokeWidth={2} />
+          <span>
+            <small>Início</small>
+            <strong>{formatDateTime(serviceRecord.startedAt)}</strong>
+          </span>
+        </div>
+
+        <div>
+          <CheckCircle2 size={16} strokeWidth={2} />
+          <span>
+            <small>Fim</small>
+            <strong>{formatDateTime(serviceRecord.finishedAt)}</strong>
+          </span>
+        </div>
+
+        <div
+          className={
+            (serviceRecord.downtimeMinutes ?? 0) > 0
+              ? 'service-record-mobile-card-downtime active'
+              : 'service-record-mobile-card-downtime'
+          }
+        >
+          <Timer size={16} strokeWidth={2} />
+          <span>
+            <small>Tempo parado</small>
+            <strong>{formatMinutes(serviceRecord.downtimeMinutes)}</strong>
+          </span>
+        </div>
       </div>
 
       {serviceRecord.standardizedProblem ||
@@ -1689,40 +1873,48 @@ function ServiceRecordMobileCard({
       <div className="service-record-mobile-card-actions">
         {canManageServiceRecords ? (
           <>
-            <button type="button" onClick={() => onEdit(serviceRecord)}>
+            <ActionButton
+              type="button"
+              variant="secondary"
+              icon={Pencil}
+              onClick={() => onEdit(serviceRecord)}
+            >
               Editar
-            </button>
+            </ActionButton>
 
             {!serviceRecord.finishedAt ? (
-              <button
+              <ActionButton
                 type="button"
-                className="finish"
+                variant="primary"
+                icon={CheckCircle2}
                 onClick={() => void onFinish(serviceRecord)}
               >
                 Finalizar
-              </button>
+              </ActionButton>
             ) : (
-              <button
+              <ActionButton
                 type="button"
-                className="reopen"
+                variant="secondary"
+                icon={RotateCcw}
                 onClick={() => void onReopen(serviceRecord)}
               >
                 Reabrir
-              </button>
+              </ActionButton>
             )}
 
-            <button
+            <ActionButton
               type="button"
-              className="remove"
+              variant="danger"
+              icon={Trash2}
               onClick={() => void onRemove(serviceRecord)}
             >
               Remover
-            </button>
+            </ActionButton>
           </>
         ) : (
-          <span className="service-record-readonly-badge">
+          <StatusBadge tone="neutral">
             Somente consulta
-          </span>
+          </StatusBadge>
         )}
       </div>
     </article>
