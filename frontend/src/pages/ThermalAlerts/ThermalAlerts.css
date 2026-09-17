@@ -1,67 +1,13 @@
 .thermal-alerts-page {
+  width: min(100%, var(--content-max));
+  margin: 0 auto;
   display: grid;
-  gap: 24px;
+  gap: 18px;
 }
 
-.thermal-alerts-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  align-items: flex-start;
-  padding: 26px;
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-xl);
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(34, 193, 255, 0.14),
-      transparent 24rem
-    ),
-    rgba(255, 255, 255, 0.86);
-  box-shadow: var(--shadow-panel);
-}
-
-.thermal-alerts-header span,
-.thermal-alerts-panel-header span {
-  color: var(--color-primary);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 12px;
-}
-
-.thermal-alerts-header h1 {
-  margin: 6px 0 8px;
-  font-size: 36px;
-  color: var(--color-primary-dark);
-  letter-spacing: -0.04em;
-}
-
-.thermal-alerts-header p {
-  margin: 0;
-  color: var(--color-muted);
-  max-width: 760px;
-  line-height: 1.55;
-}
-
-.thermal-alerts-header p + p {
-  margin-top: 10px;
-}
-
-.thermal-alerts-header button {
-  border: 0;
-  border-radius: 14px;
-  padding: 12px 18px;
-  background:
-    linear-gradient(
-      135deg,
-      var(--color-primary-dark),
-      var(--color-primary)
-    );
-  color: #ffffff;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.2);
+.thermal-alerts-summary-disclosure,
+.thermal-alerts-filters-disclosure {
+  min-width: 0;
 }
 
 .thermal-alerts-summary {
@@ -70,145 +16,109 @@
   gap: 12px;
 }
 
-.thermal-alerts-summary-card {
-  position: relative;
-  overflow: hidden;
-  min-height: 104px;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.96),
-      rgba(245, 251, 255, 0.96)
-    );
-  border: 1px solid var(--color-border-soft);
-  border-radius: 20px;
-  padding: 16px 18px;
-  box-shadow: var(--shadow-card);
-}
-
-.thermal-alerts-summary-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  background:
-    linear-gradient(
-      180deg,
-      var(--color-primary),
-      var(--color-primary-light)
-    );
-}
-
-.thermal-alerts-summary-card span {
-  display: block;
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 800;
-  margin-bottom: 8px;
-}
-
-.thermal-alerts-summary-card strong {
-  font-size: 26px;
-  line-height: 1;
-  color: var(--color-primary-dark);
-  letter-spacing: -0.05em;
-}
-
-.thermal-alerts-summary-card.danger {
-  border-color: rgba(217, 48, 37, 0.18);
-  background: linear-gradient(180deg, #fff7f7, #ffffff);
-}
-
-.thermal-alerts-summary-card.danger::before {
-  background: var(--color-danger-text);
-}
-
-.thermal-alerts-summary-card.danger strong {
-  color: var(--color-danger-text);
-}
-
 .thermal-alerts-panel {
+  min-width: 0;
   display: grid;
-  gap: 16px;
-  background: rgba(255, 255, 255, 0.94);
+  gap: 14px;
+  padding: 18px;
   border: 1px solid var(--color-border-soft);
-  border-radius: 28px;
-  padding: 22px;
-  box-shadow: var(--shadow-panel);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-card);
 }
 
 .thermal-alerts-panel-header {
   display: flex;
-  justify-content: space-between;
-  gap: 18px;
   align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.thermal-alerts-panel-header > div {
+  min-width: 0;
+}
+
+.thermal-alerts-panel-header > div > span {
+  display: block;
+  color: var(--color-primary);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .thermal-alerts-panel-header h2 {
-  margin: 0 0 4px;
+  margin-top: 3px;
   color: var(--color-primary-dark);
-  font-size: 24px;
-  letter-spacing: -0.03em;
+  font-size: 18px;
+  line-height: 1.2;
 }
 
 .thermal-alerts-panel-header p {
-  margin: 0;
+  margin: 4px 0 0;
   color: var(--color-muted);
-  line-height: 1.5;
-}
-
-.thermal-alerts-summary-disclosure,
-.thermal-alerts-filters-disclosure {
-  min-width: 0;
+  font-size: 10.5px;
+  line-height: 1.45;
 }
 
 .thermal-alerts-filter-area {
-  display: grid;
-  gap: 14px;
   min-width: 0;
+  display: grid;
+  gap: 13px;
 }
 
 .thermal-alerts-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(160px, 1fr));
-  gap: 10px;
   width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(145px, 1fr));
+  gap: 9px;
 }
 
 .thermal-alerts-filter-field {
+  min-width: 0;
   display: grid;
-  gap: 6px;
+  gap: 5px;
 }
 
-.thermal-alerts-filter-field span {
+.thermal-alerts-filter-field > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--color-text-soft);
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: normal;
-  text-transform: none;
+  font-size: 10px;
+  font-weight: 850;
+  line-height: 1.2;
 }
 
 .thermal-alerts-actions input,
 .thermal-alerts-actions select {
   width: 100%;
-  min-height: 42px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 11px;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 0 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.98);
   color: var(--color-text);
-  background: #ffffff;
+  font-size: 11px;
   outline: none;
-  box-shadow: inset 0 1px 0 rgba(3, 20, 63, 0.03);
+  box-shadow: inset 0 1px 0 rgba(20, 50, 91, 0.025);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
-.thermal-alerts-actions input::placeholder {
-  color: #8a9aaa;
+.thermal-alerts-actions input:hover,
+.thermal-alerts-actions select:hover {
+  border-color: var(--color-primary-border);
 }
 
 .thermal-alerts-actions input:focus,
 .thermal-alerts-actions select:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(34, 193, 255, 0.18);
+  background: #ffffff;
+  box-shadow: var(--focus-ring);
 }
 
 .thermal-alerts-search-field {
@@ -217,417 +127,563 @@
 
 .thermal-alerts-action-buttons {
   display: flex;
-  gap: 10px;
   align-items: end;
+  gap: 8px;
 }
 
-.thermal-alerts-action-buttons button,
-.thermal-alerts-error button {
-  border: 0;
-  border-radius: 14px;
-  padding: 0 14px;
-  min-height: 42px;
-  background:
-    linear-gradient(
-      135deg,
-      var(--color-primary-dark),
-      var(--color-primary)
-    );
-  color: #ffffff;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
-}
-
-.thermal-alerts-action-buttons button {
+.thermal-alerts-action-buttons .cm-button {
   flex: 1;
-}
-
-.thermal-alerts-action-buttons .thermal-alerts-secondary-action {
-  background: var(--color-surface-soft);
-  color: var(--color-primary);
-  box-shadow: none;
+  min-width: 0;
 }
 
 .thermal-alerts-filter-status {
   display: flex;
-  justify-content: space-between;
-  gap: 14px;
   align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
   border: 1px solid var(--color-border-soft);
-  border-radius: 20px;
-  padding: 14px;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(237, 247, 255, 0.76),
-      rgba(255, 255, 255, 0.9)
-    );
+  border-radius: 14px;
+  background: var(--color-surface-soft);
+}
+
+.thermal-alerts-filter-status > div:first-child {
+  min-width: 180px;
 }
 
 .thermal-alerts-filter-status strong {
   display: block;
   color: var(--color-primary-dark);
-  font-size: 14px;
-  margin-bottom: 4px;
+  font-size: 10.5px;
+  font-weight: 900;
 }
 
 .thermal-alerts-filter-status span {
   color: var(--color-muted);
-  font-size: 13px;
+  font-size: 9.5px;
   line-height: 1.4;
 }
 
+.thermal-alerts-filter-status > div:first-child > span {
+  display: block;
+  margin-top: 3px;
+}
+
 .thermal-alerts-filter-chips {
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
-  max-width: 780px;
+  gap: 6px;
 }
 
-.thermal-alerts-filter-chips span {
+.thermal-alerts-filter-chips > span {
+  min-height: 26px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  border: 1px solid rgba(9, 109, 242, 0.12);
+  padding: 0 9px;
+  border: 1px solid var(--color-info-border);
   border-radius: 999px;
-  padding: 7px 10px;
   background: #ffffff;
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .thermal-alerts-filter-chips strong {
-  margin: 0;
+  display: inline;
   color: var(--color-primary);
-  font-size: 12px;
+  font-size: inherit;
 }
 
-.thermal-alerts-error {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
-  background: var(--color-danger-bg);
-  border: 1px solid rgba(217, 48, 37, 0.12);
-  color: var(--color-danger-text);
-  padding: 16px;
-  border-radius: 20px;
-}
-
-.thermal-alerts-error button {
-  background: var(--color-danger-text);
-  box-shadow: 0 14px 34px rgba(217, 48, 37, 0.18);
-}
-
-.thermal-alerts-empty {
-  margin: 0;
-  color: #8a9aaa;
-  padding: 20px;
-  border-radius: 18px;
-  background: var(--color-surface-soft);
-  text-align: center;
+.thermal-alerts-mobile-list {
+  display: none;
 }
 
 .thermal-alerts-table-wrapper {
+  min-width: 0;
   overflow-x: auto;
   border: 1px solid var(--color-border-soft);
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
   background: #ffffff;
   scrollbar-width: thin;
 }
 
-.thermal-alerts-table-wrapper::before {
-  content: 'Deslize a tabela para ver todas as colunas';
-  display: none;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--color-border-soft);
-  background: var(--color-surface-soft);
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 800;
-}
-
 .thermal-alerts-table {
   width: 100%;
-  min-width: 1420px;
+  min-width: 1220px;
   border-collapse: collapse;
 }
 
 .thermal-alerts-table th {
-  text-align: left;
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 14px 12px;
+  padding: 11px 12px;
   border-bottom: 1px solid var(--color-border-soft);
   background: var(--color-surface-soft);
+  color: var(--color-muted);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.055em;
+  line-height: 1.2;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .thermal-alerts-table td {
-  padding: 15px 12px;
-  border-bottom: 1px solid rgba(9, 109, 242, 0.08);
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border-soft);
   color: var(--color-text-soft);
-  vertical-align: top;
+  font-size: 10.5px;
+  line-height: 1.4;
+  vertical-align: middle;
 }
 
 .thermal-alerts-table tbody tr {
-  transition: background-color 0.15s ease;
+  transition: background-color var(--transition-fast);
 }
 
 .thermal-alerts-table tbody tr:hover {
-  background: rgba(237, 247, 255, 0.72);
+  background: rgba(243, 248, 253, 0.72);
 }
 
 .thermal-alerts-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.thermal-alerts-table td strong,
-.thermal-alerts-table td span {
-  display: block;
+.thermal-alert-table-primary,
+.thermal-alert-table-location,
+.thermal-alert-table-sensor,
+.thermal-alert-table-acknowledgement {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
 }
 
-.thermal-alerts-table td strong {
+.thermal-alert-table-primary {
+  min-width: 155px;
+}
+
+.thermal-alert-table-primary strong,
+.thermal-alert-table-location strong {
   color: var(--color-primary-dark);
-}
-
-.thermal-alerts-table td small {
-  display: block;
-  color: #8a9aaa;
-  margin-top: 4px;
-  max-width: 280px;
-}
-
-.thermal-alert-temperature {
-  color: var(--color-danger-text);
+  font-size: 10.5px;
   font-weight: 900;
 }
 
-.thermal-alert-severity,
-.thermal-alert-status,
-.thermal-alert-readonly-badge {
+.thermal-alert-table-primary > span {
+  color: var(--color-text-soft);
+  font-size: 9.4px;
+}
+
+.thermal-alert-table-primary small {
+  width: max-content;
+  padding: 3px 6px;
+  border-radius: 7px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 8.5px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+
+.thermal-alert-table-location {
+  min-width: 190px;
+}
+
+.thermal-alert-table-location > span,
+.thermal-alert-table-sensor > span,
+.thermal-alert-table-acknowledgement > span {
   display: inline-flex;
   align-items: center;
-  width: fit-content;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.thermal-alert-severity.warning {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-}
-
-.thermal-alert-severity.critical {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-}
-
-.thermal-alert-status.open {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-}
-
-.thermal-alert-status.acknowledged {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-}
-
-.thermal-alert-status.resolved {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
-}
-
-.thermal-alert-status.dismissed,
-.thermal-alert-readonly-badge {
-  background: var(--color-surface-soft);
+  gap: 5px;
   color: var(--color-muted);
+  font-size: 9.3px;
+}
+
+.thermal-alert-table-location > span svg,
+.thermal-alert-table-sensor > span svg,
+.thermal-alert-table-acknowledgement > span svg {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+}
+
+.thermal-alert-table-location small,
+.thermal-alert-table-sensor small,
+.thermal-alert-table-acknowledgement small {
+  color: var(--color-muted);
+  font-size: 8.8px;
+  line-height: 1.35;
+}
+
+.thermal-alert-table-sensor {
+  min-width: 145px;
+}
+
+.thermal-alert-table-badges {
+  min-width: 118px;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.thermal-alert-measurement {
+  min-width: 150px;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 8px 9px;
+  border: 1px solid var(--color-warning-border);
+  border-radius: 11px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.thermal-alert-measurement.is-critical {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.thermal-alert-measurement svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.thermal-alert-measurement strong {
+  display: block;
+  color: currentColor;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.thermal-alert-measurement small {
+  display: block;
+  margin-top: 2px;
+  color: currentColor;
+  font-size: 8.8px;
+  line-height: 1.35;
+  opacity: 0.82;
+}
+
+.thermal-alert-message {
+  display: -webkit-box;
+  min-width: 190px;
+  max-width: 280px;
+  overflow: hidden;
+  color: var(--color-text-soft);
+  font-size: 9.5px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.thermal-alert-table-acknowledgement {
+  min-width: 155px;
 }
 
 .thermal-alert-row-actions {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 5px;
+  min-width: 74px;
 }
 
-.thermal-alert-row-action {
-  border: 0;
-  border-radius: 14px;
-  padding: 9px 11px;
-  background: var(--color-surface-soft);
+.thermal-alert-icon-action {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 10px;
+  background: #ffffff;
   color: var(--color-primary);
-  font-weight: 900;
   cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
 }
 
-.thermal-alert-row-action.resolve {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
+.thermal-alert-icon-action:hover {
+  border-color: var(--color-primary-border);
+  background: var(--color-primary-soft);
 }
 
-.thermal-alert-row-action.dismiss {
+.thermal-alert-icon-action:active {
+  transform: translateY(1px);
+}
+
+.thermal-alert-icon-action--acknowledge {
+  border-color: var(--color-warning-border);
   background: var(--color-warning-bg);
   color: var(--color-warning-text);
 }
 
-.thermal-alert-row-action.remove {
+.thermal-alert-icon-action--resolve {
+  border-color: var(--color-success-border);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.thermal-alert-icon-action--dismiss {
+  border-color: var(--color-warning-border);
+  background: #ffffff;
+  color: var(--color-warning-text);
+}
+
+.thermal-alert-icon-action--remove {
+  border-color: var(--color-danger-border);
   background: var(--color-danger-bg);
   color: var(--color-danger-text);
 }
 
-.thermal-alert-row-action:disabled {
-  opacity: 0.45;
+.thermal-alert-icon-action:disabled {
+  opacity: 0.42;
   cursor: not-allowed;
-  box-shadow: none;
+  transform: none;
 }
 
-@media (max-width: 1200px) {
+.thermal-alert-mobile-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 11px;
+  padding: 13px;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(190, 128, 0, 0.06),
+      transparent 11rem
+    ),
+    rgba(255, 255, 255, 0.98);
+  box-shadow: var(--shadow-card);
+}
+
+.thermal-alert-mobile-card.is-critical {
+  border-color: var(--color-danger-border);
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(201, 60, 53, 0.08),
+      transparent 11rem
+    ),
+    rgba(255, 255, 255, 0.98);
+}
+
+.thermal-alert-mobile-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.thermal-alert-mobile-card-title {
+  min-width: 0;
+}
+
+.thermal-alert-mobile-card-title > span {
+  display: block;
+  color: var(--color-primary);
+  font-size: 8.5px;
+  font-weight: 900;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.thermal-alert-mobile-card-title > strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-primary-dark);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.thermal-alert-mobile-card-title > small {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.thermal-alert-mobile-card-measurement {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.thermal-alert-mobile-card-measurement > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+}
+
+.thermal-alert-mobile-card-measurement > div:first-child {
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-bg);
+}
+
+.thermal-alert-mobile-card.is-critical
+  .thermal-alert-mobile-card-measurement
+  > div:first-child {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-bg);
+}
+
+.thermal-alert-mobile-card-measurement span {
+  color: var(--color-muted);
+  font-size: 8.5px;
+  font-weight: 850;
+}
+
+.thermal-alert-mobile-card-measurement strong {
+  color: var(--color-primary-dark);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.thermal-alert-mobile-card-measurement > div:first-child strong {
+  color: var(--color-warning-text);
+  font-size: 17px;
+  letter-spacing: -0.025em;
+}
+
+.thermal-alert-mobile-card.is-critical
+  .thermal-alert-mobile-card-measurement
+  > div:first-child
+  strong {
+  color: var(--color-danger-text);
+}
+
+.thermal-alert-mobile-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.thermal-alert-mobile-card-meta > span:not(.cm-status-badge) {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  border-radius: 9px;
+  background: var(--color-surface-soft);
+  color: var(--color-muted);
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.thermal-alert-mobile-card-meta > span svg {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+}
+
+.thermal-alert-mobile-card-message {
+  margin: 0;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: var(--color-surface-soft);
+  color: var(--color-text-soft);
+  font-size: 9.5px;
+  line-height: 1.45;
+}
+
+.thermal-alert-mobile-card-acknowledgement {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: 9px;
+  border-top: 1px solid var(--color-border-soft);
+  color: var(--color-primary);
+}
+
+.thermal-alert-mobile-card-acknowledgement > svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.thermal-alert-mobile-card-acknowledgement span {
+  display: block;
+  color: var(--color-muted);
+  font-size: 8.5px;
+  font-weight: 850;
+}
+
+.thermal-alert-mobile-card-acknowledgement strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-primary-dark);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.thermal-alert-mobile-card-acknowledgement small {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 8.8px;
+}
+
+.thermal-alert-mobile-card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.thermal-alert-mobile-card-actions .cm-button {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 9px;
+}
+
+@media (max-width: 1280px) {
   .thermal-alerts-summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .thermal-alerts-panel-header,
-  .thermal-alerts-filter-status {
-    flex-direction: column;
-    align-items: stretch;
+  .thermal-alerts-actions {
+    grid-template-columns: repeat(3, minmax(145px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .thermal-alerts-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .thermal-alerts-actions {
-    width: 100%;
+  .thermal-alerts-search-field {
+    grid-column: 1 / -1;
+  }
+
+  .thermal-alerts-action-buttons {
+    grid-column: 1 / -1;
+  }
+
+  .thermal-alerts-filter-status {
+    display: grid;
   }
 
   .thermal-alerts-filter-chips {
     justify-content: flex-start;
-    max-width: none;
-  }
-}
-
-@media (max-width: 1000px) {
-  .thermal-alerts-page {
-    gap: 16px;
-  }
-
-  .thermal-alerts-header {
-    gap: 14px;
-    align-items: flex-start;
-  }
-
-  .thermal-alerts-header h1 {
-    font-size: 28px;
-    line-height: 1.1;
-  }
-
-  .thermal-alerts-header p {
-    font-size: 14px;
-    line-height: 1.5;
-    max-width: 100%;
-  }
-
-  .thermal-alerts-header button {
-    min-height: 40px;
-    padding: 10px 14px;
-    border-radius: 14px;
-    font-size: 14px;
-    align-self: flex-start;
-  }
-
-  .thermal-alerts-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 9px;
-  }
-
-  .thermal-alerts-summary-card {
-    min-height: 86px;
-    padding: 12px 14px;
-    border-radius: 16px;
-  }
-
-  .thermal-alerts-summary-card span {
-    margin-bottom: 6px;
-    font-size: 11px;
-  }
-
-  .thermal-alerts-summary-card strong {
-    font-size: 22px;
-    line-height: 1;
-  }
-
-  .thermal-alerts-panel {
-    padding: 14px;
-    border-radius: 20px;
-    overflow: hidden;
-  }
-
-  .thermal-alerts-panel-header {
-    gap: 12px;
-    align-items: stretch;
-  }
-
-  .thermal-alerts-panel-header h2 {
-    font-size: 20px;
-  }
-
-  .thermal-alerts-panel-header p {
-    font-size: 13px;
-  }
-
-  .thermal-alerts-actions {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 8px;
-  }
-
-  .thermal-alerts-actions input,
-  .thermal-alerts-actions select {
-    min-height: 38px;
-    padding: 8px 10px;
-    border-radius: 12px;
-    font-size: 13px;
-  }
-
-  .thermal-alerts-action-buttons {
-    align-items: end;
-  }
-
-  .thermal-alerts-action-buttons button {
-    min-height: 38px;
-    padding: 8px 12px;
-    border-radius: 12px;
-    font-size: 13px;
-  }
-
-  .thermal-alerts-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    border-radius: 16px;
-  }
-
-  .thermal-alerts-table {
-    min-width: 1180px;
-    font-size: 13px;
-  }
-
-  .thermal-alerts-table th,
-  .thermal-alerts-table td {
-    padding: 10px 12px;
-  }
-
-  .thermal-alert-row-actions {
-    gap: 6px;
-  }
-
-  .thermal-alert-row-action {
-    min-height: 34px;
-    padding: 7px 10px;
-    border-radius: 10px;
-    font-size: 12px;
   }
 }
 
@@ -636,162 +692,83 @@
     gap: 14px;
   }
 
-  .thermal-alerts-header {
-    flex-direction: column;
-    padding: 18px;
-    border-radius: 22px;
-  }
-
-  .thermal-alerts-header h1 {
-    font-size: 24px;
-  }
-
-  .thermal-alerts-header p {
-    font-size: 13px;
-  }
-
-  .thermal-alerts-header button {
-    width: 100%;
-    min-height: 42px;
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
   .thermal-alerts-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px;
-  }
-
-  .thermal-alerts-summary-card {
-    min-height: 74px;
-    padding: 10px 11px;
-    border-radius: 14px;
-  }
-
-  .thermal-alerts-summary-card::before {
-    width: 3px;
-  }
-
-  .thermal-alerts-summary-card span {
-    margin-bottom: 5px;
-    font-size: 10px;
-  }
-
-  .thermal-alerts-summary-card strong {
-    font-size: 18px;
+    gap: 9px;
   }
 
   .thermal-alerts-panel {
+    gap: 12px;
     padding: 12px;
-    border-radius: 18px;
+    border-radius: var(--radius-lg);
   }
 
-  .thermal-alerts-filter-area {
-    gap: 10px;
+  .thermal-alerts-panel-header {
+    display: grid;
+    gap: 9px;
+  }
+
+  .thermal-alerts-panel-header .cm-button {
+    width: 100%;
   }
 
   .thermal-alerts-actions {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .thermal-alerts-search-field,
   .thermal-alerts-action-buttons {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 
   .thermal-alerts-action-buttons {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .thermal-alerts-action-buttons button {
-    width: 100%;
+    grid-template-columns: 1fr;
   }
 
   .thermal-alerts-filter-status {
-    padding: 12px;
-    border-radius: 16px;
-  }
-
-  .thermal-alerts-filter-status strong {
-    font-size: 13px;
-  }
-
-  .thermal-alerts-filter-status span {
-    font-size: 12px;
+    padding: 10px;
   }
 
   .thermal-alerts-filter-chips {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 6px;
   }
 
-  .thermal-alerts-filter-chips span {
+  .thermal-alerts-filter-chips > span {
     width: 100%;
     justify-content: space-between;
-    border-radius: 12px;
+    border-radius: 10px;
+    white-space: normal;
   }
 
   .thermal-alerts-table-wrapper {
-    border-radius: 16px;
+    display: none;
   }
 
-  .thermal-alerts-table-wrapper::before {
-    display: block;
-  }
-
-  .thermal-alerts-table {
-    min-width: 1050px;
-    font-size: 12px;
-  }
-
-  .thermal-alerts-table th,
-  .thermal-alerts-table td {
-    padding: 10px 12px;
-  }
-
-  .thermal-alert-row-actions {
-    flex-direction: column;
-  }
-
-  .thermal-alert-row-action {
-    width: 100%;
-    min-height: 36px;
-  }
-
-  .thermal-alerts-error {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 14px;
-    border-radius: 16px;
-  }
-
-  .thermal-alerts-error button {
-    width: 100%;
+  .thermal-alerts-mobile-list {
+    display: grid;
+    gap: 10px;
   }
 }
 
 @media (max-width: 430px) {
-  .thermal-alerts-actions,
-  .thermal-alerts-action-buttons {
-    grid-template-columns: 1fr;
-  }
-
   .thermal-alerts-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .thermal-alerts-summary-card {
-    padding: 9px 10px;
+  .thermal-alert-mobile-card-measurement {
+    grid-template-columns: 1fr;
   }
 
-  .thermal-alerts-summary-card strong {
-    font-size: 17px;
+  .thermal-alert-mobile-card-actions {
+    grid-template-columns: 1fr;
   }
+}
 
-  .thermal-alerts-table {
-    min-width: 980px;
+@media (prefers-reduced-motion: reduce) {
+  .thermal-alert-icon-action {
+    transition: none;
   }
 }

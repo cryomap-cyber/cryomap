@@ -1,8 +1,34 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  Building2,
+  CheckCircle2,
+  Clock3,
+  Database,
+  DoorOpen,
+  Droplets,
+  Gauge,
+  Plus,
+  Radio,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  Snowflake,
+  Thermometer,
+  TriangleAlert,
+} from 'lucide-react';
 
 import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
-import { EmptyState } from '../../components/Feedback/EmptyState';
-import { LoadingState } from '../../components/Feedback/LoadingState';
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetaPill,
+  MetricCard,
+  PageHeader,
+  StatusBadge,
+  type UiTone,
+} from '../../components/ui/CryoUi';
 import { getCompanies } from '../../services/companies';
 import { getRooms } from '../../services/rooms';
 import { getSensors } from '../../services/sensors';
@@ -259,7 +285,8 @@ export function TemperatureReadings() {
           setFormData((current) => ({
             ...current,
             roomId: shouldResetRoom ? '' : current.roomId,
-            sensorId: shouldResetRoom || shouldResetSensor ? '' : current.sensorId,
+            sensorId:
+              shouldResetRoom || shouldResetSensor ? '' : current.sensorId,
           }));
         }
       })
@@ -376,6 +403,14 @@ export function TemperatureReadings() {
     readingsWithHumidity.map((reading) => reading.humidity ?? 0),
   );
 
+  const hasCriticalTemperature = temperatureReadings.some((reading) =>
+    isTemperatureOutsideLimits(
+      reading.temperature,
+      reading.room?.minTemperature,
+      reading.room?.maxTemperature,
+    ),
+  );
+
   function openCreateForm() {
     setFormData({
       ...emptyFormData,
@@ -472,28 +507,50 @@ export function TemperatureReadings() {
   if (isLoading) {
     return (
       <LoadingState
-        title="Carregando leituras de temperatura..."
-        description="Buscando histórico térmico das salas."
+        title="Carregando leituras"
+        description="Buscando histórico térmico das salas monitoradas."
       />
     );
   }
 
   return (
     <div className="temperature-readings-page">
-      <header className="temperature-readings-header">
-        <div>
-          <span>Monitoramento</span>
-          <h1>Leituras de temperatura</h1>
-          <p>
-            Consulte o histórico de temperatura e umidade das salas monitoradas
-            por sensores ou registros manuais.
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Monitoramento"
+        title="Leituras de temperatura"
+        description="Consulte temperatura e umidade das salas monitoradas por sensores, integrações ou registros manuais."
+        icon={Thermometer}
+        actions={
+          <ActionButton
+            type="button"
+            icon={Plus}
+            variant="primary"
+            onClick={openCreateForm}
+          >
+            Nova leitura manual
+          </ActionButton>
+        }
+        meta={
+          <>
+            <MetaPill icon={Clock3}>
+              {formatDate(startDate)} até {formatDate(endDate)}
+            </MetaPill>
 
-        <button type="button" onClick={openCreateForm}>
-          Nova leitura manual
-        </button>
-      </header>
+            <MetaPill icon={Database}>
+              {temperatureReadings.length} leituras
+            </MetaPill>
+
+            <MetaPill
+              icon={hasCriticalTemperature ? TriangleAlert : CheckCircle2}
+              tone={hasCriticalTemperature ? 'danger' : 'success'}
+            >
+              {hasCriticalTemperature
+                ? 'Há leituras fora do limite'
+                : 'Sem leituras fora do limite'}
+            </MetaPill>
+          </>
+        }
+      />
 
       <CollapsibleSection
         title="Resumo das leituras"
@@ -508,31 +565,48 @@ export function TemperatureReadings() {
         contentClassName="temperature-readings-summary"
         variant="section"
       >
-        <SummaryCard title="Total" value={temperatureReadings.length} />
-        <SummaryCard
-          title="Temperatura média"
+        <MetricCard
+          label="Total de leituras"
+          value={temperatureReadings.length}
+          detail="Registros no período atual"
+          icon={Database}
+          tone="info"
+        />
+
+        <MetricCard
+          label="Temperatura média"
           value={formatTemperature(averageTemperature)}
+          detail="Média das leituras carregadas"
+          icon={Thermometer}
+          tone="info"
         />
-        <SummaryCard
-          title="Mínima"
+
+        <MetricCard
+          label="Temperatura mínima"
           value={formatTemperature(minimumTemperature)}
+          detail="Menor valor registrado"
+          icon={Snowflake}
+          tone="info"
         />
-        <SummaryCard
-          title="Máxima"
+
+        <MetricCard
+          label="Temperatura máxima"
           value={formatTemperature(maximumTemperature)}
-          danger={
-            maximumTemperature !== null &&
-            temperatureReadings.some(
-              (reading) =>
-                reading.room?.maxTemperature !== null &&
-                reading.room?.maxTemperature !== undefined &&
-                reading.temperature > reading.room.maxTemperature,
-            )
+          detail={
+            hasCriticalTemperature
+              ? 'Há leitura fora do limite configurado'
+              : 'Sem extrapolação identificada'
           }
+          icon={Gauge}
+          tone={hasCriticalTemperature ? 'danger' : 'success'}
         />
-        <SummaryCard
-          title="Umidade média"
+
+        <MetricCard
+          label="Umidade média"
           value={formatHumidity(averageHumidity)}
+          detail={`${readingsWithHumidity.length} leitura(s) com umidade`}
+          icon={Droplets}
+          tone="info"
         />
       </CollapsibleSection>
 
@@ -542,19 +616,31 @@ export function TemperatureReadings() {
             <div>
               <span>Leitura manual</span>
               <h2>Nova leitura de temperatura</h2>
+              <p>
+                Registre uma medição de contingência ou uma leitura coletada
+                manualmente em campo.
+              </p>
             </div>
 
-            <button type="button" onClick={closeForm}>
+            <ActionButton
+              type="button"
+              variant="ghost"
+              onClick={closeForm}
+            >
               Fechar
-            </button>
+            </ActionButton>
           </div>
 
           <div className="temperature-reading-form-tip">
-            <strong>Uso sem sensor ativo</strong>
-            <p>
-              Para alimentar o gráfico da tela Salas, selecione empresa e sala,
-              deixe o sensor vazio e mantenha a origem como MANUAL.
-            </p>
+            <Thermometer size={18} strokeWidth={2.1} aria-hidden="true" />
+
+            <div>
+              <strong>Uso sem sensor ativo</strong>
+              <p>
+                Para alimentar o histórico da sala, selecione empresa e sala,
+                deixe o sensor vazio e mantenha a origem como MANUAL.
+              </p>
+            </div>
           </div>
 
           <form className="temperature-reading-form" onSubmit={handleSubmit}>
@@ -683,13 +769,21 @@ export function TemperatureReadings() {
             ) : null}
 
             <div className="temperature-reading-form-actions">
-              <button type="button" onClick={closeForm}>
+              <ActionButton
+                type="button"
+                variant="secondary"
+                onClick={closeForm}
+              >
                 Cancelar
-              </button>
+              </ActionButton>
 
-              <button type="submit" disabled={isSaving}>
+              <ActionButton
+                type="submit"
+                variant="primary"
+                disabled={isSaving}
+              >
                 {isSaving ? 'Salvando...' : 'Cadastrar leitura'}
-              </button>
+              </ActionButton>
             </div>
           </form>
         </section>
@@ -698,12 +792,21 @@ export function TemperatureReadings() {
       <section className="temperature-readings-panel">
         <div className="temperature-readings-panel-header">
           <div>
-            <h2>Histórico de leituras</h2>
+            <span>Histórico térmico</span>
+            <h2>Leituras registradas</h2>
             <p>
               {filteredReadings.length} leitura(s) exibida(s) de{' '}
               {temperatureReadings.length} carregada(s)
             </p>
           </div>
+
+          <ActionButton
+            type="button"
+            icon={RefreshCw}
+            onClick={() => void handleRefresh()}
+          >
+            Atualizar
+          </ActionButton>
         </div>
 
         <CollapsibleSection
@@ -795,7 +898,11 @@ export function TemperatureReadings() {
             </label>
 
             <label className="temperature-readings-filter-field temperature-readings-search-field">
-              <span>Busca</span>
+              <span>
+                <Search size={13} strokeWidth={2.1} aria-hidden="true" />
+                Busca
+              </span>
+
               <input
                 type="search"
                 placeholder="Buscar por sala, sensor, origem..."
@@ -805,17 +912,23 @@ export function TemperatureReadings() {
             </label>
 
             <div className="temperature-readings-action-buttons">
-              <button type="button" onClick={() => void handleRefresh()}>
-                Aplicar filtros
-              </button>
-
-              <button
+              <ActionButton
                 type="button"
-                className="temperature-readings-secondary-action"
+                icon={RefreshCw}
+                variant="primary"
+                onClick={() => void handleRefresh()}
+              >
+                Aplicar filtros
+              </ActionButton>
+
+              <ActionButton
+                type="button"
+                icon={RotateCcw}
+                variant="secondary"
                 onClick={() => void handleClearFilters()}
               >
                 Limpar filtros
-              </button>
+              </ActionButton>
             </div>
           </div>
         </CollapsibleSection>
@@ -824,8 +937,8 @@ export function TemperatureReadings() {
           <div>
             <strong>Filtros selecionados</strong>
             <span>
-              Clique em Aplicar filtros para recarregar o histórico. A busca
-              textual filtra os registros já carregados.
+              Aplicar filtros recarrega o histórico. A busca textual atua nos
+              registros já carregados.
             </span>
           </div>
 
@@ -839,118 +952,214 @@ export function TemperatureReadings() {
         </div>
 
         {error ? (
-          <div className="temperature-readings-error">
-            <strong>{error}</strong>
-
-            <button type="button" onClick={() => void handleRefresh()}>
-              Tentar novamente
-            </button>
-          </div>
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Tente recarregar os dados do período selecionado."
+            action={
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="danger"
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {!error && filteredReadings.length === 0 ? (
           <EmptyState
-            title="Nenhuma leitura encontrada."
+            icon={Thermometer}
+            title="Nenhuma leitura encontrada"
             description="Ajuste os filtros ou registre uma nova leitura de temperatura."
           />
         ) : null}
 
         {!error && filteredReadings.length > 0 ? (
-          <div className="temperature-readings-table-wrapper">
-            <table className="temperature-readings-table">
-              <thead>
-                <tr>
-                  <th>Data da leitura</th>
-                  <th>Empresa</th>
-                  <th>Sala</th>
-                  <th>Sensor</th>
-                  <th>Temperatura</th>
-                  <th>Umidade</th>
-                  <th>Status térmico</th>
-                  <th>Origem</th>
-                  <th>Observações</th>
-                </tr>
-              </thead>
+          <>
+            <div className="temperature-readings-mobile-list">
+              {filteredReadings.map((reading) => (
+                <TemperatureReadingMobileCard
+                  key={reading.id}
+                  reading={reading}
+                />
+              ))}
+            </div>
 
-              <tbody>
-                {filteredReadings.map((reading) => (
-                  <tr key={reading.id}>
-                    <td>
-                      <strong>{formatDateTime(reading.readAt)}</strong>
-                      <small>{shortId(reading.id)}</small>
-                    </td>
-
-                    <td>{reading.company?.name ?? reading.companyId}</td>
-
-                    <td>
-                      <strong>{reading.room?.name ?? reading.roomId}</strong>
-
-                      {hasTemperatureLimit(
-                        reading.room?.minTemperature,
-                        reading.room?.maxTemperature,
-                      ) ? (
-                        <small>
-                          Limite: {formatTemperature(reading.room?.minTemperature)}{' '}
-                          até {formatTemperature(reading.room?.maxTemperature)}
-                        </small>
-                      ) : null}
-                    </td>
-
-                    <td>
-                      <span>{reading.sensor?.code ?? '-'}</span>
-
-                      {reading.sensor?.location ? (
-                        <small>{reading.sensor.location}</small>
-                      ) : null}
-                    </td>
-
-                    <td>
-                      <TemperatureBadge
-                        temperature={reading.temperature}
-                        minTemperature={reading.room?.minTemperature}
-                        maxTemperature={reading.room?.maxTemperature}
-                      />
-                    </td>
-
-                    <td>{formatHumidity(reading.humidity)}</td>
-
-                    <td>
-                      <ThermalStatusBadge
-                        status={reading.room?.thermalStatus ?? null}
-                      />
-                    </td>
-
-                    <td>{formatSource(reading.source)}</td>
-
-                    <td>{reading.notes || '-'}</td>
+            <div className="temperature-readings-table-wrapper">
+              <table className="temperature-readings-table">
+                <thead>
+                  <tr>
+                    <th>Leitura</th>
+                    <th>Local</th>
+                    <th>Sensor / origem</th>
+                    <th>Temperatura</th>
+                    <th>Umidade</th>
+                    <th>Status</th>
+                    <th>Observações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {filteredReadings.map((reading) => (
+                    <tr key={reading.id}>
+                      <td>
+                        <div className="temperature-reading-table-primary">
+                          <strong>{formatDateTime(reading.readAt)}</strong>
+                          <span>{shortId(reading.id)}</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="temperature-reading-table-location">
+                          <strong>
+                            {reading.room?.name ?? reading.roomId}
+                          </strong>
+
+                          <span>
+                            <Building2 size={13} strokeWidth={2} />
+                            {reading.company?.name ?? reading.companyId}
+                          </span>
+
+                          {hasTemperatureLimit(
+                            reading.room?.minTemperature,
+                            reading.room?.maxTemperature,
+                          ) ? (
+                            <small>
+                              Faixa: {formatTemperature(reading.room?.minTemperature)}{' '}
+                              até {formatTemperature(reading.room?.maxTemperature)}
+                            </small>
+                          ) : null}
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="temperature-reading-table-source">
+                          <span>
+                            <Radio size={13} strokeWidth={2} />
+                            {reading.sensor?.code ?? 'Sem sensor'}
+                          </span>
+
+                          {reading.sensor?.location ? (
+                            <small>{reading.sensor.location}</small>
+                          ) : null}
+
+                          <SourceBadge source={reading.source} />
+                        </div>
+                      </td>
+
+                      <td>
+                        <TemperatureBadge
+                          temperature={reading.temperature}
+                          minTemperature={reading.room?.minTemperature}
+                          maxTemperature={reading.room?.maxTemperature}
+                        />
+                      </td>
+
+                      <td>
+                        <div className="temperature-reading-humidity">
+                          <Droplets size={14} strokeWidth={2} />
+                          <strong>{formatHumidity(reading.humidity)}</strong>
+                        </div>
+                      </td>
+
+                      <td>
+                        <ThermalStatusBadge
+                          status={reading.room?.thermalStatus ?? null}
+                        />
+                      </td>
+
+                      <td>
+                        <span className="temperature-reading-notes">
+                          {reading.notes || 'Sem observações'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
       </section>
     </div>
   );
 }
 
-type SummaryCardProps = {
-  title: string;
-  value: number | string;
-  danger?: boolean;
+type TemperatureReadingMobileCardProps = {
+  reading: TemperatureReading;
 };
 
-function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
+function TemperatureReadingMobileCard({
+  reading,
+}: TemperatureReadingMobileCardProps) {
+  const outsideLimits = isTemperatureOutsideLimits(
+    reading.temperature,
+    reading.room?.minTemperature,
+    reading.room?.maxTemperature,
+  );
+
   return (
     <article
       className={
-        danger
-          ? 'temperature-readings-summary-card danger'
-          : 'temperature-readings-summary-card'
+        outsideLimits
+          ? 'temperature-reading-mobile-card is-critical'
+          : 'temperature-reading-mobile-card'
       }
     >
-      <span>{title}</span>
-      <strong>{value}</strong>
+      <div className="temperature-reading-mobile-card-header">
+        <div className="temperature-reading-mobile-card-title">
+          <span>{reading.company?.name ?? 'Empresa não informada'}</span>
+          <strong>{reading.room?.name ?? 'Sala não informada'}</strong>
+        </div>
+
+        <ThermalStatusBadge status={reading.room?.thermalStatus ?? null} />
+      </div>
+
+      <div className="temperature-reading-mobile-card-measurement">
+        <div>
+          <span>Temperatura</span>
+          <strong>{formatTemperature(reading.temperature)}</strong>
+        </div>
+
+        <div>
+          <span>Umidade</span>
+          <strong>{formatHumidity(reading.humidity)}</strong>
+        </div>
+      </div>
+
+      <div className="temperature-reading-mobile-card-meta">
+        <span>
+          <Radio size={14} strokeWidth={2} />
+          {reading.sensor?.code ?? 'Leitura sem sensor'}
+        </span>
+
+        <span>
+          <Clock3 size={14} strokeWidth={2} />
+          {formatDateTime(reading.readAt)}
+        </span>
+
+        <span>
+          <DoorOpen size={14} strokeWidth={2} />
+          {hasTemperatureLimit(
+            reading.room?.minTemperature,
+            reading.room?.maxTemperature,
+          )
+            ? `${formatTemperature(reading.room?.minTemperature)} até ${formatTemperature(reading.room?.maxTemperature)}`
+            : 'Sem faixa configurada'}
+        </span>
+
+        <SourceBadge source={reading.source} />
+      </div>
+
+      {reading.notes ? (
+        <p className="temperature-reading-mobile-card-notes">
+          {reading.notes}
+        </p>
+      ) : null}
     </article>
   );
 }
@@ -966,22 +1175,21 @@ function TemperatureBadge({
   minTemperature,
   maxTemperature,
 }: TemperatureBadgeProps) {
-  const isCritical =
-    (minTemperature !== null &&
-      minTemperature !== undefined &&
-      temperature < minTemperature) ||
-    (maxTemperature !== null &&
-      maxTemperature !== undefined &&
-      temperature > maxTemperature);
+  const isCritical = isTemperatureOutsideLimits(
+    temperature,
+    minTemperature,
+    maxTemperature,
+  );
 
   return (
     <span
       className={
         isCritical
-          ? 'temperature-reading-badge critical'
-          : 'temperature-reading-badge normal'
+          ? 'temperature-reading-value is-critical'
+          : 'temperature-reading-value'
       }
     >
+      <Thermometer size={15} strokeWidth={2.1} />
       {formatTemperature(temperature)}
     </span>
   );
@@ -1002,11 +1210,68 @@ function ThermalStatusBadge({ status }: ThermalStatusBadgeProps) {
   };
 
   return (
-    <span
-      className={`temperature-reading-status ${normalizedStatus.toLowerCase()}`}
-    >
+    <StatusBadge tone={getThermalStatusTone(normalizedStatus)}>
       {labels[normalizedStatus] ?? normalizedStatus}
-    </span>
+    </StatusBadge>
+  );
+}
+
+type SourceBadgeProps = {
+  source?: string | null;
+};
+
+function SourceBadge({ source }: SourceBadgeProps) {
+  return (
+    <StatusBadge tone={getSourceTone(source)}>
+      {formatSource(source)}
+    </StatusBadge>
+  );
+}
+
+function getThermalStatusTone(status: string): UiTone {
+  if (status === 'NORMAL') {
+    return 'success';
+  }
+
+  if (status === 'WARNING') {
+    return 'warning';
+  }
+
+  if (status === 'CRITICAL') {
+    return 'danger';
+  }
+
+  return 'neutral';
+}
+
+function getSourceTone(source?: string | null): UiTone {
+  if (source === 'MANUAL') {
+    return 'warning';
+  }
+
+  if (source === 'SENSOR' || source === 'MQTT') {
+    return 'success';
+  }
+
+  if (source === 'API' || source === 'GOVEE') {
+    return 'info';
+  }
+
+  return 'neutral';
+}
+
+function isTemperatureOutsideLimits(
+  temperature: number,
+  minTemperature?: number | null,
+  maxTemperature?: number | null,
+) {
+  return (
+    (minTemperature !== null &&
+      minTemperature !== undefined &&
+      temperature < minTemperature) ||
+    (maxTemperature !== null &&
+      maxTemperature !== undefined &&
+      temperature > maxTemperature)
   );
 }
 
@@ -1121,7 +1386,13 @@ function formatDateTime(value?: string | null) {
     return '-';
   }
 
-  return new Date(value).toLocaleString('pt-BR');
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
 }
 
 function formatTemperature(value?: number | null) {

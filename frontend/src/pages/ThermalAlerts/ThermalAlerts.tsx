@@ -1,8 +1,38 @@
 import { useEffect, useMemo, useState } from 'react';
+import {
+  BellRing,
+  Building2,
+  Check,
+  CheckCircle2,
+  CircleAlert,
+  Clock3,
+  DoorOpen,
+  Eye,
+  Radio,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  ShieldCheck,
+  Snowflake,
+  Thermometer,
+  Trash2,
+  TriangleAlert,
+  UserRound,
+  X,
+} from 'lucide-react';
 
 import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
-import { EmptyState } from '../../components/Feedback/EmptyState';
-import { LoadingState } from '../../components/Feedback/LoadingState';
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetaPill,
+  MetricCard,
+  PageHeader,
+  StatusBadge,
+  type UiTone,
+} from '../../components/ui/CryoUi';
 import { useAuth } from '../../contexts/useAuth';
 import { getCompanies } from '../../services/companies';
 import { getRooms } from '../../services/rooms';
@@ -363,10 +393,7 @@ export function ThermalAlerts() {
       });
     }
 
-    if (
-      startDate !== defaultStartDate() ||
-      endDate !== defaultEndDate()
-    ) {
+    if (startDate !== defaultStartDate() || endDate !== defaultEndDate()) {
       filters.push({
         label: 'Período',
         value: `${formatDate(startDate)} até ${formatDate(endDate)}`,
@@ -523,7 +550,7 @@ export function ThermalAlerts() {
   if (isLoading) {
     return (
       <LoadingState
-        title="Carregando alertas térmicos..."
+        title="Carregando alertas térmicos"
         description="Buscando ocorrências de temperatura fora dos limites."
       />
     );
@@ -531,27 +558,49 @@ export function ThermalAlerts() {
 
   return (
     <div className="thermal-alerts-page">
-      <header className="thermal-alerts-header">
-        <div>
-          <span>Monitoramento</span>
-          <h1>Alertas térmicos</h1>
-          <p>
-            Acompanhe ocorrências de temperatura fora dos limites das salas,
-            reconheça alertas e marque resoluções operacionais.
-          </p>
+      <PageHeader
+        eyebrow="Monitoramento"
+        title="Alertas térmicos"
+        description="Acompanhe ocorrências fora da faixa térmica, identifique criticidade e registre o tratamento operacional."
+        icon={BellRing}
+        actions={
+          <ActionButton
+            type="button"
+            icon={RefreshCw}
+            variant="primary"
+            onClick={() => void handleRefresh()}
+          >
+            Atualizar alertas
+          </ActionButton>
+        }
+        meta={
+          <>
+            <MetaPill icon={Clock3}>{periodLabel}</MetaPill>
 
-          {!canManageThermalAlerts ? (
-            <p>
-              Seu acesso é somente consulta. Ações de alerta ficam restritas à
-              equipe técnica e administrativa.
-            </p>
-          ) : null}
-        </div>
+            <MetaPill
+              icon={activeAlerts > 0 ? TriangleAlert : CheckCircle2}
+              tone={activeAlerts > 0 ? 'danger' : 'success'}
+            >
+              {activeAlerts > 0
+                ? `${activeAlerts} alerta(s) ativo(s)`
+                : 'Sem alertas ativos'}
+            </MetaPill>
 
-        <button type="button" onClick={() => void handleRefresh()}>
-          Atualizar alertas
-        </button>
-      </header>
+            <MetaPill icon={ShieldCheck}>
+              {canManageThermalAlerts ? 'Acesso operacional' : 'Somente consulta'}
+            </MetaPill>
+          </>
+        }
+      />
+
+      {!canManageThermalAlerts ? (
+        <InlineNotice
+          tone="info"
+          icon={Eye}
+          title="Modo de consulta"
+          description="Reconhecer, resolver, dispensar e remover alertas é restrito à equipe técnica e administrativa."
+        />
+      ) : null}
 
       <CollapsibleSection
         title="Resumo dos alertas"
@@ -566,35 +615,73 @@ export function ThermalAlerts() {
         contentClassName="thermal-alerts-summary"
         variant="section"
       >
-        <SummaryCard title="Total" value={alerts.length} />
-        <SummaryCard
-          title="Ativos"
+        <MetricCard
+          label="Total"
+          value={alerts.length}
+          detail="Ocorrências carregadas"
+          icon={BellRing}
+          tone="info"
+        />
+
+        <MetricCard
+          label="Ativos"
           value={activeAlerts}
-          danger={activeAlerts > 0}
+          detail="Abertos ou reconhecidos"
+          icon={TriangleAlert}
+          tone={activeAlerts > 0 ? 'danger' : 'success'}
         />
-        <SummaryCard
-          title="Abertos"
+
+        <MetricCard
+          label="Abertos"
           value={openAlerts}
-          danger={openAlerts > 0}
+          detail="Ainda não reconhecidos"
+          icon={CircleAlert}
+          tone={openAlerts > 0 ? 'danger' : 'neutral'}
         />
-        <SummaryCard title="Reconhecidos" value={acknowledgedAlerts} />
-        <SummaryCard
-          title="Críticos"
+
+        <MetricCard
+          label="Reconhecidos"
+          value={acknowledgedAlerts}
+          detail="Em acompanhamento"
+          icon={Eye}
+          tone={acknowledgedAlerts > 0 ? 'warning' : 'neutral'}
+        />
+
+        <MetricCard
+          label="Críticos"
           value={criticalAlerts}
-          danger={criticalAlerts > 0}
+          detail="Severidade crítica"
+          icon={Thermometer}
+          tone={criticalAlerts > 0 ? 'danger' : 'success'}
         />
-        <SummaryCard title="Resolvidos" value={resolvedAlerts} />
+
+        <MetricCard
+          label="Resolvidos"
+          value={resolvedAlerts}
+          detail="Ocorrências encerradas"
+          icon={CheckCircle2}
+          tone="success"
+        />
       </CollapsibleSection>
 
       <section className="thermal-alerts-panel">
         <div className="thermal-alerts-panel-header">
           <div>
-            <h2>Histórico de alertas</h2>
+            <span>Histórico operacional</span>
+            <h2>Ocorrências térmicas</h2>
             <p>
               {filteredAlerts.length} alerta(s) exibido(s) de {alerts.length}{' '}
               carregado(s)
             </p>
           </div>
+
+          <ActionButton
+            type="button"
+            icon={RefreshCw}
+            onClick={() => void handleRefresh()}
+          >
+            Atualizar
+          </ActionButton>
         </div>
 
         <CollapsibleSection
@@ -738,7 +825,11 @@ export function ThermalAlerts() {
             </label>
 
             <label className="thermal-alerts-filter-field thermal-alerts-search-field">
-              <span>Busca</span>
+              <span>
+                <Search size={13} strokeWidth={2.1} aria-hidden="true" />
+                Busca
+              </span>
+
               <input
                 type="search"
                 placeholder="Buscar por sala, sensor, mensagem..."
@@ -748,17 +839,23 @@ export function ThermalAlerts() {
             </label>
 
             <div className="thermal-alerts-action-buttons">
-              <button type="button" onClick={() => void handleRefresh()}>
-                Aplicar filtros
-              </button>
-
-              <button
+              <ActionButton
                 type="button"
-                className="thermal-alerts-secondary-action"
+                icon={RefreshCw}
+                variant="primary"
+                onClick={() => void handleRefresh()}
+              >
+                Aplicar filtros
+              </ActionButton>
+
+              <ActionButton
+                type="button"
+                icon={RotateCcw}
+                variant="secondary"
                 onClick={() => void handleClearFilters()}
               >
                 Limpar filtros
-              </button>
+              </ActionButton>
             </div>
           </div>
         </CollapsibleSection>
@@ -786,213 +883,456 @@ export function ThermalAlerts() {
         </div>
 
         {error ? (
-          <div className="thermal-alerts-error">
-            <strong>{error}</strong>
-
-            <button type="button" onClick={() => void handleRefresh()}>
-              Tentar novamente
-            </button>
-          </div>
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Tente recarregar os alertas do período selecionado."
+            action={
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="danger"
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {!error && filteredAlerts.length === 0 ? (
           <EmptyState
-            title="Nenhum alerta térmico encontrado."
+            icon={BellRing}
+            title="Nenhum alerta térmico encontrado"
             description="Não há alertas para os filtros selecionados no momento."
           />
         ) : null}
 
         {!error && filteredAlerts.length > 0 ? (
-          <div className="thermal-alerts-table-wrapper">
-            <table className="thermal-alerts-table">
-              <thead>
-                <tr>
-                  <th>Disparado em</th>
-                  <th>Empresa</th>
-                  <th>Sala</th>
-                  <th>Sensor</th>
-                  <th>Tipo</th>
-                  <th>Severidade</th>
-                  <th>Status</th>
-                  <th>Temperatura</th>
-                  <th>Limites</th>
-                  <th>Mensagem</th>
-                  <th>Reconhecido por</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+          <>
+            <div className="thermal-alerts-mobile-list">
+              {filteredAlerts.map((alert) => (
+                <ThermalAlertMobileCard
+                  key={alert.id}
+                  alert={alert}
+                  canManage={canManageThermalAlerts}
+                  isBusy={actionAlertId === alert.id}
+                  onAcknowledge={handleAcknowledge}
+                  onResolve={handleResolve}
+                  onDismiss={handleDismiss}
+                  onRemove={handleRemove}
+                />
+              ))}
+            </div>
 
-              <tbody>
-                {filteredAlerts.map((alert) => (
-                  <tr key={alert.id}>
-                    <td>
-                      <strong>{formatDateTime(alert.triggeredAt)}</strong>
-                      <small>{shortId(alert.id)}</small>
-                    </td>
-
-                    <td>{alert.company?.name ?? alert.companyId}</td>
-
-                    <td>
-                      <strong>{alert.room?.name ?? alert.roomId}</strong>
-
-                      {alert.room?.thermalStatus ? (
-                        <small>
-                          {formatThermalStatus(alert.room.thermalStatus)}
-                        </small>
-                      ) : null}
-                    </td>
-
-                    <td>
-                      <span>{alert.sensor?.code ?? '-'}</span>
-
-                      {alert.sensor?.lastSeenAt ? (
-                        <small>
-                          Última comunicação:{' '}
-                          {formatDateTime(alert.sensor.lastSeenAt)}
-                        </small>
-                      ) : null}
-                    </td>
-
-                    <td>{formatAlertType(alert.type)}</td>
-
-                    <td>
-                      <SeverityBadge severity={alert.severity as ThermalAlertSeverity} />
-                    </td>
-
-                    <td>
-                      <StatusBadge status={alert.status as ThermalAlertStatus} />
-                    </td>
-
-                    <td>
-                      <span className="thermal-alert-temperature">
-                        {formatTemperature(alert.temperature)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span>
-                        Mín: {formatTemperature(alert.minTemperature)}
-                      </span>
-                      <small>
-                        Máx: {formatTemperature(alert.maxTemperature)}
-                      </small>
-                    </td>
-
-                    <td>{alert.message || '-'}</td>
-
-                    <td>
-                      <span>{alert.acknowledgedByUser?.name ?? '-'}</span>
-
-                      {alert.acknowledgedAt ? (
-                        <small>{formatDateTime(alert.acknowledgedAt)}</small>
-                      ) : null}
-                    </td>
-
-                    <td>
-                      {canManageThermalAlerts ? (
-                        <div className="thermal-alert-row-actions">
-                          {alert.status === 'OPEN' ? (
-                            <button
-                              type="button"
-                              className="thermal-alert-row-action acknowledge"
-                              disabled={actionAlertId === alert.id}
-                              onClick={() => void handleAcknowledge(alert)}
-                            >
-                              Reconhecer
-                            </button>
-                          ) : null}
-
-                          {['OPEN', 'ACKNOWLEDGED'].includes(alert.status) ? (
-                            <>
-                              <button
-                                type="button"
-                                className="thermal-alert-row-action resolve"
-                                disabled={actionAlertId === alert.id}
-                                onClick={() => void handleResolve(alert)}
-                              >
-                                Resolver
-                              </button>
-
-                              <button
-                                type="button"
-                                className="thermal-alert-row-action dismiss"
-                                disabled={actionAlertId === alert.id}
-                                onClick={() => void handleDismiss(alert)}
-                              >
-                                Dispensar
-                              </button>
-                            </>
-                          ) : null}
-
-                          <button
-                            type="button"
-                            className="thermal-alert-row-action remove"
-                            disabled={actionAlertId === alert.id}
-                            onClick={() => void handleRemove(alert)}
-                          >
-                            Remover
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="thermal-alert-readonly-badge">
-                          Somente consulta
-                        </span>
-                      )}
-                    </td>
+            <div className="thermal-alerts-table-wrapper">
+              <table className="thermal-alerts-table">
+                <thead>
+                  <tr>
+                    <th>Alerta</th>
+                    <th>Local</th>
+                    <th>Sensor</th>
+                    <th>Severidade / status</th>
+                    <th>Medição</th>
+                    <th>Mensagem</th>
+                    <th>Reconhecimento</th>
+                    <th>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {filteredAlerts.map((alert) => (
+                    <tr key={alert.id}>
+                      <td>
+                        <div className="thermal-alert-table-primary">
+                          <strong>{formatAlertType(alert.type)}</strong>
+                          <span>{formatDateTime(alert.triggeredAt)}</span>
+                          <small>{shortId(alert.id)}</small>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="thermal-alert-table-location">
+                          <strong>{alert.room?.name ?? alert.roomId}</strong>
+
+                          <span>
+                            <Building2 size={13} strokeWidth={2} />
+                            {alert.company?.name ?? alert.companyId}
+                          </span>
+
+                          {alert.room?.thermalStatus ? (
+                            <small>
+                              Sala: {formatThermalStatus(alert.room.thermalStatus)}
+                            </small>
+                          ) : null}
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="thermal-alert-table-sensor">
+                          <span>
+                            <Radio size={13} strokeWidth={2} />
+                            {alert.sensor?.code ?? 'Sem sensor'}
+                          </span>
+
+                          {alert.sensor?.lastSeenAt ? (
+                            <small>
+                              Última comunicação:{' '}
+                              {formatDateTime(alert.sensor.lastSeenAt)}
+                            </small>
+                          ) : null}
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="thermal-alert-table-badges">
+                          <AlertSeverityBadge severity={alert.severity} />
+                          <AlertStatusBadge status={alert.status} />
+                        </div>
+                      </td>
+
+                      <td>
+                        <AlertMeasurement alert={alert} />
+                      </td>
+
+                      <td>
+                        <span className="thermal-alert-message">
+                          {alert.message || 'Sem mensagem adicional'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="thermal-alert-table-acknowledgement">
+                          <span>
+                            <UserRound size={13} strokeWidth={2} />
+                            {alert.acknowledgedByUser?.name ?? 'Não reconhecido'}
+                          </span>
+
+                          {alert.acknowledgedAt ? (
+                            <small>{formatDateTime(alert.acknowledgedAt)}</small>
+                          ) : null}
+                        </div>
+                      </td>
+
+                      <td>
+                        {canManageThermalAlerts ? (
+                          <AlertRowActions
+                            alert={alert}
+                            isBusy={actionAlertId === alert.id}
+                            onAcknowledge={handleAcknowledge}
+                            onResolve={handleResolve}
+                            onDismiss={handleDismiss}
+                            onRemove={handleRemove}
+                          />
+                        ) : (
+                          <StatusBadge tone="neutral">Somente consulta</StatusBadge>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
       </section>
     </div>
   );
 }
 
-type SummaryCardProps = {
-  title: string;
-  value: number | string;
-  danger?: boolean;
+type ThermalAlertMobileCardProps = {
+  alert: ThermalAlert;
+  canManage: boolean;
+  isBusy: boolean;
+  onAcknowledge: (alert: ThermalAlert) => Promise<void>;
+  onResolve: (alert: ThermalAlert) => Promise<void>;
+  onDismiss: (alert: ThermalAlert) => Promise<void>;
+  onRemove: (alert: ThermalAlert) => Promise<void>;
 };
 
-function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
+function ThermalAlertMobileCard({
+  alert,
+  canManage,
+  isBusy,
+  onAcknowledge,
+  onResolve,
+  onDismiss,
+  onRemove,
+}: ThermalAlertMobileCardProps) {
   return (
     <article
-      className={
-        danger
-          ? 'thermal-alerts-summary-card danger'
-          : 'thermal-alerts-summary-card'
-      }
+      className={`thermal-alert-mobile-card ${
+        alert.severity === 'CRITICAL' ? 'is-critical' : 'is-warning'
+      }`}
     >
-      <span>{title}</span>
-      <strong>{value}</strong>
+      <div className="thermal-alert-mobile-card-header">
+        <div className="thermal-alert-mobile-card-title">
+          <span>{formatAlertType(alert.type)}</span>
+          <strong>{alert.room?.name ?? 'Sala não informada'}</strong>
+          <small>{alert.company?.name ?? alert.companyId}</small>
+        </div>
+
+        <AlertStatusBadge status={alert.status} />
+      </div>
+
+      <div className="thermal-alert-mobile-card-measurement">
+        <div>
+          <span>Temperatura</span>
+          <strong>{formatTemperature(alert.temperature)}</strong>
+        </div>
+
+        <div>
+          <span>Limites</span>
+          <strong>
+            {formatTemperature(alert.minTemperature)} até{' '}
+            {formatTemperature(alert.maxTemperature)}
+          </strong>
+        </div>
+      </div>
+
+      <div className="thermal-alert-mobile-card-meta">
+        <AlertSeverityBadge severity={alert.severity} />
+
+        <span>
+          <Radio size={14} strokeWidth={2} />
+          {alert.sensor?.code ?? 'Sem sensor'}
+        </span>
+
+        <span>
+          <Clock3 size={14} strokeWidth={2} />
+          {formatDateTime(alert.triggeredAt)}
+        </span>
+
+        <span>
+          <DoorOpen size={14} strokeWidth={2} />
+          {alert.room?.thermalStatus
+            ? formatThermalStatus(alert.room.thermalStatus)
+            : 'Status da sala indisponível'}
+        </span>
+      </div>
+
+      {alert.message ? (
+        <p className="thermal-alert-mobile-card-message">{alert.message}</p>
+      ) : null}
+
+      {alert.acknowledgedByUser?.name || alert.acknowledgedAt ? (
+        <div className="thermal-alert-mobile-card-acknowledgement">
+          <UserRound size={14} strokeWidth={2} />
+
+          <div>
+            <span>Reconhecimento</span>
+            <strong>
+              {alert.acknowledgedByUser?.name ?? 'Usuário não informado'}
+            </strong>
+            {alert.acknowledgedAt ? (
+              <small>{formatDateTime(alert.acknowledgedAt)}</small>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="thermal-alert-mobile-card-actions">
+        {canManage ? (
+          <>
+            {alert.status === 'OPEN' ? (
+              <ActionButton
+                type="button"
+                icon={Eye}
+                variant="secondary"
+                disabled={isBusy}
+                onClick={() => void onAcknowledge(alert)}
+              >
+                Reconhecer
+              </ActionButton>
+            ) : null}
+
+            {['OPEN', 'ACKNOWLEDGED'].includes(alert.status) ? (
+              <>
+                <ActionButton
+                  type="button"
+                  icon={Check}
+                  variant="primary"
+                  disabled={isBusy}
+                  onClick={() => void onResolve(alert)}
+                >
+                  Resolver
+                </ActionButton>
+
+                <ActionButton
+                  type="button"
+                  icon={X}
+                  variant="secondary"
+                  disabled={isBusy}
+                  onClick={() => void onDismiss(alert)}
+                >
+                  Dispensar
+                </ActionButton>
+              </>
+            ) : null}
+
+            <ActionButton
+              type="button"
+              icon={Trash2}
+              variant="danger"
+              disabled={isBusy}
+              onClick={() => void onRemove(alert)}
+            >
+              Remover
+            </ActionButton>
+          </>
+        ) : (
+          <StatusBadge tone="neutral">Somente consulta</StatusBadge>
+        )}
+      </div>
     </article>
   );
 }
 
-type SeverityBadgeProps = {
-  severity: ThermalAlertSeverity;
+type AlertRowActionsProps = {
+  alert: ThermalAlert;
+  isBusy: boolean;
+  onAcknowledge: (alert: ThermalAlert) => Promise<void>;
+  onResolve: (alert: ThermalAlert) => Promise<void>;
+  onDismiss: (alert: ThermalAlert) => Promise<void>;
+  onRemove: (alert: ThermalAlert) => Promise<void>;
 };
 
-function SeverityBadge({ severity }: SeverityBadgeProps) {
+function AlertRowActions({
+  alert,
+  isBusy,
+  onAcknowledge,
+  onResolve,
+  onDismiss,
+  onRemove,
+}: AlertRowActionsProps) {
   return (
-    <span className={`thermal-alert-severity ${severity.toLowerCase()}`}>
-      {formatSeverity(severity)}
-    </span>
+    <div className="thermal-alert-row-actions">
+      {alert.status === 'OPEN' ? (
+        <button
+          type="button"
+          className="thermal-alert-icon-action thermal-alert-icon-action--acknowledge"
+          title="Reconhecer alerta"
+          aria-label="Reconhecer alerta"
+          disabled={isBusy}
+          onClick={() => void onAcknowledge(alert)}
+        >
+          <Eye size={15} strokeWidth={2} />
+        </button>
+      ) : null}
+
+      {['OPEN', 'ACKNOWLEDGED'].includes(alert.status) ? (
+        <>
+          <button
+            type="button"
+            className="thermal-alert-icon-action thermal-alert-icon-action--resolve"
+            title="Resolver alerta"
+            aria-label="Resolver alerta"
+            disabled={isBusy}
+            onClick={() => void onResolve(alert)}
+          >
+            <Check size={15} strokeWidth={2} />
+          </button>
+
+          <button
+            type="button"
+            className="thermal-alert-icon-action thermal-alert-icon-action--dismiss"
+            title="Dispensar alerta"
+            aria-label="Dispensar alerta"
+            disabled={isBusy}
+            onClick={() => void onDismiss(alert)}
+          >
+            <X size={15} strokeWidth={2} />
+          </button>
+        </>
+      ) : null}
+
+      <button
+        type="button"
+        className="thermal-alert-icon-action thermal-alert-icon-action--remove"
+        title="Remover alerta"
+        aria-label="Remover alerta"
+        disabled={isBusy}
+        onClick={() => void onRemove(alert)}
+      >
+        <Trash2 size={15} strokeWidth={2} />
+      </button>
+    </div>
   );
 }
 
-type StatusBadgeProps = {
-  status: ThermalAlertStatus;
+type AlertMeasurementProps = {
+  alert: ThermalAlert;
 };
 
-function StatusBadge({ status }: StatusBadgeProps) {
+function AlertMeasurement({ alert }: AlertMeasurementProps) {
+  const isLow = alert.type === 'LOW_TEMPERATURE';
+
   return (
-    <span className={`thermal-alert-status ${status.toLowerCase()}`}>
-      {formatStatus(status)}
-    </span>
+    <div
+      className={`thermal-alert-measurement ${
+        alert.severity === 'CRITICAL' ? 'is-critical' : 'is-warning'
+      }`}
+    >
+      {isLow ? (
+        <Snowflake size={16} strokeWidth={2.1} />
+      ) : (
+        <Thermometer size={16} strokeWidth={2.1} />
+      )}
+
+      <div>
+        <strong>{formatTemperature(alert.temperature)}</strong>
+        <small>
+          {formatTemperature(alert.minTemperature)} até{' '}
+          {formatTemperature(alert.maxTemperature)}
+        </small>
+      </div>
+    </div>
   );
+}
+
+type AlertSeverityBadgeProps = {
+  severity: string;
+};
+
+function AlertSeverityBadge({ severity }: AlertSeverityBadgeProps) {
+  return (
+    <StatusBadge tone={getSeverityTone(severity)}>
+      {formatSeverity(severity)}
+    </StatusBadge>
+  );
+}
+
+type AlertStatusBadgeProps = {
+  status: string;
+};
+
+function AlertStatusBadge({ status }: AlertStatusBadgeProps) {
+  return (
+    <StatusBadge tone={getStatusTone(status)}>
+      {formatStatus(status)}
+    </StatusBadge>
+  );
+}
+
+function getSeverityTone(severity: string): UiTone {
+  return severity === 'CRITICAL' ? 'danger' : 'warning';
+}
+
+function getStatusTone(status: string): UiTone {
+  if (status === 'OPEN') {
+    return 'danger';
+  }
+
+  if (status === 'ACKNOWLEDGED') {
+    return 'warning';
+  }
+
+  if (status === 'RESOLVED') {
+    return 'success';
+  }
+
+  return 'neutral';
 }
 
 function formatAlertType(value: string) {
@@ -1086,7 +1426,13 @@ function formatDateTime(value?: string | null) {
     return '-';
   }
 
-  return new Date(value).toLocaleString('pt-BR');
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
 }
 
 function formatTemperature(value?: number | null) {
