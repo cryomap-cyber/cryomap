@@ -1,5 +1,32 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import {
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Plus,
+  Power,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  TriangleAlert,
+} from 'lucide-react';
+
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetaPill,
+  MetricCard,
+  PageHeader,
+  StatusBadge,
+} from '../../components/ui/CryoUi';
+import {
   createCompany,
   getCompanies,
   inactivateCompany,
@@ -8,8 +35,6 @@ import {
 } from '../../services/companies';
 import type { Company } from '../../types/company';
 import './Companies.css';
-import { LoadingState } from '../../components/Feedback/LoadingState';
-import { EmptyState } from '../../components/Feedback/EmptyState';
 
 type CompanyFormData = {
   name: string;
@@ -118,6 +143,8 @@ export function Companies() {
     (company) => company.status === 'INACTIVE',
   ).length;
 
+  const activeFilterCount = search.trim() ? 1 : 0;
+
   function openCreateForm() {
     setEditingCompany(null);
     setFormData(emptyFormData);
@@ -220,31 +247,72 @@ export function Companies() {
 
   if (isLoading) {
     return (
-  <LoadingState
-    title="Carregando empresas..."
-    description="Buscando empresas cadastradas."
-  />
-);
+      <LoadingState
+        title="Carregando empresas"
+        description="Buscando empresas cadastradas."
+      />
+    );
   }
 
   return (
     <div className="companies-page">
-      <header className="companies-header">
-        <div>
-          <span>Cadastros</span>
-          <h1>Empresas</h1>
-          <p>Gerencie os clientes cadastrados no CryoMap.</p>
-        </div>
+      <PageHeader
+        eyebrow="Cadastros"
+        title="Empresas"
+        description="Gerencie os clientes cadastrados no CryoMap, seus dados de contato e localização."
+        icon={Building2}
+        actions={
+          <ActionButton
+            type="button"
+            icon={Plus}
+            variant="primary"
+            onClick={openCreateForm}
+          >
+            Nova empresa
+          </ActionButton>
+        }
+        meta={
+          <>
+            <MetaPill icon={Building2}>{companies.length} empresa(s)</MetaPill>
 
-        <button type="button" onClick={openCreateForm}>
-          Nova empresa
-        </button>
-      </header>
+            <MetaPill icon={CheckCircle2} tone="success">
+              {activeCompanies} ativa(s)
+            </MetaPill>
+
+            <MetaPill
+              icon={Power}
+              tone={inactiveCompanies > 0 ? 'neutral' : 'success'}
+            >
+              {inactiveCompanies} inativa(s)
+            </MetaPill>
+          </>
+        }
+      />
 
       <section className="companies-summary">
-        <SummaryCard title="Total" value={companies.length} />
-        <SummaryCard title="Ativas" value={activeCompanies} />
-        <SummaryCard title="Inativas" value={inactiveCompanies} />
+        <MetricCard
+          label="Total"
+          value={companies.length}
+          detail="Empresas cadastradas"
+          icon={Building2}
+          tone="info"
+        />
+
+        <MetricCard
+          label="Ativas"
+          value={activeCompanies}
+          detail="Disponíveis para operação"
+          icon={CheckCircle2}
+          tone="success"
+        />
+
+        <MetricCard
+          label="Inativas"
+          value={inactiveCompanies}
+          detail="Fora da operação ativa"
+          icon={Power}
+          tone="neutral"
+        />
       </section>
 
       {isFormOpen ? (
@@ -253,11 +321,14 @@ export function Companies() {
             <div>
               <span>Empresa</span>
               <h2>{editingCompany ? 'Editar empresa' : 'Nova empresa'}</h2>
+              <p>
+                Informe os dados cadastrais, contato e localização do cliente.
+              </p>
             </div>
 
-            <button type="button" onClick={closeForm}>
+            <ActionButton type="button" variant="ghost" onClick={closeForm}>
               Fechar
-            </button>
+            </ActionButton>
           </div>
 
           <form className="company-form" onSubmit={handleSubmit}>
@@ -345,17 +416,25 @@ export function Companies() {
             ) : null}
 
             <div className="company-form-actions">
-              <button type="button" onClick={closeForm}>
+              <ActionButton
+                type="button"
+                variant="secondary"
+                onClick={closeForm}
+              >
                 Cancelar
-              </button>
+              </ActionButton>
 
-              <button type="submit" disabled={isSaving}>
+              <ActionButton
+                type="submit"
+                variant="primary"
+                disabled={isSaving}
+              >
                 {isSaving
                   ? 'Salvando...'
                   : editingCompany
                     ? 'Salvar alterações'
                     : 'Cadastrar empresa'}
-              </button>
+              </ActionButton>
             </div>
           </form>
         </section>
@@ -364,140 +443,310 @@ export function Companies() {
       <section className="companies-panel">
         <div className="companies-panel-header">
           <div>
+            <span>Clientes cadastrados</span>
             <h2>Lista de empresas</h2>
-            <p>{filteredCompanies.length} registro(s) encontrado(s)</p>
+            <p>
+              {filteredCompanies.length} registro(s) exibido(s) de{' '}
+              {companies.length} carregado(s)
+            </p>
           </div>
 
-          <div className="companies-actions">
-            <input
-              type="search"
-              placeholder="Buscar por nome, CNPJ, cidade..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-
-            <button type="button" onClick={handleRefresh}>
-              Atualizar
-            </button>
-          </div>
+          <ActionButton
+            type="button"
+            icon={RefreshCw}
+            onClick={() => void handleRefresh()}
+          >
+            Atualizar
+          </ActionButton>
         </div>
 
-        {error ? (
-          <div className="companies-error">
-            <strong>{error}</strong>
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Use a busca para localizar empresas por nome, CNPJ, contato ou localização."
+          closedDescription={
+            activeFilterCount > 0
+              ? '1 filtro ativo.'
+              : 'Nenhum filtro específico selecionado.'
+          }
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.companies.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeFilterCount}
+          className="companies-filters-disclosure"
+          contentClassName="companies-filter-area"
+          variant="toolbar"
+        >
+          <div className="companies-actions">
+            <label className="companies-search-field">
+              <span>
+                <Search size={13} strokeWidth={2.1} aria-hidden="true" />
+                Busca
+              </span>
 
-            <button type="button" onClick={handleRefresh}>
-              Tentar novamente
-            </button>
+              <input
+                type="search"
+                placeholder="Buscar por nome, CNPJ, cidade..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+
+            <ActionButton
+              type="button"
+              icon={RotateCcw}
+              variant="secondary"
+              disabled={!search}
+              onClick={() => setSearch('')}
+            >
+              Limpar busca
+            </ActionButton>
           </div>
+        </CollapsibleSection>
+
+        {error ? (
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Tente atualizar novamente a lista de empresas."
+            action={
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="danger"
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {!error && filteredCompanies.length === 0 ? (
           <EmptyState
-  title="Nenhuma empresa encontrada."
-  description="Cadastre uma empresa ou ajuste os filtros para visualizar resultados."
-/>
+            icon={Building2}
+            title="Nenhuma empresa encontrada"
+            description="Cadastre uma empresa ou ajuste a busca para visualizar resultados."
+          />
         ) : null}
 
         {!error && filteredCompanies.length > 0 ? (
-          <div className="companies-table-wrapper">
-            <table className="companies-table">
-              <thead>
-                <tr>
-                  <th>Empresa</th>
-                  <th>CNPJ</th>
-                  <th>Contato</th>
-                  <th>Localização</th>
-                  <th>Status</th>
-                  <th>Criada em</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+          <>
+            <div className="companies-mobile-list">
+              {filteredCompanies.map((company) => (
+                <CompanyMobileCard
+                  key={company.id}
+                  company={company}
+                  onEdit={openEditForm}
+                  onInactivate={handleInactivate}
+                />
+              ))}
+            </div>
 
-              <tbody>
-                {filteredCompanies.map((company) => (
-                  <tr key={company.id}>
-                    <td>
-                      <strong>{company.name}</strong>
-                      <small>{company.id}</small>
-                    </td>
-
-                    <td>{formatCnpj(company.cnpj)}</td>
-
-                    <td>
-                      <span>{company.email || '-'}</span>
-                      <small>{company.phone || '-'}</small>
-                    </td>
-
-                    <td>
-                      <span>{company.city || '-'}</span>
-                      <small>{company.state || '-'}</small>
-                    </td>
-
-                    <td>
-                      <StatusBadge status={company.status} />
-                    </td>
-
-                    <td>{formatDate(company.createdAt)}</td>
-
-                    <td>
-                      <div className="company-row-actions">
-                        <button type="button" onClick={() => openEditForm(company)}>
-                          Editar
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={company.status === 'INACTIVE'}
-                          onClick={() => handleInactivate(company)}
-                        >
-                          Inativar
-                        </button>
-                      </div>
-                    </td>
+            <div className="companies-table-wrapper">
+              <table className="companies-table">
+                <thead>
+                  <tr>
+                    <th>Empresa</th>
+                    <th>Contato</th>
+                    <th>Localização</th>
+                    <th>Status</th>
+                    <th>Cadastro</th>
+                    <th>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {filteredCompanies.map((company) => (
+                    <tr key={company.id}>
+                      <td>
+                        <div className="company-table-primary">
+                          <strong>{company.name}</strong>
+                          <span>{formatCnpj(company.cnpj)}</span>
+                          <small>ID {shortId(company.id)}</small>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="company-table-contact">
+                          <span>
+                            <Mail size={13} strokeWidth={2} />
+                            {company.email || 'Email não informado'}
+                          </span>
+
+                          <span>
+                            <Phone size={13} strokeWidth={2} />
+                            {company.phone || 'Telefone não informado'}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="company-table-location">
+                          <MapPin size={13} strokeWidth={2} />
+
+                          <div>
+                            <strong>{formatCompanyLocation(company)}</strong>
+                            <small>{company.address || 'Endereço não informado'}</small>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td>
+                        <CompanyStatusBadge status={company.status} />
+                      </td>
+
+                      <td>
+                        <div className="company-table-created">
+                          <CalendarDays size={13} strokeWidth={2} />
+                          <span>{formatDate(company.createdAt)}</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="company-row-actions">
+                          <button
+                            type="button"
+                            className="company-icon-action"
+                            title="Editar empresa"
+                            aria-label={`Editar empresa ${company.name}`}
+                            onClick={() => openEditForm(company)}
+                          >
+                            <Pencil size={15} strokeWidth={2} />
+                          </button>
+
+                          <button
+                            type="button"
+                            className="company-icon-action company-icon-action--danger"
+                            title="Inativar empresa"
+                            aria-label={`Inativar empresa ${company.name}`}
+                            disabled={company.status === 'INACTIVE'}
+                            onClick={() => void handleInactivate(company)}
+                          >
+                            <Power size={15} strokeWidth={2} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
       </section>
     </div>
   );
 }
 
-type SummaryCardProps = {
-  title: string;
-  value: number;
+type CompanyMobileCardProps = {
+  company: Company;
+  onEdit: (company: Company) => void;
+  onInactivate: (company: Company) => Promise<void>;
 };
 
-function SummaryCard({ title, value }: SummaryCardProps) {
+function CompanyMobileCard({
+  company,
+  onEdit,
+  onInactivate,
+}: CompanyMobileCardProps) {
   return (
-    <article className="companies-summary-card">
-      <span>{title}</span>
-      <strong>{value}</strong>
+    <article
+      className={`company-mobile-card ${
+        company.status === 'INACTIVE' ? 'is-inactive' : ''
+      }`}
+    >
+      <div className="company-mobile-card-header">
+        <div>
+          <span>{formatCnpj(company.cnpj)}</span>
+          <strong>{company.name}</strong>
+          <small>ID {shortId(company.id)}</small>
+        </div>
+
+        <CompanyStatusBadge status={company.status} />
+      </div>
+
+      <div className="company-mobile-card-info">
+        <div>
+          <Mail size={14} strokeWidth={2} />
+          <div>
+            <span>Email</span>
+            <strong>{company.email || 'Não informado'}</strong>
+          </div>
+        </div>
+
+        <div>
+          <Phone size={14} strokeWidth={2} />
+          <div>
+            <span>Telefone</span>
+            <strong>{company.phone || 'Não informado'}</strong>
+          </div>
+        </div>
+
+        <div>
+          <MapPin size={14} strokeWidth={2} />
+          <div>
+            <span>Localização</span>
+            <strong>{formatCompanyLocation(company)}</strong>
+            <small>{company.address || 'Endereço não informado'}</small>
+          </div>
+        </div>
+
+        <div>
+          <CalendarDays size={14} strokeWidth={2} />
+          <div>
+            <span>Cadastrada em</span>
+            <strong>{formatDate(company.createdAt)}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="company-mobile-card-actions">
+        <ActionButton
+          type="button"
+          icon={Pencil}
+          variant="secondary"
+          onClick={() => onEdit(company)}
+        >
+          Editar
+        </ActionButton>
+
+        <ActionButton
+          type="button"
+          icon={Power}
+          variant="danger"
+          disabled={company.status === 'INACTIVE'}
+          onClick={() => void onInactivate(company)}
+        >
+          Inativar
+        </ActionButton>
+      </div>
     </article>
   );
 }
 
-type StatusBadgeProps = {
+type CompanyStatusBadgeProps = {
   status: Company['status'];
 };
 
-function StatusBadge({ status }: StatusBadgeProps) {
-  const label = status === 'ACTIVE' ? 'Ativa' : 'Inativa';
-
+function CompanyStatusBadge({ status }: CompanyStatusBadgeProps) {
   return (
-    <span
-      className={
-        status === 'ACTIVE'
-          ? 'companies-status active'
-          : 'companies-status inactive'
-      }
-    >
-      {label}
-    </span>
+    <StatusBadge tone={status === 'ACTIVE' ? 'success' : 'neutral'}>
+      {status === 'ACTIVE' ? 'Ativa' : 'Inativa'}
+    </StatusBadge>
   );
+}
+
+function formatCompanyLocation(company: Company) {
+  const parts = [company.city, company.state].filter(Boolean);
+
+  return parts.length > 0 ? parts.join(' / ') : 'Não informada';
+}
+
+function shortId(value: string) {
+  return value.slice(0, 8).toUpperCase();
 }
 
 function formatDate(value?: string | null) {

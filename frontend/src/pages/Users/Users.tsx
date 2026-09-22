@@ -1,4 +1,38 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  CircleOff,
+  Clock3,
+  LockKeyhole,
+  Pencil,
+  Phone,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  ShieldCheck,
+  TriangleAlert,
+  UserCog,
+  UsersRound,
+  UserRound,
+  Wrench,
+} from 'lucide-react';
+
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetaPill,
+  MetricCard,
+  PageHeader,
+  StatusBadge,
+  type UiTone,
+} from '../../components/ui/CryoUi';
+import { useAuth } from '../../contexts/useAuth';
 import { getCompanies } from '../../services/companies';
 import {
   createUser,
@@ -10,42 +44,19 @@ import {
 } from '../../services/users';
 import type { Company } from '../../types/company';
 import type { User, UserRole, UserStatus } from '../../types/user';
-import { useAuth } from '../../contexts/useAuth';
 import './Users.css';
-import { LoadingState } from '../../components/Feedback/LoadingState';
 
 const userRoleOptions: { value: UserRole; label: string }[] = [
-  {
-    value: 'MASTER_ADMIN',
-    label: 'Administrador master',
-  },
-  {
-    value: 'SUPERVISOR',
-    label: 'Supervisor',
-  },
-  {
-    value: 'CLIENT_USER',
-    label: 'Usuário cliente',
-  },
-  {
-    value: 'TECHNICIAN',
-    label: 'Técnico',
-  },
+  { value: 'MASTER_ADMIN', label: 'Administrador master' },
+  { value: 'SUPERVISOR', label: 'Supervisor' },
+  { value: 'CLIENT_USER', label: 'Usuário cliente' },
+  { value: 'TECHNICIAN', label: 'Técnico' },
 ];
 
 const userStatusOptions: { value: UserStatus; label: string }[] = [
-  {
-    value: 'ACTIVE',
-    label: 'Ativo',
-  },
-  {
-    value: 'INACTIVE',
-    label: 'Inativo',
-  },
-  {
-    value: 'BLOCKED',
-    label: 'Bloqueado',
-  },
+  { value: 'ACTIVE', label: 'Ativo' },
+  { value: 'INACTIVE', label: 'Inativo' },
+  { value: 'BLOCKED', label: 'Bloqueado' },
 ];
 
 type UserFormData = {
@@ -71,7 +82,7 @@ const emptyFormData: UserFormData = {
 };
 
 export function Users() {
-    const { user: currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
 
   const isCurrentUserMasterAdmin = currentUser?.role === 'MASTER_ADMIN';
 
@@ -148,7 +159,6 @@ export function Users() {
         !selectedCompanyId || user.companyId === selectedCompanyId;
 
       const matchesRole = !selectedRole || user.role === selectedRole;
-
       const matchesStatus = !selectedStatus || user.status === selectedStatus;
 
       const matchesSearch =
@@ -171,16 +181,21 @@ export function Users() {
   }, [users, selectedCompanyId, selectedRole, selectedStatus, search]);
 
   const activeUsers = users.filter((user) => user.status === 'ACTIVE').length;
-
   const blockedUsers = users.filter((user) => user.status === 'BLOCKED').length;
-
   const technicians = users.filter((user) => user.role === 'TECHNICIAN').length;
-
-  const clientUsers = users.filter((user) => user.role === 'CLIENT_USER').length;
-
+  const clientUsers = users.filter(
+    (user) => user.role === 'CLIENT_USER',
+  ).length;
   const usersWithoutCompany = users.filter((user) => !user.companyId).length;
 
-    const availableRoleOptions = useMemo(() => {
+  const activeFilterCount = [
+    selectedCompanyId,
+    selectedRole,
+    selectedStatus,
+    search.trim(),
+  ].filter(Boolean).length;
+
+  const availableRoleOptions = useMemo(() => {
     if (editingUser?.role === 'MASTER_ADMIN') {
       return userRoleOptions.filter((option) => option.value === 'MASTER_ADMIN');
     }
@@ -193,7 +208,7 @@ export function Users() {
     setFormData({
       ...emptyFormData,
       companyId: selectedCompanyId,
-            role:
+      role:
         selectedRole && selectedRole !== 'MASTER_ADMIN'
           ? (selectedRole as UserRole)
           : 'TECHNICIAN',
@@ -204,10 +219,11 @@ export function Users() {
   }
 
   function openEditForm(user: User) {
-        if (!canEditUser(user, currentUser?.id, isCurrentUserMasterAdmin)) {
+    if (!canEditUser(user, currentUser?.id, isCurrentUserMasterAdmin)) {
       setError('Você não tem permissão para editar o administrador master.');
       return;
     }
+
     setEditingUser(user);
     setFormData({
       companyId: user.companyId ?? '',
@@ -244,6 +260,13 @@ export function Users() {
     }));
   }
 
+  function clearFilters() {
+    setSelectedCompanyId('');
+    setSelectedRole('');
+    setSelectedStatus('');
+    setSearch('');
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -268,7 +291,8 @@ export function Users() {
       setFormError('A nova senha precisa ter pelo menos 8 caracteres.');
       return;
     }
-        if (!editingUser && formData.role === 'MASTER_ADMIN') {
+
+    if (!editingUser && formData.role === 'MASTER_ADMIN') {
       setFormError('Não é permitido criar outro administrador master.');
       return;
     }
@@ -278,7 +302,9 @@ export function Users() {
       editingUser.role !== 'MASTER_ADMIN' &&
       formData.role === 'MASTER_ADMIN'
     ) {
-      setFormError('Não é permitido promover outro usuário para administrador master.');
+      setFormError(
+        'Não é permitido promover outro usuário para administrador master.',
+      );
       return;
     }
 
@@ -286,17 +312,19 @@ export function Users() {
       editingUser?.role === 'MASTER_ADMIN' &&
       formData.role !== 'MASTER_ADMIN'
     ) {
-      setFormError('O administrador master principal não pode perder o perfil master.');
+      setFormError(
+        'O administrador master principal não pode perder o perfil master.',
+      );
       return;
     }
 
-    if (
-      editingUser?.role === 'MASTER_ADMIN' &&
-      !isCurrentUserMasterAdmin
-    ) {
-      setFormError('Somente o administrador master pode editar o próprio cadastro master.');
+    if (editingUser?.role === 'MASTER_ADMIN' && !isCurrentUserMasterAdmin) {
+      setFormError(
+        'Somente o administrador master pode editar o próprio cadastro master.',
+      );
       return;
     }
+
     setIsSaving(true);
 
     try {
@@ -338,7 +366,7 @@ export function Users() {
   }
 
   async function handleInactivate(user: User) {
-        if (!canInactivateUser(user, currentUser?.id)) {
+    if (!canInactivateUser(user, currentUser?.id)) {
       setError(
         user.id === currentUser?.id
           ? 'Você não pode inativar o próprio usuário logado.'
@@ -346,6 +374,7 @@ export function Users() {
       );
       return;
     }
+
     const confirmed = window.confirm(
       `Deseja realmente inativar o usuário "${user.name}"?`,
     );
@@ -366,38 +395,102 @@ export function Users() {
 
   if (isLoading) {
     return (
-  <LoadingState
-    title="Carregando usuários..."
-    description="Buscando usuários e permissões cadastradas."
-  />
-);
+      <LoadingState
+        title="Carregando usuários"
+        description="Buscando usuários e permissões cadastradas."
+      />
+    );
   }
 
   return (
     <div className="users-page">
-      <header className="users-header">
-        <div>
-          <span>Acessos</span>
-          <h1>Usuários</h1>
-          <p>
-            Gerencie administradores, supervisores, usuários de empresas e
-            técnicos operacionais do CryoMap.
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Acessos"
+        title="Usuários"
+        description="Gerencie administradores, supervisores, usuários de empresas e técnicos operacionais do CryoMap."
+        icon={UsersRound}
+        actions={
+          <ActionButton
+            type="button"
+            icon={Plus}
+            variant="primary"
+            onClick={openCreateForm}
+          >
+            Novo usuário
+          </ActionButton>
+        }
+        meta={
+          <>
+            <MetaPill icon={UsersRound}>{users.length} usuário(s)</MetaPill>
+            <MetaPill icon={CheckCircle2} tone="success">
+              {activeUsers} ativo(s)
+            </MetaPill>
+            <MetaPill
+              icon={LockKeyhole}
+              tone={blockedUsers > 0 ? 'danger' : 'neutral'}
+            >
+              {blockedUsers} bloqueado(s)
+            </MetaPill>
+          </>
+        }
+      />
 
-        <button type="button" onClick={openCreateForm}>
-          Novo usuário
-        </button>
-      </header>
-
-      <section className="users-summary">
-        <SummaryCard title="Total" value={users.length} />
-        <SummaryCard title="Ativos" value={activeUsers} />
-        <SummaryCard title="Bloqueados" value={blockedUsers} danger={blockedUsers > 0} />
-        <SummaryCard title="Técnicos" value={technicians} />
-        <SummaryCard title="Clientes" value={clientUsers} />
-        <SummaryCard title="Sem empresa" value={usersWithoutCompany} />
-      </section>
+      <CollapsibleSection
+        title="Resumo dos usuários"
+        openDescription="Indicadores gerais de usuários e perfis estão visíveis."
+        closedDescription="Indicadores gerais estão ocultos para liberar espaço na tela."
+        openLabel="Ocultar resumo"
+        closedLabel="Mostrar resumo"
+        storageKey="cryomap.users.summary-open"
+        defaultOpen
+        defaultOpenOnMobile={false}
+        className="users-summary-disclosure"
+        contentClassName="users-summary"
+        variant="section"
+      >
+        <MetricCard
+          label="Total"
+          value={users.length}
+          detail="Usuários cadastrados"
+          icon={UsersRound}
+          tone="info"
+        />
+        <MetricCard
+          label="Ativos"
+          value={activeUsers}
+          detail="Com acesso operacional"
+          icon={CheckCircle2}
+          tone="success"
+        />
+        <MetricCard
+          label="Bloqueados"
+          value={blockedUsers}
+          detail="Acesso bloqueado"
+          icon={LockKeyhole}
+          tone={blockedUsers > 0 ? 'danger' : 'success'}
+        />
+        <MetricCard
+          label="Técnicos"
+          value={technicians}
+          detail="Perfis de campo"
+          icon={Wrench}
+          tone="warning"
+        />
+        <MetricCard
+          label="Clientes"
+          value={clientUsers}
+          detail="Usuários de empresas"
+          icon={Building2}
+          tone="success"
+        />
+        <MetricCard
+          label="Sem empresa"
+          value={usersWithoutCompany}
+          detail="Usuários internos"
+          icon={UserCog}
+          tone="neutral"
+        />
+      </CollapsibleSection>
 
       {isFormOpen ? (
         <section className="user-form-panel">
@@ -405,12 +498,25 @@ export function Users() {
             <div>
               <span>Usuário</span>
               <h2>{editingUser ? 'Editar usuário' : 'Novo usuário'}</h2>
+              <p>
+                Configure identificação, vínculo com empresa, perfil de acesso e
+                status do usuário.
+              </p>
             </div>
 
-            <button type="button" onClick={closeForm}>
+            <ActionButton type="button" variant="ghost" onClick={closeForm}>
               Fechar
-            </button>
+            </ActionButton>
           </div>
+
+          {editingUser?.role === 'MASTER_ADMIN' ? (
+            <InlineNotice
+              tone="info"
+              icon={ShieldCheck}
+              title="Administrador master protegido"
+              description="O perfil master principal não pode ser removido, rebaixado ou inativado."
+            />
+          ) : null}
 
           <form className="user-form" onSubmit={handleSubmit}>
             <label>
@@ -422,7 +528,6 @@ export function Users() {
                 }
               >
                 <option value="">Sem empresa / usuário interno</option>
-
                 {companies.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name}
@@ -503,7 +608,7 @@ export function Users() {
                   updateFormField('role', event.target.value as UserRole)
                 }
               >
-                  {availableRoleOptions.map((option) => (
+                {availableRoleOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -532,17 +637,25 @@ export function Users() {
             ) : null}
 
             <div className="user-form-actions">
-              <button type="button" onClick={closeForm}>
+              <ActionButton
+                type="button"
+                variant="secondary"
+                onClick={closeForm}
+              >
                 Cancelar
-              </button>
+              </ActionButton>
 
-              <button type="submit" disabled={isSaving}>
+              <ActionButton
+                type="submit"
+                variant="primary"
+                disabled={isSaving}
+              >
                 {isSaving
                   ? 'Salvando...'
                   : editingUser
                     ? 'Salvar alterações'
                     : 'Cadastrar usuário'}
-              </button>
+              </ActionButton>
             </div>
           </form>
         </section>
@@ -551,195 +664,447 @@ export function Users() {
       <section className="users-panel">
         <div className="users-panel-header">
           <div>
+            <span>Controle de acesso</span>
             <h2>Lista de usuários</h2>
-            <p>{filteredUsers.length} usuário(s) encontrado(s)</p>
+            <p>
+              {filteredUsers.length} usuário(s) exibido(s) de {users.length}{' '}
+              carregado(s)
+            </p>
           </div>
 
-          <div className="users-actions">
-            <select
-              value={selectedCompanyId}
-              onChange={(event) => setSelectedCompanyId(event.target.value)}
-            >
-              <option value="">Todas as empresas</option>
-
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedRole}
-              onChange={(event) => setSelectedRole(event.target.value)}
-            >
-              <option value="">Todos os perfis</option>
-
-              {userRoleOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedStatus}
-              onChange={(event) => setSelectedStatus(event.target.value)}
-            >
-              <option value="">Todos os status</option>
-
-              {userStatusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="search"
-              placeholder="Buscar por nome, e-mail, cargo..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-
-            <button type="button" onClick={handleRefresh}>
-              Atualizar
-            </button>
-          </div>
+          <ActionButton
+            type="button"
+            icon={RefreshCw}
+            onClick={() => void handleRefresh()}
+          >
+            Atualizar
+          </ActionButton>
         </div>
 
-        {error ? (
-          <div className="users-error">
-            <strong>{error}</strong>
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Refine a lista por empresa, perfil, status ou busca textual."
+          closedDescription={
+            activeFilterCount > 0
+              ? `${activeFilterCount} filtro(s) ativo(s).`
+              : 'Nenhum filtro específico selecionado.'
+          }
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.users.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeFilterCount}
+          className="users-filters-disclosure"
+          contentClassName="users-filter-area"
+          variant="toolbar"
+        >
+          <div className="users-actions">
+            <label className="users-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => setSelectedCompanyId(event.target.value)}
+              >
+                <option value="">Todas as empresas</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <button type="button" onClick={handleRefresh}>
-              Tentar novamente
-            </button>
+            <label className="users-filter-field">
+              <span>Perfil</span>
+              <select
+                value={selectedRole}
+                onChange={(event) => setSelectedRole(event.target.value)}
+              >
+                <option value="">Todos os perfis</option>
+                {userRoleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="users-filter-field">
+              <span>Status</span>
+              <select
+                value={selectedStatus}
+                onChange={(event) => setSelectedStatus(event.target.value)}
+              >
+                <option value="">Todos os status</option>
+                {userStatusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="users-filter-field users-search-field">
+              <span>
+                <Search size={13} strokeWidth={2.1} aria-hidden="true" />
+                Busca
+              </span>
+              <input
+                type="search"
+                placeholder="Buscar por nome, e-mail, cargo..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+
+            <div className="users-filter-actions">
+              <ActionButton
+                type="button"
+                icon={RotateCcw}
+                variant="secondary"
+                disabled={activeFilterCount === 0}
+                onClick={clearFilters}
+              >
+                Limpar filtros
+              </ActionButton>
+            </div>
           </div>
+        </CollapsibleSection>
+
+        {error ? (
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Tente atualizar os usuários ou reveja os filtros selecionados."
+            action={
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="danger"
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {!error && filteredUsers.length === 0 ? (
-          <p className="users-empty">
-            Nenhum usuário encontrado para os filtros selecionados.
-          </p>
+          <EmptyState
+            icon={UsersRound}
+            title="Nenhum usuário encontrado"
+            description="Cadastre um usuário ou ajuste os filtros para visualizar resultados."
+          />
         ) : null}
 
         {!error && filteredUsers.length > 0 ? (
-          <div className="users-table-wrapper">
-            <table className="users-table">
-              <thead>
-                <tr>
-                  <th>Usuário</th>
-                  <th>Empresa</th>
-                  <th>Contato</th>
-                  <th>Cargo</th>
-                  <th>Perfil</th>
-                  <th>Status</th>
-                  <th>Último login</th>
-                  <th>Criado em</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+          <>
+            <div className="users-mobile-list">
+              {filteredUsers.map((user) => (
+                <UserMobileCard
+                  key={user.id}
+                  user={user}
+                  currentUserId={currentUser?.id}
+                  isCurrentUserMasterAdmin={isCurrentUserMasterAdmin}
+                  onEdit={openEditForm}
+                  onInactivate={handleInactivate}
+                />
+              ))}
+            </div>
 
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <strong>{user.name}</strong>
-                      <small>{user.email}</small>
-                    </td>
-
-                    <td>{user.company?.name ?? '-'}</td>
-
-                    <td>{user.phone || '-'}</td>
-
-                    <td>{user.jobTitle || '-'}</td>
-
-                    <td>
-                      <RoleBadge role={user.role} />
-                    </td>
-
-                    <td>
-                      <StatusBadge status={user.status} />
-                    </td>
-
-                    <td>{formatDateTime(user.lastLoginAt)}</td>
-
-                    <td>{formatDateTime(user.createdAt)}</td>
-
-                    <td>
-                      <div className="user-row-actions">
-                      {canEditUser(user, currentUser?.id, isCurrentUserMasterAdmin) ? (
-                       <button type="button" onClick={() => openEditForm(user)}>
-                             Editar
-                       </button>
-                      ) : null}
-
-                    {canInactivateUser(user, currentUser?.id) ? (
-                       <button
-                          type="button"
-                          onClick={() => void handleInactivate(user)}
-                        >
-                          Inativar
-                        </button>
-                      ) : null}
-
-                      {!canEditUser(user, currentUser?.id, isCurrentUserMasterAdmin) &&
-                      !canInactivateUser(user, currentUser?.id) ? (
-                        <span className="user-protected-badge">Protegido</span>
-                      ) : null}
-                    </div>
-                    </td>
+            <div className="users-table-wrapper">
+              <table className="users-table">
+                <thead>
+                  <tr>
+                    <th>Usuário</th>
+                    <th>Empresa</th>
+                    <th>Perfil / status</th>
+                    <th>Contato / cargo</th>
+                    <th>Atividade</th>
+                    <th>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {filteredUsers.map((user) => {
+                    const canEdit = canEditUser(
+                      user,
+                      currentUser?.id,
+                      isCurrentUserMasterAdmin,
+                    );
+                    const canInactivate = canInactivateUser(
+                      user,
+                      currentUser?.id,
+                    );
+
+                    return (
+                      <tr key={user.id}>
+                        <td>
+                          <div className="user-table-primary">
+                            <strong>{user.name}</strong>
+                            <span>{user.email}</span>
+                            {user.id === currentUser?.id ? (
+                              <small>Usuário atual</small>
+                            ) : null}
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="user-table-company">
+                            <Building2 size={13} strokeWidth={2} />
+                            <span>
+                              {user.company?.name ?? 'Usuário interno'}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="user-table-access">
+                            <UserRoleBadge role={user.role} />
+                            <UserStatusBadge status={user.status} />
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="user-table-contact">
+                            <span>
+                              <Phone size={13} strokeWidth={2} />
+                              {user.phone || 'Telefone não informado'}
+                            </span>
+                            <span>
+                              <UserRound size={13} strokeWidth={2} />
+                              {user.jobTitle || 'Cargo não informado'}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="user-table-activity">
+                            <span>
+                              <Clock3 size={13} strokeWidth={2} />
+                              <span>
+                                Último login
+                                <strong>
+                                  {formatDateTime(user.lastLoginAt)}
+                                </strong>
+                              </span>
+                            </span>
+
+                            <span>
+                              <CalendarDays size={13} strokeWidth={2} />
+                              <span>
+                                Criado em
+                                <strong>{formatDateTime(user.createdAt)}</strong>
+                              </span>
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="user-row-actions">
+                            {canEdit ? (
+                              <button
+                                type="button"
+                                className="user-icon-action"
+                                title="Editar usuário"
+                                aria-label={`Editar usuário ${user.name}`}
+                                onClick={() => openEditForm(user)}
+                              >
+                                <Pencil size={15} strokeWidth={2} />
+                              </button>
+                            ) : null}
+
+                            {canInactivate ? (
+                              <button
+                                type="button"
+                                className="user-icon-action user-icon-action--danger"
+                                title="Inativar usuário"
+                                aria-label={`Inativar usuário ${user.name}`}
+                                onClick={() => void handleInactivate(user)}
+                              >
+                                <CircleOff size={15} strokeWidth={2} />
+                              </button>
+                            ) : null}
+
+                            {!canEdit && !canInactivate ? (
+                              <StatusBadge tone="neutral">Protegido</StatusBadge>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
       </section>
     </div>
   );
 }
 
-type SummaryCardProps = {
-  title: string;
-  value: number | string;
-  danger?: boolean;
+type UserMobileCardProps = {
+  user: User;
+  currentUserId?: string;
+  isCurrentUserMasterAdmin: boolean;
+  onEdit: (user: User) => void;
+  onInactivate: (user: User) => Promise<void>;
 };
 
-function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
+function UserMobileCard({
+  user,
+  currentUserId,
+  isCurrentUserMasterAdmin,
+  onEdit,
+  onInactivate,
+}: UserMobileCardProps) {
+  const canEdit = canEditUser(
+    user,
+    currentUserId,
+    isCurrentUserMasterAdmin,
+  );
+  const canInactivate = canInactivateUser(user, currentUserId);
+
   return (
     <article
-      className={danger ? 'users-summary-card danger' : 'users-summary-card'}
+      className={`user-mobile-card user-mobile-card--${user.status.toLowerCase()}`}
     >
-      <span>{title}</span>
-      <strong>{value}</strong>
+      <div className="user-mobile-card-header">
+        <div>
+          <span>{user.company?.name ?? 'Usuário interno'}</span>
+          <strong>{user.name}</strong>
+          <small>{user.email}</small>
+        </div>
+
+        <UserStatusBadge status={user.status} />
+      </div>
+
+      <div className="user-mobile-card-access">
+        <UserRoleBadge role={user.role} />
+
+        {user.id === currentUserId ? (
+          <StatusBadge tone="info">Usuário atual</StatusBadge>
+        ) : null}
+
+        {!canEdit && !canInactivate ? (
+          <StatusBadge tone="neutral">Protegido</StatusBadge>
+        ) : null}
+      </div>
+
+      <div className="user-mobile-card-info">
+        <div>
+          <Phone size={14} strokeWidth={2} />
+          <div>
+            <span>Telefone</span>
+            <strong>{user.phone || 'Não informado'}</strong>
+          </div>
+        </div>
+
+        <div>
+          <UserRound size={14} strokeWidth={2} />
+          <div>
+            <span>Cargo</span>
+            <strong>{user.jobTitle || 'Não informado'}</strong>
+          </div>
+        </div>
+
+        <div>
+          <Clock3 size={14} strokeWidth={2} />
+          <div>
+            <span>Último login</span>
+            <strong>{formatDateTime(user.lastLoginAt)}</strong>
+          </div>
+        </div>
+
+        <div>
+          <CalendarDays size={14} strokeWidth={2} />
+          <div>
+            <span>Criado em</span>
+            <strong>{formatDateTime(user.createdAt)}</strong>
+          </div>
+        </div>
+      </div>
+
+      {canEdit || canInactivate ? (
+        <div className="user-mobile-card-actions">
+          {canEdit ? (
+            <ActionButton
+              type="button"
+              icon={Pencil}
+              variant="secondary"
+              onClick={() => onEdit(user)}
+            >
+              Editar
+            </ActionButton>
+          ) : null}
+
+          {canInactivate ? (
+            <ActionButton
+              type="button"
+              icon={CircleOff}
+              variant="danger"
+              onClick={() => void onInactivate(user)}
+            >
+              Inativar
+            </ActionButton>
+          ) : null}
+        </div>
+      ) : null}
     </article>
   );
 }
 
-type RoleBadgeProps = {
+type UserRoleBadgeProps = {
   role: UserRole;
 };
 
-function RoleBadge({ role }: RoleBadgeProps) {
+function UserRoleBadge({ role }: UserRoleBadgeProps) {
   return (
-    <span className={`user-role-badge ${role.toLowerCase()}`}>
-      {formatRole(role)}
-    </span>
+    <StatusBadge tone={getUserRoleTone(role)}>{formatRole(role)}</StatusBadge>
   );
 }
 
-type StatusBadgeProps = {
+function getUserRoleTone(role: UserRole): UiTone {
+  if (role === 'MASTER_ADMIN' || role === 'SUPERVISOR') {
+    return 'info';
+  }
+
+  if (role === 'CLIENT_USER') {
+    return 'success';
+  }
+
+  if (role === 'TECHNICIAN') {
+    return 'warning';
+  }
+
+  return 'neutral';
+}
+
+type UserStatusBadgeProps = {
   status: UserStatus;
 };
 
-function StatusBadge({ status }: StatusBadgeProps) {
+function UserStatusBadge({ status }: UserStatusBadgeProps) {
   return (
-    <span className={`user-status-badge ${status.toLowerCase()}`}>
+    <StatusBadge tone={getUserStatusTone(status)}>
       {formatStatus(status)}
-    </span>
+    </StatusBadge>
   );
+}
+
+function getUserStatusTone(status: UserStatus): UiTone {
+  if (status === 'ACTIVE') {
+    return 'success';
+  }
+
+  if (status === 'BLOCKED') {
+    return 'danger';
+  }
+
+  return 'neutral';
 }
 
 function optionalValue(value: string) {
@@ -780,7 +1145,13 @@ function formatDateTime(value?: string | null) {
     return '-';
   }
 
-  return new Date(value).toLocaleString('pt-BR');
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
 }
 
 function getRequestErrorMessage(error: unknown) {
