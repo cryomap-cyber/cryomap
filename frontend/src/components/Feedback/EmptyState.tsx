@@ -1,4 +1,4 @@
-import './EmptyState.css';
+import { EmptyState as CryoEmptyState } from '../ui/CryoUi';
 
 type EmptyStateProps = {
   title?: string;
@@ -12,18 +12,10 @@ export function EmptyState({
   compact = false,
 }: EmptyStateProps) {
   return (
-    <section
-      className={compact ? 'empty-state compact' : 'empty-state'}
-      role="status"
-    >
-      <div className="empty-state-icon" aria-hidden="true">
-        <span />
-      </div>
-
-      <div>
-        <strong>{title}</strong>
-        {description ? <p>{description}</p> : null}
-      </div>
-    </section>
+    <CryoEmptyState
+      title={title}
+      description={description}
+      compact={compact}
+    />
   );
 }

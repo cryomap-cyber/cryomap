@@ -3,7 +3,10 @@ import type {
   ReactNode,
 } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { LoaderCircle } from 'lucide-react';
+import {
+  Inbox,
+  LoaderCircle,
+} from 'lucide-react';
 
 import './CryoUi.css';
 
@@ -73,7 +76,14 @@ export function MetaPill({
 }: MetaPillProps) {
   return (
     <span className={`cm-meta-pill cm-meta-pill--${tone}`}>
-      {Icon ? <Icon size={13} strokeWidth={2.1} aria-hidden="true" /> : null}
+      {Icon ? (
+        <Icon
+          size={13}
+          strokeWidth={2.1}
+          aria-hidden="true"
+        />
+      ) : null}
+
       {children}
     </span>
   );
@@ -97,7 +107,14 @@ export function ActionButton({
       {...buttonProps}
       className={`cm-button cm-button--${variant} ${className}`.trim()}
     >
-      {Icon ? <Icon size={17} strokeWidth={2.2} aria-hidden="true" /> : null}
+      {Icon ? (
+        <Icon
+          size={17}
+          strokeWidth={2.2}
+          aria-hidden="true"
+        />
+      ) : null}
+
       <span>{children}</span>
     </button>
   );
@@ -124,6 +141,7 @@ export function MetricCard({
         <span className="cm-metric-card__icon" aria-hidden="true">
           <Icon size={20} strokeWidth={2.15} />
         </span>
+
         <span className="cm-metric-card__label">{label}</span>
       </div>
 
@@ -177,7 +195,9 @@ export function SectionCard({
             <h2>{title}</h2>
 
             {description ? (
-              <p className="cm-section-card__description">{description}</p>
+              <p className="cm-section-card__description">
+                {description}
+              </p>
             ) : null}
           </div>
         </div>
@@ -212,24 +232,42 @@ type EmptyStateProps = {
   title: string;
   description?: string;
   icon?: LucideIcon;
+  action?: ReactNode;
+  compact?: boolean;
 };
 
 export function EmptyState({
   title,
   description,
-  icon: Icon,
+  icon: Icon = Inbox,
+  action,
+  compact = false,
 }: EmptyStateProps) {
   return (
-    <div className="cm-empty-state">
-      {Icon ? (
-        <span className="cm-empty-state__icon" aria-hidden="true">
-          <Icon size={22} strokeWidth={2} />
-        </span>
-      ) : null}
+    <div
+      className={[
+        'cm-empty-state',
+        compact ? 'cm-empty-state--compact' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      role="status"
+      aria-live="polite"
+    >
+      <span className="cm-empty-state__icon" aria-hidden="true">
+        <Icon size={22} strokeWidth={2} />
+      </span>
 
-      <div>
+      <div className="cm-empty-state__content">
         <strong>{title}</strong>
+
         {description ? <p>{description}</p> : null}
+
+        {action ? (
+          <div className="cm-empty-state__action">
+            {action}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -238,20 +276,33 @@ export function EmptyState({
 type LoadingStateProps = {
   title?: string;
   description?: string;
+  compact?: boolean;
 };
 
 export function LoadingState({
   title = 'Carregando informações',
   description,
+  compact = false,
 }: LoadingStateProps) {
   return (
-    <div className="cm-loading-state" role="status" aria-live="polite">
+    <div
+      className={[
+        'cm-loading-state',
+        compact ? 'cm-loading-state--compact' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
       <span className="cm-loading-state__icon" aria-hidden="true">
         <LoaderCircle size={26} strokeWidth={2} />
       </span>
 
-      <div>
+      <div className="cm-loading-state__content">
         <strong>{title}</strong>
+
         {description ? <p>{description}</p> : null}
       </div>
     </div>
@@ -273,8 +324,14 @@ export function InlineNotice({
   action,
   icon: Icon,
 }: InlineNoticeProps) {
+  const isUrgent = tone === 'danger';
+
   return (
-    <div className={`cm-inline-notice cm-inline-notice--${tone}`}>
+    <div
+      className={`cm-inline-notice cm-inline-notice--${tone}`}
+      role={isUrgent ? 'alert' : 'status'}
+      aria-live={isUrgent ? 'assertive' : 'polite'}
+    >
       {Icon ? (
         <span className="cm-inline-notice__icon" aria-hidden="true">
           <Icon size={20} strokeWidth={2.1} />
@@ -283,10 +340,15 @@ export function InlineNotice({
 
       <div className="cm-inline-notice__copy">
         <strong>{title}</strong>
+
         {description ? <p>{description}</p> : null}
       </div>
 
-      {action ? <div className="cm-inline-notice__action">{action}</div> : null}
+      {action ? (
+        <div className="cm-inline-notice__action">
+          {action}
+        </div>
+      ) : null}
     </div>
   );
 }

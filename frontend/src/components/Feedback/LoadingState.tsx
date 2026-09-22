@@ -1,24 +1,21 @@
-import './LoadingState.css';
+import { LoadingState as CryoLoadingState } from '../ui/CryoUi';
 
 type LoadingStateProps = {
   title?: string;
   description?: string;
+  compact?: boolean;
 };
 
 export function LoadingState({
   title = 'Carregando...',
   description = 'Buscando dados atualizados do CryoMap.',
+  compact = false,
 }: LoadingStateProps) {
   return (
-    <section className="loading-state" role="status" aria-live="polite">
-      <div className="loading-state-orb" aria-hidden="true">
-        <span />
-      </div>
-
-      <div>
-        <strong>{title}</strong>
-        {description ? <p>{description}</p> : null}
-      </div>
-    </section>
+    <CryoLoadingState
+      title={title}
+      description={description}
+      compact={compact}
+    />
   );
 }

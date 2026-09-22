@@ -1,6 +1,12 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
 import {
+  CheckCircle2,
+  RefreshCw,
+  TriangleAlert,
+} from 'lucide-react';
+
+import {
 
   Area,
 
@@ -25,6 +31,11 @@ import {
 import { EmptyState } from '../../components/Feedback/EmptyState';
 
 import { LoadingState } from '../../components/Feedback/LoadingState';
+
+import {
+  ActionButton,
+  InlineNotice,
+} from '../../components/ui/CryoUi';
 
 import { useAuth } from '../../contexts/useAuth';
 
@@ -446,6 +457,8 @@ export function EquipmentTemperatureReadings() {
 
   const [error, setError] = useState('');
 
+  const [success, setSuccess] = useState('');
+
   const [formError, setFormError] = useState('');
 
   const [isLoading, setIsLoading] = useState(true);
@@ -553,9 +566,8 @@ export function EquipmentTemperatureReadings() {
   }
 
   async function handleRefresh() {
-
+    setSuccess('');
     await loadData();
-
   }
 
   async function handleApplyFilters() {
@@ -701,6 +713,20 @@ export function EquipmentTemperatureReadings() {
     };
 
   }, []);
+
+  useEffect(() => {
+    if (!success) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSuccess('');
+    }, 4500);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [success]);
 
   useEffect(() => {
 
@@ -1058,6 +1084,9 @@ export function EquipmentTemperatureReadings() {
 
     }
 
+    setError('');
+    setSuccess('');
+
     const selectedEquipment = equipments.find(
 
       (equipment) => equipment.id === selectedEquipmentId,
@@ -1093,6 +1122,9 @@ export function EquipmentTemperatureReadings() {
       return;
 
     }
+
+    setError('');
+    setSuccess('');
 
     setEditingReading(reading);
 
@@ -1154,22 +1186,19 @@ export function EquipmentTemperatureReadings() {
 
   }
 
+  function resetFormState() {
+    setIsFormOpen(false);
+    setEditingReading(null);
+    setFormData(emptyFormData);
+    setFormError('');
+  }
+
   function closeForm() {
-
     if (isSaving) {
-
       return;
-
     }
 
-    setIsFormOpen(false);
-
-    setEditingReading(null);
-
-    setFormData(emptyFormData);
-
-    setFormError('');
-
+    resetFormState();
   }
 
   function updateFormField(
@@ -1269,6 +1298,7 @@ export function EquipmentTemperatureReadings() {
     }
 
     setFormError('');
+    setSuccess('');
 
     if (!formData.companyId) {
 
@@ -1295,6 +1325,10 @@ export function EquipmentTemperatureReadings() {
       return;
 
     }
+
+    const successMessage = editingReading
+      ? 'Medição atualizada com sucesso.'
+      : 'Medição registrada com sucesso.';
 
     setIsSaving(true);
 
@@ -1386,9 +1420,10 @@ export function EquipmentTemperatureReadings() {
 
       }
 
-      closeForm();
+      resetFormState();
 
       await handleRefresh();
+      setSuccess(successMessage);
 
     } catch (requestError) {
 
@@ -1431,12 +1466,14 @@ export function EquipmentTemperatureReadings() {
     }
 
     setError('');
+    setSuccess('');
 
     try {
 
       await deleteEquipmentTemperatureReading(reading.id);
 
       await handleRefresh();
+      setSuccess('Medição removida com sucesso.');
 
     } catch {
 
@@ -1521,6 +1558,15 @@ export function EquipmentTemperatureReadings() {
         ) : null}
 
       </header>
+
+      {success ? (
+        <InlineNotice
+          tone="success"
+          icon={CheckCircle2}
+          title={success}
+          description="A alteração já foi aplicada ao histórico técnico."
+        />
+      ) : null}
 
       <section className="equipment-temperature-readings-summary">
 
@@ -1932,10 +1978,8 @@ export function EquipmentTemperatureReadings() {
 
             </div>
 
-            <button type="button" onClick={closeForm}>
-
+            <button type="button" onClick={closeForm} disabled={isSaving}>
               Fechar
-
             </button>
 
           </div>
@@ -2304,10 +2348,8 @@ export function EquipmentTemperatureReadings() {
 
             <div className="equipment-temperature-reading-form-actions">
 
-              <button type="button" onClick={closeForm}>
-
+              <button type="button" onClick={closeForm} disabled={isSaving}>
                 Cancelar
-
               </button>
 
               <button type="submit" disabled={isSaving}>
@@ -2633,19 +2675,22 @@ export function EquipmentTemperatureReadings() {
         </div>
 
         {error ? (
-
-          <div className="equipment-temperature-readings-error">
-
-            <strong>{error}</strong>
-
-            <button type="button" onClick={() => void handleRefresh()}>
-
-              Tentar novamente
-
-            </button>
-
-          </div>
-
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Verifique sua conexão e tente carregar o histórico novamente."
+            action={
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="danger"
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {!error && filteredReadings.length === 0 ? (
