@@ -1,7 +1,40 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Building2,
+  Camera,
+  CircleOff,
+  ClipboardList,
+  Download,
+  File,
+  FileImage,
+  Files,
+  FileText,
+  HardDrive,
+  Image,
+  Link2,
+  Paperclip,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  TriangleAlert,
+  Upload,
+  UserRound,
+  Wrench,
+} from 'lucide-react';
 
-import { EmptyState } from '../../components/Feedback/EmptyState';
-import { LoadingState } from '../../components/Feedback/LoadingState';
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
+import {
+  ActionButton,
+  EmptyState,
+  InlineNotice,
+  LoadingState,
+  MetaPill,
+  MetricCard,
+  PageHeader,
+  StatusBadge,
+  type UiTone,
+} from '../../components/ui/CryoUi';
 import { useAuth } from '../../contexts/useAuth';
 import {
   createAttachment,
@@ -359,6 +392,15 @@ export function Attachments() {
     (attachment) => attachment.serviceRecordId,
   ).length;
 
+  const activeFilterCount = [
+    selectedCompanyId,
+    selectedTaskId,
+    selectedServiceRecordId,
+    selectedUploadedByUserId,
+    selectedType,
+    search.trim(),
+  ].filter(Boolean).length;
+
   function openCreateForm() {
     if (!canManageAttachments) {
       return;
@@ -387,6 +429,15 @@ export function Attachments() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  }
+
+  function clearFilters() {
+    setSelectedCompanyId('');
+    setSelectedTaskId('');
+    setSelectedServiceRecordId('');
+    setSelectedUploadedByUserId('');
+    setSelectedType('');
+    setSearch('');
   }
 
   function updateFormField<K extends keyof AttachmentFormData>(
@@ -493,7 +544,7 @@ export function Attachments() {
   if (isLoading) {
     return (
       <LoadingState
-        title="Carregando anexos..."
+        title="Carregando anexos"
         description="Buscando arquivos vinculados ao sistema."
       />
     );
@@ -501,31 +552,104 @@ export function Attachments() {
 
   return (
     <div className="attachments-page">
-      <header className="attachments-header">
-        <div>
-          <span>Arquivos</span>
-          <h1>Anexos</h1>
-          <p>
-            Envie e acompanhe arquivos vinculados a empresas, tarefas e
-            atendimentos técnicos.
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Arquivos"
+        title="Anexos"
+        description="Consulte e gerencie arquivos vinculados a empresas, tarefas e atendimentos técnicos."
+        icon={Paperclip}
+        actions={
+          canManageAttachments ? (
+            <ActionButton
+              type="button"
+              icon={Plus}
+              variant="primary"
+              onClick={openCreateForm}
+            >
+              Novo anexo
+            </ActionButton>
+          ) : undefined
+        }
+        meta={
+          <>
+            <MetaPill icon={Files}>{attachments.length} arquivo(s)</MetaPill>
+            <MetaPill icon={Camera} tone="info">
+              {servicePhotos} foto(s)
+            </MetaPill>
+            <MetaPill icon={HardDrive}>{formatFileSize(totalSize)}</MetaPill>
+          </>
+        }
+      />
 
-        {canManageAttachments ? (
-          <button type="button" onClick={openCreateForm}>
-            Novo anexo
-          </button>
-        ) : null}
-      </header>
+      {!canManageAttachments ? (
+        <InlineNotice
+          tone="info"
+          icon={FileText}
+          title="Acesso somente para consulta"
+          description="Seu perfil pode visualizar e baixar anexos, mas não pode enviar ou remover arquivos."
+        />
+      ) : null}
 
-      <section className="attachments-summary">
-        <SummaryCard title="Total" value={attachments.length} />
-        <SummaryCard title="Fotos de serviço" value={servicePhotos} />
-        <SummaryCard title="Plantas baixas" value={floorPlans} />
-        <SummaryCard title="Em tarefas" value={linkedToTasks} />
-        <SummaryCard title="Em atendimentos" value={linkedToServiceRecords} />
-        <SummaryCard title="Tamanho total" value={formatFileSize(totalSize)} />
-      </section>
+      <CollapsibleSection
+        title="Resumo dos anexos"
+        openDescription="Indicadores dos arquivos cadastrados estão visíveis."
+        closedDescription="Indicadores gerais estão ocultos para liberar espaço na tela."
+        openLabel="Ocultar resumo"
+        closedLabel="Mostrar resumo"
+        storageKey="cryomap.attachments.summary-open"
+        defaultOpen
+        defaultOpenOnMobile={false}
+        className="attachments-summary-disclosure"
+        contentClassName="attachments-summary"
+        variant="section"
+      >
+        <MetricCard
+          label="Total"
+          value={attachments.length}
+          detail="Arquivos cadastrados"
+          icon={Files}
+          tone="info"
+        />
+
+        <MetricCard
+          label="Fotos de serviço"
+          value={servicePhotos}
+          detail="Registros fotográficos"
+          icon={Camera}
+          tone="info"
+        />
+
+        <MetricCard
+          label="Plantas baixas"
+          value={floorPlans}
+          detail="Documentação de ambientes"
+          icon={Image}
+          tone="neutral"
+        />
+
+        <MetricCard
+          label="Em tarefas"
+          value={linkedToTasks}
+          detail="Arquivos ligados a tarefas"
+          icon={ClipboardList}
+          tone="warning"
+        />
+
+        <MetricCard
+          label="Em atendimentos"
+          value={linkedToServiceRecords}
+          detail="Arquivos ligados a atendimentos"
+          icon={Wrench}
+          tone="success"
+        />
+
+        <MetricCard
+          label="Tamanho total"
+          value={formatFileSize(totalSize)}
+          detail="Volume armazenado"
+          icon={HardDrive}
+          tone="neutral"
+        />
+      </CollapsibleSection>
 
       {isFormOpen && canManageAttachments ? (
         <section className="attachment-form-panel">
@@ -533,12 +657,22 @@ export function Attachments() {
             <div>
               <span>Upload</span>
               <h2>Novo anexo</h2>
+              <p>
+                Selecione os vínculos do arquivo e envie um ou mais documentos.
+              </p>
             </div>
 
-            <button type="button" onClick={closeForm}>
+            <ActionButton type="button" variant="ghost" onClick={closeForm}>
               Fechar
-            </button>
+            </ActionButton>
           </div>
+
+          <InlineNotice
+            tone="info"
+            icon={Upload}
+            title="Vínculo obrigatório"
+            description="O anexo precisa estar associado a pelo menos uma empresa, tarefa ou atendimento. O limite é de 10 MB por arquivo."
+          />
 
           <form className="attachment-form" onSubmit={handleSubmit}>
             <label>
@@ -636,16 +770,23 @@ export function Attachments() {
 
             {formData.files.length > 0 ? (
               <div className="attachment-selected-file">
-                <strong>
-                  {formData.files.length} arquivo(s) selecionado(s)
-                </strong>
-                <span>{formatFileSize(selectedFilesSize)}</span>
+                <div className="attachment-selected-file-summary">
+                  <div>
+                    <File size={16} strokeWidth={2} />
+                    <strong>
+                      {formData.files.length} arquivo(s) selecionado(s)
+                    </strong>
+                  </div>
+                  <span>{formatFileSize(selectedFilesSize)}</span>
+                </div>
 
-                {formData.files.map((file) => (
-                  <small key={`${file.name}-${file.size}-${file.lastModified}`}>
-                    {file.name} · {formatFileSize(file.size)}
-                  </small>
-                ))}
+                <div className="attachment-selected-file-list">
+                  {formData.files.map((file) => (
+                    <small key={`${file.name}-${file.size}-${file.lastModified}`}>
+                      {file.name} · {formatFileSize(file.size)}
+                    </small>
+                  ))}
+                </div>
               </div>
             ) : null}
 
@@ -654,13 +795,22 @@ export function Attachments() {
             ) : null}
 
             <div className="attachment-form-actions">
-              <button type="button" onClick={closeForm}>
+              <ActionButton
+                type="button"
+                variant="secondary"
+                onClick={closeForm}
+              >
                 Cancelar
-              </button>
+              </ActionButton>
 
-              <button type="submit" disabled={isSaving}>
+              <ActionButton
+                type="submit"
+                icon={Upload}
+                variant="primary"
+                disabled={isSaving}
+              >
                 {isSaving ? 'Enviando...' : 'Enviar anexos'}
-              </button>
+              </ActionButton>
             </div>
           </form>
         </section>
@@ -669,237 +819,489 @@ export function Attachments() {
       <section className="attachments-panel">
         <div className="attachments-panel-header">
           <div>
+            <span>Biblioteca</span>
             <h2>Lista de anexos</h2>
-            <p>{filteredAttachments.length} arquivo(s) encontrado(s)</p>
+            <p>
+              {filteredAttachments.length} arquivo(s) exibido(s) de{' '}
+              {attachments.length} carregado(s)
+            </p>
           </div>
 
-          <div className="attachments-actions">
-            <select
-              value={selectedCompanyId}
-              onChange={(event) => {
-                setSelectedCompanyId(event.target.value);
-                setSelectedTaskId('');
-                setSelectedServiceRecordId('');
-                setSelectedUploadedByUserId('');
-              }}
-            >
-              <option value="">Todas as empresas</option>
-
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedTaskId}
-              onChange={(event) => {
-                setSelectedTaskId(event.target.value);
-                setSelectedServiceRecordId('');
-              }}
-            >
-              <option value="">Todas as tarefas</option>
-
-              {tasks.map((task) => (
-                <option key={task.id} value={task.id}>
-                  {task.title}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedServiceRecordId}
-              onChange={(event) =>
-                setSelectedServiceRecordId(event.target.value)
-              }
-            >
-              <option value="">Todos os atendimentos</option>
-
-              {serviceRecords.map((serviceRecord) => (
-                <option key={serviceRecord.id} value={serviceRecord.id}>
-                  {serviceRecord.task?.title ??
-                    `Atendimento ${shortId(serviceRecord.id)}`}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedUploadedByUserId}
-              onChange={(event) =>
-                setSelectedUploadedByUserId(event.target.value)
-              }
-            >
-              <option value="">Todos os usuários</option>
-
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedType}
-              onChange={(event) => setSelectedType(event.target.value)}
-            >
-              <option value="">Todos os tipos</option>
-
-              {attachmentTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="search"
-              placeholder="Buscar por arquivo, empresa, tarefa..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-
-            <button type="button" onClick={handleRefresh}>
-              Atualizar
-            </button>
-          </div>
+          <ActionButton
+            type="button"
+            icon={RefreshCw}
+            onClick={() => void handleRefresh()}
+          >
+            Atualizar
+          </ActionButton>
         </div>
 
-        {error ? (
-          <div className="attachments-error">
-            <strong>{error}</strong>
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Refine a lista por empresa, tarefa, atendimento, usuário, tipo ou busca textual."
+          closedDescription={
+            activeFilterCount > 0
+              ? `${activeFilterCount} filtro(s) ativo(s).`
+              : 'Nenhum filtro específico selecionado.'
+          }
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.attachments.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeFilterCount}
+          className="attachments-filters-disclosure"
+          contentClassName="attachments-filter-area"
+          variant="toolbar"
+        >
+          <div className="attachments-actions">
+            <label className="attachments-filter-field">
+              <span>Empresa</span>
+              <select
+                value={selectedCompanyId}
+                onChange={(event) => {
+                  setSelectedCompanyId(event.target.value);
+                  setSelectedTaskId('');
+                  setSelectedServiceRecordId('');
+                  setSelectedUploadedByUserId('');
+                }}
+              >
+                <option value="">Todas as empresas</option>
 
-            <button type="button" onClick={handleRefresh}>
-              Tentar novamente
-            </button>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="attachments-filter-field">
+              <span>Tarefa</span>
+              <select
+                value={selectedTaskId}
+                onChange={(event) => {
+                  setSelectedTaskId(event.target.value);
+                  setSelectedServiceRecordId('');
+                }}
+              >
+                <option value="">Todas as tarefas</option>
+
+                {tasks.map((task) => (
+                  <option key={task.id} value={task.id}>
+                    {task.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="attachments-filter-field">
+              <span>Atendimento</span>
+              <select
+                value={selectedServiceRecordId}
+                onChange={(event) =>
+                  setSelectedServiceRecordId(event.target.value)
+                }
+              >
+                <option value="">Todos os atendimentos</option>
+
+                {serviceRecords.map((serviceRecord) => (
+                  <option key={serviceRecord.id} value={serviceRecord.id}>
+                    {serviceRecord.task?.title ??
+                      `Atendimento ${shortId(serviceRecord.id)}`}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="attachments-filter-field">
+              <span>Enviado por</span>
+              <select
+                value={selectedUploadedByUserId}
+                onChange={(event) =>
+                  setSelectedUploadedByUserId(event.target.value)
+                }
+              >
+                <option value="">Todos os usuários</option>
+
+                {users.map((attachmentUser) => (
+                  <option key={attachmentUser.id} value={attachmentUser.id}>
+                    {attachmentUser.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="attachments-filter-field">
+              <span>Tipo</span>
+              <select
+                value={selectedType}
+                onChange={(event) => setSelectedType(event.target.value)}
+              >
+                <option value="">Todos os tipos</option>
+
+                {attachmentTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="attachments-filter-field attachments-search-field">
+              <span>
+                <Search size={13} strokeWidth={2.1} aria-hidden="true" />
+                Busca
+              </span>
+              <input
+                type="search"
+                placeholder="Buscar por arquivo, empresa, tarefa..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+
+            <div className="attachments-filter-actions">
+              <ActionButton
+                type="button"
+                icon={RotateCcw}
+                variant="secondary"
+                disabled={activeFilterCount === 0}
+                onClick={clearFilters}
+              >
+                Limpar filtros
+              </ActionButton>
+            </div>
           </div>
+        </CollapsibleSection>
+
+        {error ? (
+          <InlineNotice
+            tone="danger"
+            icon={TriangleAlert}
+            title={error}
+            description="Tente atualizar a lista de anexos novamente."
+            action={
+              <ActionButton
+                type="button"
+                icon={RefreshCw}
+                variant="danger"
+                onClick={() => void handleRefresh()}
+              >
+                Tentar novamente
+              </ActionButton>
+            }
+          />
         ) : null}
 
         {!error && filteredAttachments.length === 0 ? (
           <EmptyState
-            title="Nenhum anexo encontrado."
+            icon={Paperclip}
+            title="Nenhum anexo encontrado"
             description="Envie um anexo ou ajuste os filtros para visualizar arquivos."
           />
         ) : null}
 
         {!error && filteredAttachments.length > 0 ? (
-          <div className="attachments-table-wrapper">
-            <table className="attachments-table">
-              <thead>
-                <tr>
-                  <th>Arquivo</th>
-                  <th>Tipo</th>
-                  <th>Empresa</th>
-                  <th>Tarefa</th>
-                  <th>Atendimento</th>
-                  <th>Enviado por</th>
-                  <th>Tamanho</th>
-                  <th>Data</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+          <>
+            <div className="attachments-mobile-list">
+              {filteredAttachments.map((attachment) => (
+                <AttachmentMobileCard
+                  key={attachment.id}
+                  attachment={attachment}
+                  canManageAttachments={canManageAttachments}
+                  isActionPending={actionAttachmentId === attachment.id}
+                  onDownload={handleDownload}
+                  onRemove={handleRemove}
+                />
+              ))}
+            </div>
 
-              <tbody>
-                {filteredAttachments.map((attachment) => (
-                  <tr key={attachment.id}>
-                    <td>
-                      <strong>{attachment.originalName}</strong>
-                      <small>
-                        {attachment.mimeType} · {shortId(attachment.id)}
-                      </small>
-                    </td>
+            <div className="attachments-table-wrapper">
+              <table className="attachments-table">
+                <thead>
+                  <tr>
+                    <th>Arquivo</th>
+                    <th>Vínculo</th>
+                    <th>Tipo</th>
+                    <th>Enviado por</th>
+                    <th>Detalhes</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
 
-                    <td>
-                      <span className="attachment-type-badge">
-                        {formatAttachmentType(attachment.type)}
-                      </span>
-                    </td>
+                <tbody>
+                  {filteredAttachments.map((attachment) => (
+                    <tr key={attachment.id}>
+                      <td>
+                        <div className="attachment-table-primary">
+                          <AttachmentFileIcon attachment={attachment} />
+                          <div>
+                            <strong>{attachment.originalName}</strong>
+                            <span>{attachment.mimeType}</span>
+                            <small>ID {shortId(attachment.id)}</small>
+                          </div>
+                        </div>
+                      </td>
 
-                    <td>{attachment.company?.name ?? '-'}</td>
+                      <td>
+                        <AttachmentLinks attachment={attachment} />
+                      </td>
 
-                    <td>
-                      <span>{attachment.task?.title ?? '-'}</span>
-                      {attachment.task?.status ? (
-                        <small>{attachment.task.status}</small>
-                      ) : null}
-                    </td>
+                      <td>
+                        <AttachmentTypeBadge type={attachment.type} />
+                      </td>
 
-                    <td>
-                      {attachment.serviceRecord ? (
-                        <>
-                          <span>
-                            {attachment.serviceRecord.finishedAt
-                              ? 'Finalizado'
-                              : 'Em andamento'}
-                          </span>
-                          <small>
-                            {formatDateTime(attachment.serviceRecord.startedAt)}
-                          </small>
-                        </>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
+                      <td>
+                        <div className="attachment-uploader">
+                          <UserRound size={13} strokeWidth={2} />
+                          <div>
+                            <strong>
+                              {attachment.uploadedByUser?.name ?? 'Não informado'}
+                            </strong>
+                            <small>
+                              {attachment.uploadedByUser?.email ?? '-'}
+                            </small>
+                          </div>
+                        </div>
+                      </td>
 
-                    <td>
-                      <span>{attachment.uploadedByUser?.name ?? '-'}</span>
-                      {attachment.uploadedByUser?.email ? (
-                        <small>{attachment.uploadedByUser.email}</small>
-                      ) : null}
-                    </td>
+                      <td>
+                        <div className="attachment-details">
+                          <span>{formatFileSize(attachment.size)}</span>
+                          <small>{formatDateTime(attachment.createdAt)}</small>
+                        </div>
+                      </td>
 
-                    <td>{formatFileSize(attachment.size)}</td>
-
-                    <td>{formatDateTime(attachment.createdAt)}</td>
-
-                    <td>
-                      <div className="attachment-row-actions">
-                        <button
-                          type="button"
-                          disabled={actionAttachmentId === attachment.id}
-                          onClick={() => void handleDownload(attachment)}
-                        >
-                          Baixar
-                        </button>
-
-                        {canManageAttachments ? (
+                      <td>
+                        <div className="attachment-row-actions">
                           <button
                             type="button"
+                            className="attachment-icon-action"
+                            title="Baixar anexo"
+                            aria-label={`Baixar ${attachment.originalName}`}
                             disabled={actionAttachmentId === attachment.id}
-                            onClick={() => void handleRemove(attachment)}
+                            onClick={() => void handleDownload(attachment)}
                           >
-                            Remover
+                            <Download size={15} strokeWidth={2} />
                           </button>
-                        ) : (
-                          <span className="attachment-readonly-badge">
-                            Somente consulta
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+                          {canManageAttachments ? (
+                            <button
+                              type="button"
+                              className="attachment-icon-action attachment-icon-action--danger"
+                              title="Remover anexo"
+                              aria-label={`Remover ${attachment.originalName}`}
+                              disabled={actionAttachmentId === attachment.id}
+                              onClick={() => void handleRemove(attachment)}
+                            >
+                              <CircleOff size={15} strokeWidth={2} />
+                            </button>
+                          ) : (
+                            <StatusBadge tone="neutral">
+                              Somente consulta
+                            </StatusBadge>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
       </section>
     </div>
   );
 }
 
-type SummaryCardProps = {
-  title: string;
-  value: number | string;
+type AttachmentMobileCardProps = {
+  attachment: Attachment;
+  canManageAttachments: boolean;
+  isActionPending: boolean;
+  onDownload: (attachment: Attachment) => Promise<void>;
+  onRemove: (attachment: Attachment) => Promise<void>;
 };
 
-function SummaryCard({ title, value }: SummaryCardProps) {
+function AttachmentMobileCard({
+  attachment,
+  canManageAttachments,
+  isActionPending,
+  onDownload,
+  onRemove,
+}: AttachmentMobileCardProps) {
   return (
-    <article className="attachments-summary-card">
-      <span>{title}</span>
-      <strong>{value}</strong>
+    <article className="attachment-mobile-card">
+      <div className="attachment-mobile-card-header">
+        <div className="attachment-mobile-file">
+          <AttachmentFileIcon attachment={attachment} />
+
+          <div>
+            <span>{attachment.mimeType}</span>
+            <strong>{attachment.originalName}</strong>
+            <small>ID {shortId(attachment.id)}</small>
+          </div>
+        </div>
+
+        <AttachmentTypeBadge type={attachment.type} />
+      </div>
+
+      <AttachmentLinks attachment={attachment} />
+
+      <div className="attachment-mobile-info">
+        <div>
+          <UserRound size={14} strokeWidth={2} />
+          <div>
+            <span>Enviado por</span>
+            <strong>
+              {attachment.uploadedByUser?.name ?? 'Não informado'}
+            </strong>
+            <small>{attachment.uploadedByUser?.email ?? '-'}</small>
+          </div>
+        </div>
+
+        <div>
+          <HardDrive size={14} strokeWidth={2} />
+          <div>
+            <span>Tamanho</span>
+            <strong>{formatFileSize(attachment.size)}</strong>
+          </div>
+        </div>
+
+        <div>
+          <FileText size={14} strokeWidth={2} />
+          <div>
+            <span>Data</span>
+            <strong>{formatDateTime(attachment.createdAt)}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="attachment-mobile-card-actions">
+        <ActionButton
+          type="button"
+          icon={Download}
+          variant="secondary"
+          disabled={isActionPending}
+          onClick={() => void onDownload(attachment)}
+        >
+          Baixar
+        </ActionButton>
+
+        {canManageAttachments ? (
+          <ActionButton
+            type="button"
+            icon={CircleOff}
+            variant="danger"
+            disabled={isActionPending}
+            onClick={() => void onRemove(attachment)}
+          >
+            Remover
+          </ActionButton>
+        ) : null}
+      </div>
     </article>
   );
+}
+
+type AttachmentLinksProps = {
+  attachment: Attachment;
+};
+
+function AttachmentLinks({ attachment }: AttachmentLinksProps) {
+  const hasLinks =
+    attachment.company ||
+    attachment.task ||
+    attachment.serviceRecord;
+
+  if (!hasLinks) {
+    return (
+      <div className="attachment-links attachment-links--empty">
+        <Link2 size={13} strokeWidth={2} />
+        <span>Sem vínculo exibido</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="attachment-links">
+      {attachment.company ? (
+        <span>
+          <Building2 size={13} strokeWidth={2} />
+          {attachment.company.name}
+        </span>
+      ) : null}
+
+      {attachment.task ? (
+        <span>
+          <ClipboardList size={13} strokeWidth={2} />
+          <span>
+            {attachment.task.title}
+            {attachment.task.status ? (
+              <small>{formatTaskStatus(attachment.task.status)}</small>
+            ) : null}
+          </span>
+        </span>
+      ) : null}
+
+      {attachment.serviceRecord ? (
+        <span>
+          <Wrench size={13} strokeWidth={2} />
+          <span>
+            {attachment.serviceRecord.finishedAt
+              ? 'Atendimento finalizado'
+              : 'Atendimento em andamento'}
+            <small>
+              {formatDateTime(attachment.serviceRecord.startedAt)}
+            </small>
+          </span>
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function AttachmentFileIcon({ attachment }: { attachment: Attachment }) {
+  const className = 'attachment-file-icon';
+
+  if (attachment.mimeType.startsWith('image/')) {
+    return <FileImage className={className} size={18} strokeWidth={2} />;
+  }
+
+  if (
+    attachment.mimeType.includes('pdf') ||
+    attachment.mimeType.includes('document') ||
+    attachment.mimeType.includes('text')
+  ) {
+    return <FileText className={className} size={18} strokeWidth={2} />;
+  }
+
+  return <File className={className} size={18} strokeWidth={2} />;
+}
+
+function AttachmentTypeBadge({ type }: { type: AttachmentType }) {
+  return (
+    <StatusBadge tone={getAttachmentTypeTone(type)}>
+      {formatAttachmentType(type)}
+    </StatusBadge>
+  );
+}
+
+function getAttachmentTypeTone(type: AttachmentType): UiTone {
+  if (type === 'SERVICE_PHOTO') {
+    return 'info';
+  }
+
+  if (type === 'AUVO_REPORT') {
+    return 'success';
+  }
+
+  if (type === 'FLOOR_PLAN') {
+    return 'warning';
+  }
+
+  return 'neutral';
 }
 
 function formatAttachmentType(value: string) {
@@ -909,6 +1311,18 @@ function formatAttachmentType(value: string) {
     COMPANY_LOGO: 'Logo da empresa',
     FLOOR_PLAN: 'Planta baixa',
     OTHER: 'Outro',
+  };
+
+  return labels[value] ?? value;
+}
+
+function formatTaskStatus(value: string) {
+  const labels: Record<string, string> = {
+    OPEN: 'Aberta',
+    IN_PROGRESS: 'Em andamento',
+    DONE: 'Concluída',
+    CANCELED: 'Cancelada',
+    OVERDUE: 'Atrasada',
   };
 
   return labels[value] ?? value;
@@ -935,7 +1349,13 @@ function formatDateTime(value?: string | null) {
     return '-';
   }
 
-  return new Date(value).toLocaleString('pt-BR');
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
 }
 
 function getRequestErrorMessage(error: unknown) {
@@ -964,4 +1384,3 @@ function getRequestErrorMessage(error: unknown) {
 
   return 'Não foi possível enviar os anexos.';
 }
-

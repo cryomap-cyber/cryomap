@@ -1,5 +1,23 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  AlignLeft,
+  CheckCircle2,
+  CircleOff,
+  Edit3,
+  Filter,
+  Hash,
+  Lightbulb,
+  Plus,
+  Power,
+  PowerOff,
+  RefreshCw,
+  Save,
+  Search,
+  Sparkles,
+  X,
+} from 'lucide-react';
 
+import { CollapsibleSection } from '../../components/CollapsibleSection/CollapsibleSection';
 import { EmptyState } from '../../components/Feedback/EmptyState';
 import { LoadingState } from '../../components/Feedback/LoadingState';
 import {
@@ -21,6 +39,8 @@ type ServiceProblemSuggestionFormData = {
   isActive: boolean;
 };
 
+type SummaryTone = 'default' | 'success' | 'danger' | 'info';
+
 const emptyFormData: ServiceProblemSuggestionFormData = {
   title: '',
   description: '',
@@ -28,9 +48,7 @@ const emptyFormData: ServiceProblemSuggestionFormData = {
 };
 
 export function ServiceProblemSuggestions() {
-  const [suggestions, setSuggestions] = useState<ServiceProblemSuggestion[]>(
-    [],
-  );
+  const [suggestions, setSuggestions] = useState<ServiceProblemSuggestion[]>([]);
   const [selectedStatus, setSelectedStatus] =
     useState<SuggestionStatusFilter>('');
   const [search, setSearch] = useState('');
@@ -132,6 +150,11 @@ export function ServiceProblemSuggestions() {
   const suggestionsWithDescription = suggestions.filter((suggestion) =>
     Boolean(suggestion.description),
   ).length;
+
+  const activeFilterCount = [
+    selectedStatus,
+    search.trim(),
+  ].filter(Boolean).length;
 
   function openCreateForm() {
     setEditingSuggestion(null);
@@ -252,6 +275,11 @@ export function ServiceProblemSuggestions() {
     }
   }
 
+  function clearFilters() {
+    setSelectedStatus('');
+    setSearch('');
+  }
+
   if (isLoading) {
     return (
       <LoadingState
@@ -264,154 +292,326 @@ export function ServiceProblemSuggestions() {
   return (
     <div className="problem-suggestions-page">
       <header className="problem-suggestions-header">
-        <div>
-          <span>Atendimentos</span>
+        <div className="problem-suggestions-header-copy">
+          <span className="problem-suggestions-kicker">
+            <Sparkles size={15} strokeWidth={2.2} />
+            Atendimentos
+          </span>
+
           <h1>Sugestões de problemas</h1>
+
           <p>
-            Cadastre problemas e componentes recorrentes para acelerar o
-            preenchimento dos atendimentos técnicos com autocomplete.
+            Padronize problemas e componentes recorrentes para tornar o
+            preenchimento dos atendimentos técnicos mais rápido e consistente.
           </p>
         </div>
 
-        <button type="button" onClick={openCreateForm}>
+        <button
+          type="button"
+          className="problem-suggestions-primary-action"
+          onClick={openCreateForm}
+        >
+          <Plus size={18} strokeWidth={2.3} />
           Nova sugestão
         </button>
       </header>
 
-      <section className="problem-suggestions-summary">
-        <SummaryCard title="Total" value={suggestions.length} />
-        <SummaryCard title="Ativas" value={activeSuggestions} />
+      <CollapsibleSection
+        title="Resumo das sugestões"
+        openDescription="Indicadores do catálogo de problemas estão visíveis."
+        closedDescription="Indicadores estão ocultos para liberar espaço na tela."
+        openLabel="Ocultar resumo"
+        closedLabel="Mostrar resumo"
+        storageKey="cryomap.problem-suggestions.summary-open"
+        defaultOpen
+        defaultOpenOnMobile={false}
+        className="problem-suggestions-summary-disclosure"
+        contentClassName="problem-suggestions-summary"
+        variant="section"
+      >
+        <SummaryCard
+          title="Total"
+          value={suggestions.length}
+          icon={Lightbulb}
+        />
+        <SummaryCard
+          title="Ativas"
+          value={activeSuggestions}
+          icon={CheckCircle2}
+          tone="success"
+        />
         <SummaryCard
           title="Inativas"
           value={inactiveSuggestions}
-          danger={inactiveSuggestions > 0}
+          icon={CircleOff}
+          tone={inactiveSuggestions > 0 ? 'danger' : 'default'}
         />
         <SummaryCard
           title="Com descrição"
           value={suggestionsWithDescription}
+          icon={AlignLeft}
+          tone="info"
         />
-      </section>
+      </CollapsibleSection>
 
       {isFormOpen ? (
-        <section className="problem-suggestion-form-panel">
-          <div className="problem-suggestion-form-header">
-            <div>
-              <span>Sugestão</span>
-              <h2>
-                {editingSuggestion ? 'Editar sugestão' : 'Nova sugestão'}
-              </h2>
-            </div>
+        <div className="problem-suggestion-form-layer" role="presentation">
+          <button
+            type="button"
+            className="problem-suggestion-form-backdrop"
+            aria-label="Fechar formulário"
+            onClick={closeForm}
+          />
 
-            <button type="button" onClick={closeForm}>
-              Fechar
-            </button>
-          </div>
-
-          <form
-            className="problem-suggestion-form"
-            onSubmit={handleSubmit}
+          <section
+            className="problem-suggestion-form-panel"
+            aria-label={
+              editingSuggestion ? 'Editar sugestão' : 'Nova sugestão'
+            }
           >
-            <label>
-              Problema/componente *
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(event) =>
-                  updateFormField('title', event.target.value)
-                }
-                placeholder="Ex: Compressor travou"
-              />
-            </label>
+            <div className="problem-suggestion-form-header">
+              <div className="problem-suggestion-form-title">
+                <span className="problem-suggestion-form-icon">
+                  <Lightbulb size={20} strokeWidth={2.1} />
+                </span>
 
-            <label>
-              Status
-              <select
-                value={formData.isActive ? 'ACTIVE' : 'INACTIVE'}
-                disabled={!editingSuggestion}
-                onChange={(event) =>
-                  updateFormField(
-                    'isActive',
-                    event.target.value === 'ACTIVE',
-                  )
-                }
+                <div>
+                  <span>Sugestão</span>
+                  <h2>
+                    {editingSuggestion ? 'Editar sugestão' : 'Nova sugestão'}
+                  </h2>
+                  <p>
+                    {editingSuggestion
+                      ? 'Atualize o item padronizado usado nos atendimentos.'
+                      : 'Cadastre um problema ou componente para reutilização rápida.'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="problem-suggestion-form-close"
+                aria-label="Fechar"
+                onClick={closeForm}
               >
-                <option value="ACTIVE">Ativa</option>
-                <option value="INACTIVE">Inativa</option>
-              </select>
-            </label>
-
-            <label className="problem-suggestion-form-wide">
-              Descrição
-              <textarea
-                value={formData.description}
-                onChange={(event) =>
-                  updateFormField('description', event.target.value)
-                }
-                placeholder="Descrição opcional para orientar o técnico..."
-                rows={4}
-              />
-            </label>
-
-            {formError ? (
-              <strong className="problem-suggestion-form-error">
-                {formError}
-              </strong>
-            ) : null}
-
-            <div className="problem-suggestion-form-actions">
-              <button type="button" onClick={closeForm}>
-                Cancelar
-              </button>
-
-              <button type="submit" disabled={isSaving}>
-                {isSaving
-                  ? 'Salvando...'
-                  : editingSuggestion
-                    ? 'Salvar alterações'
-                    : 'Cadastrar sugestão'}
+                <X size={19} strokeWidth={2.2} />
               </button>
             </div>
-          </form>
-        </section>
+
+            <form
+              className="problem-suggestion-form"
+              onSubmit={handleSubmit}
+            >
+              <label>
+                <span>Problema / componente *</span>
+                <div className="problem-suggestion-input-wrap">
+                  <Lightbulb size={17} strokeWidth={2} />
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(event) =>
+                      updateFormField('title', event.target.value)
+                    }
+                    placeholder="Ex.: Compressor travou"
+                    autoFocus
+                  />
+                </div>
+              </label>
+
+              <label>
+                <span>Status</span>
+                <select
+                  value={formData.isActive ? 'ACTIVE' : 'INACTIVE'}
+                  disabled={!editingSuggestion}
+                  onChange={(event) =>
+                    updateFormField(
+                      'isActive',
+                      event.target.value === 'ACTIVE',
+                    )
+                  }
+                >
+                  <option value="ACTIVE">Ativa</option>
+                  <option value="INACTIVE">Inativa</option>
+                </select>
+
+                {!editingSuggestion ? (
+                  <small>Novas sugestões são cadastradas como ativas.</small>
+                ) : null}
+              </label>
+
+              <label className="problem-suggestion-form-wide">
+                <span>Descrição</span>
+                <textarea
+                  value={formData.description}
+                  onChange={(event) =>
+                    updateFormField('description', event.target.value)
+                  }
+                  placeholder="Descrição opcional para orientar o técnico..."
+                  rows={5}
+                />
+              </label>
+
+              {formError ? (
+                <strong className="problem-suggestion-form-error">
+                  {formError}
+                </strong>
+              ) : null}
+
+              <div className="problem-suggestion-form-actions">
+                <button
+                  type="button"
+                  className="problem-suggestion-secondary-button"
+                  onClick={closeForm}
+                  disabled={isSaving}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="problem-suggestion-save-button"
+                  disabled={isSaving}
+                >
+                  <Save size={17} strokeWidth={2.2} />
+                  {isSaving
+                    ? 'Salvando...'
+                    : editingSuggestion
+                      ? 'Salvar alterações'
+                      : 'Cadastrar sugestão'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
       ) : null}
 
       <section className="problem-suggestions-panel">
         <div className="problem-suggestions-panel-header">
-          <div>
-            <h2>Lista de sugestões</h2>
-            <p>{filteredSuggestions.length} sugestão(ões) encontrada(s)</p>
+          <div className="problem-suggestions-panel-title">
+            <span className="problem-suggestions-panel-icon">
+              <Lightbulb size={19} strokeWidth={2.1} />
+            </span>
+
+            <div>
+              <h2>Catálogo de sugestões</h2>
+              <p>
+                {filteredSuggestions.length} sugestão(ões) exibida(s) de{' '}
+                {suggestions.length} cadastrada(s)
+              </p>
+            </div>
           </div>
 
-          <div className="problem-suggestions-actions">
-            <select
-              value={selectedStatus}
-              onChange={(event) =>
-                setSelectedStatus(event.target.value as SuggestionStatusFilter)
-              }
-            >
-              <option value="">Todos os status</option>
-              <option value="ACTIVE">Ativas</option>
-              <option value="INACTIVE">Inativas</option>
-            </select>
-
-            <input
-              type="search"
-              placeholder="Buscar por problema, componente ou descrição..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-
-            <button type="button" onClick={() => void handleRefresh()}>
-              Atualizar
-            </button>
-          </div>
+          <button
+            type="button"
+            className="problem-suggestions-refresh-action"
+            onClick={() => void handleRefresh()}
+          >
+            <RefreshCw size={17} strokeWidth={2.2} />
+            Atualizar
+          </button>
         </div>
+
+        <CollapsibleSection
+          title="Filtros"
+          openDescription="Refine o catálogo por status ou busca textual."
+          closedDescription={
+            activeFilterCount > 0
+              ? `${activeFilterCount} filtro(s) ativo(s).`
+              : 'Nenhum filtro específico selecionado.'
+          }
+          openLabel="Ocultar filtros"
+          closedLabel="Filtros"
+          storageKey="cryomap.problem-suggestions.filters-open"
+          defaultOpen={false}
+          defaultOpenOnMobile={false}
+          count={activeFilterCount}
+          className="problem-suggestions-filters-disclosure"
+          contentClassName="problem-suggestions-filter-area"
+          variant="toolbar"
+        >
+          <div className="problem-suggestions-actions">
+            <label className="problem-suggestions-filter-field">
+              <span>Status</span>
+
+              <div className="problem-suggestions-control-wrap">
+                <Filter size={16} strokeWidth={2} />
+                <select
+                  value={selectedStatus}
+                  onChange={(event) =>
+                    setSelectedStatus(
+                      event.target.value as SuggestionStatusFilter,
+                    )
+                  }
+                >
+                  <option value="">Todos os status</option>
+                  <option value="ACTIVE">Ativas</option>
+                  <option value="INACTIVE">Inativas</option>
+                </select>
+              </div>
+            </label>
+
+            <label className="problem-suggestions-filter-field problem-suggestions-search-field">
+              <span>Busca</span>
+
+              <div className="problem-suggestions-control-wrap">
+                <Search size={16} strokeWidth={2} />
+                <input
+                  type="search"
+                  placeholder="Buscar por problema, componente ou descrição..."
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </div>
+            </label>
+
+            <div className="problem-suggestions-filter-actions">
+              <button
+                type="button"
+                className="problem-suggestions-clear-action"
+                onClick={clearFilters}
+                disabled={activeFilterCount === 0}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+        </CollapsibleSection>
+
+        {activeFilterCount > 0 ? (
+          <div className="problem-suggestions-filter-status">
+            <div>
+              <strong>Filtros ativos</strong>
+              <span>O catálogo abaixo já está sendo filtrado localmente.</span>
+            </div>
+
+            <div className="problem-suggestions-filter-chips">
+              {selectedStatus ? (
+                <span>
+                  Status:{' '}
+                  <strong>
+                    {selectedStatus === 'ACTIVE' ? 'Ativas' : 'Inativas'}
+                  </strong>
+                </span>
+              ) : null}
+
+              {search.trim() ? (
+                <span>
+                  Busca: <strong>{search.trim()}</strong>
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
 
         {error ? (
           <div className="problem-suggestions-error">
-            <strong>{error}</strong>
+            <div>
+              <strong>{error}</strong>
+              <span>Tente atualizar o catálogo novamente.</span>
+            </div>
 
             <button type="button" onClick={() => void handleRefresh()}>
+              <RefreshCw size={17} strokeWidth={2.2} />
               Tentar novamente
             </button>
           </div>
@@ -425,73 +625,114 @@ export function ServiceProblemSuggestions() {
         ) : null}
 
         {!error && filteredSuggestions.length > 0 ? (
-          <div className="problem-suggestions-table-wrapper">
-            <table className="problem-suggestions-table">
-              <thead>
-                <tr>
-                  <th>Sugestão</th>
-                  <th>Descrição</th>
-                  <th>Status</th>
-                  <th>Normalização</th>
-                  <th>Criada em</th>
-                  <th>Atualizada em</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+          <>
+            <div className="problem-suggestions-mobile-list">
+              {filteredSuggestions.map((suggestion) => (
+                <SuggestionCard
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  onEdit={openEditForm}
+                  onActivate={handleActivate}
+                  onInactivate={handleInactivate}
+                />
+              ))}
+            </div>
 
-              <tbody>
-                {filteredSuggestions.map((suggestion) => (
-                  <tr key={suggestion.id}>
-                    <td>
-                      <strong>{suggestion.title}</strong>
-                      <small>{shortId(suggestion.id)}</small>
-                    </td>
-
-                    <td>{suggestion.description || '-'}</td>
-
-                    <td>
-                      <SuggestionStatusBadge isActive={suggestion.isActive} />
-                    </td>
-
-                    <td>
-                      <code>{suggestion.normalizedTitle}</code>
-                    </td>
-
-                    <td>{formatDateTime(suggestion.createdAt)}</td>
-
-                    <td>{formatDateTime(suggestion.updatedAt)}</td>
-
-                    <td>
-                      <div className="problem-suggestion-row-actions">
-                        <button
-                          type="button"
-                          onClick={() => openEditForm(suggestion)}
-                        >
-                          Editar
-                        </button>
-
-                        {suggestion.isActive ? (
-                          <button
-                            type="button"
-                            onClick={() => void handleInactivate(suggestion)}
-                          >
-                            Inativar
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => void handleActivate(suggestion)}
-                          >
-                            Ativar
-                          </button>
-                        )}
-                      </div>
-                    </td>
+            <div className="problem-suggestions-table-wrapper">
+              <table className="problem-suggestions-table">
+                <thead>
+                  <tr>
+                    <th>Sugestão</th>
+                    <th>Descrição</th>
+                    <th>Status</th>
+                    <th>Normalização</th>
+                    <th>Atualização</th>
+                    <th>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {filteredSuggestions.map((suggestion) => (
+                    <tr key={suggestion.id}>
+                      <td>
+                        <div className="problem-suggestion-name-cell">
+                          <span className="problem-suggestion-row-icon">
+                            <Lightbulb size={17} strokeWidth={2.1} />
+                          </span>
+
+                          <div>
+                            <strong>{suggestion.title}</strong>
+                            <small>
+                              <Hash size={12} strokeWidth={2} />
+                              {shortId(suggestion.id)}
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td>
+                        <span className="problem-suggestion-description">
+                          {suggestion.description || 'Sem descrição'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <SuggestionStatusBadge
+                          isActive={suggestion.isActive}
+                        />
+                      </td>
+
+                      <td>
+                        <code>{suggestion.normalizedTitle}</code>
+                      </td>
+
+                      <td>
+                        <span>{formatDateTime(suggestion.updatedAt)}</span>
+                        <small>
+                          Criada em {formatDateTime(suggestion.createdAt)}
+                        </small>
+                      </td>
+
+                      <td>
+                        <div className="problem-suggestion-row-actions">
+                          <button
+                            type="button"
+                            className="edit"
+                            onClick={() => openEditForm(suggestion)}
+                          >
+                            <Edit3 size={15} strokeWidth={2.1} />
+                            Editar
+                          </button>
+
+                          {suggestion.isActive ? (
+                            <button
+                              type="button"
+                              className="inactivate"
+                              onClick={() =>
+                                void handleInactivate(suggestion)
+                              }
+                            >
+                              <PowerOff size={15} strokeWidth={2.1} />
+                              Inativar
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="activate"
+                              onClick={() => void handleActivate(suggestion)}
+                            >
+                              <Power size={15} strokeWidth={2.1} />
+                              Ativar
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
       </section>
     </div>
@@ -501,20 +742,109 @@ export function ServiceProblemSuggestions() {
 type SummaryCardProps = {
   title: string;
   value: number | string;
-  danger?: boolean;
+  icon: typeof Lightbulb;
+  tone?: SummaryTone;
 };
 
-function SummaryCard({ title, value, danger = false }: SummaryCardProps) {
+function SummaryCard({
+  title,
+  value,
+  icon: Icon,
+  tone = 'default',
+}: SummaryCardProps) {
   return (
     <article
-      className={
-        danger
-          ? 'problem-suggestions-summary-card danger'
-          : 'problem-suggestions-summary-card'
-      }
+      className={`problem-suggestions-summary-card problem-suggestions-summary-card--${tone}`}
     >
-      <span>{title}</span>
+      <div className="problem-suggestions-summary-card-header">
+        <span className="problem-suggestions-summary-icon">
+          <Icon size={18} strokeWidth={2.1} />
+        </span>
+        <span>{title}</span>
+      </div>
+
       <strong>{value}</strong>
+    </article>
+  );
+}
+
+type SuggestionCardProps = {
+  suggestion: ServiceProblemSuggestion;
+  onEdit: (suggestion: ServiceProblemSuggestion) => void;
+  onActivate: (suggestion: ServiceProblemSuggestion) => Promise<void>;
+  onInactivate: (suggestion: ServiceProblemSuggestion) => Promise<void>;
+};
+
+function SuggestionCard({
+  suggestion,
+  onEdit,
+  onActivate,
+  onInactivate,
+}: SuggestionCardProps) {
+  return (
+    <article className="problem-suggestion-mobile-card">
+      <div className="problem-suggestion-mobile-card-header">
+        <span className="problem-suggestion-mobile-card-icon">
+          <Lightbulb size={18} strokeWidth={2.1} />
+        </span>
+
+        <div>
+          <strong>{suggestion.title}</strong>
+          <small>
+            <Hash size={12} strokeWidth={2} />
+            {shortId(suggestion.id)}
+          </small>
+        </div>
+
+        <SuggestionStatusBadge isActive={suggestion.isActive} />
+      </div>
+
+      <p>
+        {suggestion.description || 'Nenhuma descrição adicional cadastrada.'}
+      </p>
+
+      <div className="problem-suggestion-mobile-meta">
+        <div>
+          <span>Normalização</span>
+          <code>{suggestion.normalizedTitle}</code>
+        </div>
+
+        <div>
+          <span>Atualizada em</span>
+          <strong>{formatDateTime(suggestion.updatedAt)}</strong>
+        </div>
+      </div>
+
+      <div className="problem-suggestion-mobile-actions">
+        <button
+          type="button"
+          className="edit"
+          onClick={() => onEdit(suggestion)}
+        >
+          <Edit3 size={15} strokeWidth={2.1} />
+          Editar
+        </button>
+
+        {suggestion.isActive ? (
+          <button
+            type="button"
+            className="inactivate"
+            onClick={() => void onInactivate(suggestion)}
+          >
+            <PowerOff size={15} strokeWidth={2.1} />
+            Inativar
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="activate"
+            onClick={() => void onActivate(suggestion)}
+          >
+            <Power size={15} strokeWidth={2.1} />
+            Ativar
+          </button>
+        )}
+      </div>
     </article>
   );
 }
@@ -524,17 +854,20 @@ type SuggestionStatusBadgeProps = {
 };
 
 function SuggestionStatusBadge({ isActive }: SuggestionStatusBadgeProps) {
-  if (isActive) {
-    return (
-      <span className="problem-suggestion-status active">
-        Ativa
-      </span>
-    );
-  }
-
   return (
-    <span className="problem-suggestion-status inactive">
-      Inativa
+    <span
+      className={
+        isActive
+          ? 'problem-suggestion-status active'
+          : 'problem-suggestion-status inactive'
+      }
+    >
+      {isActive ? (
+        <CheckCircle2 size={13} strokeWidth={2.3} />
+      ) : (
+        <CircleOff size={13} strokeWidth={2.3} />
+      )}
+      {isActive ? 'Ativa' : 'Inativa'}
     </span>
   );
 }
@@ -568,7 +901,13 @@ function formatDateTime(value?: string | null) {
     return '-';
   }
 
-  return new Date(value).toLocaleString('pt-BR');
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '-';
+  }
+
+  return date.toLocaleString('pt-BR');
 }
 
 function getRequestErrorMessage(error: unknown) {

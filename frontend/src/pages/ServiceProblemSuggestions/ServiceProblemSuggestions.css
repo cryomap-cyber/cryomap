@@ -1,54 +1,93 @@
 .problem-suggestions-page {
   display: grid;
   gap: 24px;
+  min-width: 0;
 }
 
+/* =========================
+   Cabeçalho
+========================= */
+
 .problem-suggestions-header {
+  position: relative;
+  overflow: hidden;
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-  align-items: flex-start;
   padding: 26px;
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-xl);
   background:
     radial-gradient(
       circle at top left,
-      rgba(34, 193, 255, 0.14),
+      rgba(34, 193, 255, 0.15),
       transparent 24rem
     ),
-    rgba(255, 255, 255, 0.86);
+    radial-gradient(
+      circle at 88% 8%,
+      rgba(20, 120, 242, 0.065),
+      transparent 17rem
+    ),
+    rgba(255, 255, 255, 0.9);
   box-shadow: var(--shadow-panel);
 }
 
-.problem-suggestions-header span,
-.problem-suggestions-panel-header span,
-.problem-suggestion-form-header span {
+.problem-suggestions-header::after {
+  content: '';
+  position: absolute;
+  right: -80px;
+  bottom: -125px;
+  width: 240px;
+  height: 240px;
+  border: 26px solid rgba(20, 120, 242, 0.045);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.problem-suggestions-header-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.problem-suggestions-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   color: var(--color-primary);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
   font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .problem-suggestions-header h1 {
-  margin: 6px 0 8px;
-  font-size: 36px;
+  margin: 7px 0 8px;
   color: var(--color-primary-dark);
+  font-size: 36px;
   letter-spacing: -0.04em;
 }
 
 .problem-suggestions-header p {
+  max-width: 760px;
   margin: 0;
   color: var(--color-muted);
-  max-width: 760px;
   line-height: 1.55;
 }
 
-.problem-suggestions-header button {
+.problem-suggestions-primary-action,
+.problem-suggestions-refresh-action,
+.problem-suggestions-error button,
+.problem-suggestion-save-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
   border: 0;
   border-radius: 14px;
-  padding: 12px 18px;
+  padding: 0 16px;
   background:
     linear-gradient(
       135deg,
@@ -58,27 +97,55 @@
   color: #ffffff;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.2);
+  text-decoration: none;
+  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    filter 0.16s ease;
+}
+
+.problem-suggestions-primary-action {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+
+.problem-suggestions-primary-action:hover,
+.problem-suggestion-save-button:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+  box-shadow: 0 17px 38px rgba(9, 109, 242, 0.22);
+}
+
+/* =========================
+   Resumo
+========================= */
+
+.problem-suggestions-summary-disclosure,
+.problem-suggestions-filters-disclosure {
+  min-width: 0;
 }
 
 .problem-suggestions-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 
 .problem-suggestions-summary-card {
   position: relative;
   overflow: hidden;
+  min-height: 112px;
+  padding: 17px 18px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 20px;
   background:
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.96),
+      rgba(255, 255, 255, 0.98),
       rgba(245, 251, 255, 0.96)
     );
-  border: 1px solid var(--color-border-soft);
-  border-radius: 24px;
-  padding: 20px;
   box-shadow: var(--shadow-card);
 }
 
@@ -86,7 +153,7 @@
   content: '';
   position: absolute;
   inset: 0 auto 0 0;
-  width: 5px;
+  width: 4px;
   background:
     linear-gradient(
       180deg,
@@ -95,47 +162,114 @@
     );
 }
 
-.problem-suggestions-summary-card span {
-  display: block;
+.problem-suggestions-summary-card-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   color: var(--color-muted);
-  font-size: 13px;
-  font-weight: 800;
-  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 850;
 }
 
-.problem-suggestions-summary-card strong {
-  font-size: 36px;
+.problem-suggestions-summary-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  background: rgba(20, 120, 242, 0.075);
+  color: var(--color-primary);
+}
+
+.problem-suggestions-summary-card > strong {
+  display: block;
+  margin-top: 12px;
   color: var(--color-primary-dark);
+  font-size: 30px;
+  line-height: 1;
   letter-spacing: -0.05em;
 }
 
-.problem-suggestions-summary-card.danger {
-  border-color: rgba(217, 48, 37, 0.18);
-  background: linear-gradient(180deg, #fff7f7, #ffffff);
+.problem-suggestions-summary-card--success::before {
+  background: var(--color-success-text);
 }
 
-.problem-suggestions-summary-card.danger::before {
+.problem-suggestions-summary-card--success
+  .problem-suggestions-summary-icon {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.problem-suggestions-summary-card--danger {
+  border-color: rgba(201, 60, 53, 0.14);
+  background: linear-gradient(180deg, #fff8f8, #ffffff);
+}
+
+.problem-suggestions-summary-card--danger::before {
   background: var(--color-danger-text);
 }
 
-.problem-suggestions-summary-card.danger strong {
+.problem-suggestions-summary-card--danger
+  .problem-suggestions-summary-icon,
+.problem-suggestions-summary-card--danger > strong {
   color: var(--color-danger-text);
 }
 
+.problem-suggestions-summary-card--danger
+  .problem-suggestions-summary-icon {
+  background: var(--color-danger-bg);
+}
+
+.problem-suggestions-summary-card--info
+  .problem-suggestions-summary-icon {
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--color-primary-medium);
+}
+
+/* =========================
+   Painel principal
+========================= */
+
 .problem-suggestions-panel {
-  background: rgba(255, 255, 255, 0.94);
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 22px;
   border: 1px solid var(--color-border-soft);
   border-radius: 28px;
-  padding: 22px;
+  background: rgba(255, 255, 255, 0.94);
   box-shadow: var(--shadow-panel);
 }
 
 .problem-suggestions-panel-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
+}
+
+.problem-suggestions-panel-title {
+  display: flex;
   align-items: flex-start;
-  margin-bottom: 18px;
+  gap: 11px;
+  min-width: 0;
+}
+
+.problem-suggestions-panel-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(237, 247, 255, 1),
+      rgba(222, 243, 255, 0.95)
+    );
+  color: var(--color-primary);
 }
 
 .problem-suggestions-panel-header h2 {
@@ -151,27 +285,80 @@
   line-height: 1.5;
 }
 
+.problem-suggestions-refresh-action {
+  flex: 0 0 auto;
+  border: 1px solid var(--color-border-soft);
+  background: #ffffff;
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
+.problem-suggestions-refresh-action:hover {
+  background: var(--color-surface-soft);
+  border-color: rgba(20, 120, 242, 0.2);
+}
+
+/* =========================
+   Filtros
+========================= */
+
+.problem-suggestions-filter-area {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
 .problem-suggestions-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 0.65fr)
+    minmax(300px, 1.5fr)
+    auto;
   gap: 10px;
-  justify-content: flex-end;
+  align-items: end;
+  width: 100%;
+  min-width: 0;
+}
+
+.problem-suggestions-filter-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.problem-suggestions-filter-field > span {
+  color: var(--color-text-soft);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.problem-suggestions-control-wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.problem-suggestions-control-wrap > svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  z-index: 1;
+  color: var(--color-muted);
+  pointer-events: none;
+  transform: translateY(-50%);
 }
 
 .problem-suggestions-actions input,
 .problem-suggestions-actions select {
+  width: 100%;
+  min-width: 0;
   min-height: 42px;
   border: 1px solid var(--color-border);
   border-radius: 14px;
-  padding: 0 12px;
-  color: var(--color-text);
-  background: #ffffff;
+  padding: 0 12px 0 38px;
   outline: none;
+  background: #ffffff;
+  color: var(--color-text);
   box-shadow: inset 0 1px 0 rgba(3, 20, 63, 0.03);
-}
-
-.problem-suggestions-actions input[type='search'] {
-  min-width: 330px;
 }
 
 .problem-suggestions-actions input::placeholder {
@@ -184,72 +371,154 @@
   box-shadow: 0 0 0 4px rgba(34, 193, 255, 0.18);
 }
 
-.problem-suggestions-actions button,
-.problem-suggestions-error button {
-  border: 0;
+.problem-suggestions-filter-actions {
+  display: flex;
+  align-items: end;
+}
+
+.problem-suggestions-clear-action {
+  min-height: 42px;
+  border: 1px solid var(--color-border-soft);
   border-radius: 14px;
   padding: 0 14px;
-  min-height: 42px;
-  background:
-    linear-gradient(
-      135deg,
-      var(--color-primary-dark),
-      var(--color-primary)
-    );
-  color: #ffffff;
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  font: inherit;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
 }
+
+.problem-suggestions-clear-action:hover:not(:disabled) {
+  border-color: rgba(20, 120, 242, 0.18);
+  background: var(--color-surface-strong);
+}
+
+.problem-suggestions-clear-action:disabled {
+  opacity: 0.45;
+}
+
+.problem-suggestions-filter-status {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(237, 247, 255, 0.72),
+      rgba(255, 255, 255, 0.9)
+    );
+}
+
+.problem-suggestions-filter-status strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--color-primary-dark);
+  font-size: 13px;
+}
+
+.problem-suggestions-filter-status span {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.problem-suggestions-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.problem-suggestions-filter-chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 10px;
+  border: 1px solid rgba(20, 120, 242, 0.11);
+  border-radius: 999px;
+  background: #ffffff;
+  font-weight: 750;
+}
+
+.problem-suggestions-filter-chips strong {
+  display: inline;
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 12px;
+}
+
+/* =========================
+   Erros
+========================= */
 
 .problem-suggestions-error {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  align-items: center;
-  background: var(--color-danger-bg);
-  border: 1px solid rgba(217, 48, 37, 0.12);
-  color: var(--color-danger-text);
   padding: 16px;
-  border-radius: 20px;
-  margin-bottom: 16px;
+  border: 1px solid rgba(201, 60, 53, 0.12);
+  border-radius: 18px;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.problem-suggestions-error > div {
+  display: grid;
+  gap: 3px;
+}
+
+.problem-suggestions-error span {
+  color: #9c5a55;
+  font-size: 12px;
 }
 
 .problem-suggestions-error button {
+  flex: 0 0 auto;
+  min-height: 38px;
   background: var(--color-danger-text);
-  box-shadow: 0 14px 34px rgba(217, 48, 37, 0.18);
+  box-shadow: 0 10px 24px rgba(201, 60, 53, 0.16);
 }
 
+/* =========================
+   Tabela desktop
+========================= */
+
 .problem-suggestions-table-wrapper {
+  width: 100%;
   overflow-x: auto;
   border: 1px solid var(--color-border-soft);
   border-radius: 22px;
   background: #ffffff;
+  scrollbar-width: thin;
 }
 
 .problem-suggestions-table {
   width: 100%;
-  min-width: 1080px;
+  min-width: 980px;
   border-collapse: collapse;
 }
 
 .problem-suggestions-table th {
-  text-align: left;
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 14px 12px;
+  padding: 13px 12px;
   border-bottom: 1px solid var(--color-border-soft);
   background: var(--color-surface-soft);
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.065em;
+  text-align: left;
+  text-transform: uppercase;
 }
 
 .problem-suggestions-table td {
-  padding: 15px 12px;
-  border-bottom: 1px solid rgba(9, 109, 242, 0.08);
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(20, 120, 242, 0.075);
   color: var(--color-text-soft);
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .problem-suggestions-table tbody tr {
@@ -257,49 +526,93 @@
 }
 
 .problem-suggestions-table tbody tr:hover {
-  background: rgba(237, 247, 255, 0.72);
+  background: rgba(237, 247, 255, 0.66);
 }
 
 .problem-suggestions-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.problem-suggestions-table td strong,
-.problem-suggestions-table td span {
-  display: block;
-}
-
-.problem-suggestions-table td strong {
+.problem-suggestions-table td > strong {
   color: var(--color-primary-dark);
 }
 
 .problem-suggestions-table td small {
   display: block;
-  color: #8a9aaa;
   margin-top: 4px;
-  max-width: 280px;
+  color: #8a9aaa;
+  font-size: 11px;
 }
 
-.problem-suggestions-table code {
+.problem-suggestion-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 210px;
+}
+
+.problem-suggestion-row-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  background: rgba(20, 120, 242, 0.075);
+  color: var(--color-primary);
+}
+
+.problem-suggestion-name-cell > div {
+  min-width: 0;
+}
+
+.problem-suggestion-name-cell strong {
+  display: block;
+  color: var(--color-primary-dark);
+}
+
+.problem-suggestion-name-cell small {
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+}
+
+.problem-suggestion-description {
+  display: block;
+  max-width: 310px;
+  color: var(--color-text-soft);
+  line-height: 1.45;
+}
+
+.problem-suggestions-table code,
+.problem-suggestion-mobile-meta code {
   display: inline-flex;
   width: fit-content;
-  max-width: 260px;
+  max-width: 270px;
   overflow-wrap: anywhere;
-  border-radius: 999px;
-  padding: 6px 10px;
+  border-radius: 10px;
+  padding: 6px 9px;
   background: var(--color-surface-soft);
-  color: var(--color-primary);
-  font-size: 12px;
+  color: var(--color-primary-medium);
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+  font-size: 11px;
   font-weight: 800;
 }
 
 .problem-suggestion-status {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   width: fit-content;
+  padding: 6px 9px;
   border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
   white-space: nowrap;
 }
@@ -314,76 +627,266 @@
   color: var(--color-muted);
 }
 
-.problem-suggestion-row-actions {
+.problem-suggestion-row-actions,
+.problem-suggestion-mobile-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
 }
 
-.problem-suggestion-row-actions button {
+.problem-suggestion-row-actions button,
+.problem-suggestion-mobile-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
   border: 0;
-  border-radius: 14px;
-  padding: 9px 11px;
-  background: var(--color-surface-soft);
-  color: var(--color-primary);
-  font-weight: 900;
+  border-radius: 11px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
   cursor: pointer;
 }
 
-.problem-suggestion-row-actions button:last-child {
+.problem-suggestion-row-actions button.edit,
+.problem-suggestion-mobile-actions button.edit {
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+}
+
+.problem-suggestion-row-actions button.activate,
+.problem-suggestion-mobile-actions button.activate {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.problem-suggestion-row-actions button.inactivate,
+.problem-suggestion-mobile-actions button.inactivate {
   background: var(--color-danger-bg);
   color: var(--color-danger-text);
 }
 
-.problem-suggestion-row-actions button:last-child:first-child {
-  background: var(--color-surface-soft);
+/* =========================
+   Cards mobile
+========================= */
+
+.problem-suggestions-mobile-list {
+  display: none;
+}
+
+.problem-suggestion-mobile-card {
+  display: grid;
+  gap: 13px;
+  padding: 14px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 18px;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(34, 193, 255, 0.075),
+      transparent 12rem
+    ),
+    #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.problem-suggestion-mobile-card-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.problem-suggestion-mobile-card-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(20, 120, 242, 0.075);
   color: var(--color-primary);
 }
 
-.problem-suggestion-form-panel {
+.problem-suggestion-mobile-card-header > div {
+  min-width: 0;
+}
+
+.problem-suggestion-mobile-card-header strong {
+  display: block;
+  overflow: hidden;
+  color: var(--color-primary-dark);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.problem-suggestion-mobile-card-header small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  color: var(--color-muted);
+  font-size: 10px;
+}
+
+.problem-suggestion-mobile-card > p {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.problem-suggestion-mobile-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.problem-suggestion-mobile-meta > div {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 13px;
+  background: var(--color-surface-soft);
+}
+
+.problem-suggestion-mobile-meta span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.problem-suggestion-mobile-meta strong {
+  display: block;
+  color: var(--color-primary-dark);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.problem-suggestion-mobile-meta code {
+  max-width: 100%;
+  padding: 0;
+  background: transparent;
+  font-size: 10px;
+}
+
+.problem-suggestion-mobile-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.problem-suggestion-mobile-actions button {
+  width: 100%;
+}
+
+/* =========================
+   Modal / formulário
+========================= */
+
+.problem-suggestion-form-layer {
   position: fixed;
-  inset: 24px;
-  z-index: 70;
-  max-width: 820px;
-  width: calc(100vw - 48px);
-  max-height: calc(100vh - 48px);
-  margin: auto;
+  inset: 0;
+  z-index: 150;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.problem-suggestion-form-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(13, 36, 67, 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.problem-suggestion-form-panel {
+  position: relative;
+  z-index: 1;
+  width: min(820px, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
   overflow-y: auto;
+  padding: 22px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 26px;
   background:
     radial-gradient(
       circle at top left,
       rgba(34, 193, 255, 0.1),
       transparent 22rem
     ),
-    rgba(255, 255, 255, 0.98);
-  border: 1px solid var(--color-border-soft);
-  border-radius: 28px;
-  padding: 22px;
+    rgba(255, 255, 255, 0.99);
   box-shadow: var(--shadow-strong);
   animation: problemSuggestionFormEnter 0.18s ease-out;
 }
 
 .problem-suggestion-form-header {
   display: flex;
-  justify-content: space-between;
-  gap: 18px;
   align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 18px;
 }
 
-.problem-suggestion-form-header h2 {
-  margin: 4px 0 0;
+.problem-suggestion-form-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 0;
+}
+
+.problem-suggestion-form-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  background: rgba(20, 120, 242, 0.08);
+  color: var(--color-primary);
+}
+
+.problem-suggestion-form-title > div {
+  min-width: 0;
+}
+
+.problem-suggestion-form-title span:not(.problem-suggestion-form-icon) {
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.problem-suggestion-form-title h2 {
+  margin: 3px 0 4px;
   color: var(--color-primary-dark);
+  font-size: 22px;
   letter-spacing: -0.03em;
 }
 
-.problem-suggestion-form-header button {
+.problem-suggestion-form-title p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.problem-suggestion-form-close {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
   border: 0;
-  border-radius: 14px;
-  padding: 10px 14px;
+  border-radius: 12px;
   background: var(--color-surface-soft);
-  color: var(--color-primary);
-  font-weight: 900;
+  color: var(--color-primary-dark);
   cursor: pointer;
 }
 
@@ -396,21 +899,49 @@
 .problem-suggestion-form label {
   display: grid;
   gap: 7px;
+  min-width: 0;
   color: var(--color-text-soft);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 850;
+}
+
+.problem-suggestion-form label > span {
+  color: var(--color-text-soft);
+}
+
+.problem-suggestion-input-wrap {
+  position: relative;
+}
+
+.problem-suggestion-input-wrap > svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  color: var(--color-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .problem-suggestion-form input,
 .problem-suggestion-form select,
 .problem-suggestion-form textarea {
   width: 100%;
+  min-height: 44px;
   border: 1px solid var(--color-border);
-  border-radius: 15px;
-  padding: 11px 12px;
-  color: var(--color-text);
-  background: #ffffff;
+  border-radius: 14px;
+  padding: 10px 12px;
   outline: none;
+  background: #ffffff;
+  color: var(--color-text);
+}
+
+.problem-suggestion-input-wrap input {
+  padding-left: 39px;
+}
+
+.problem-suggestion-form textarea {
+  min-height: 126px;
+  resize: vertical;
 }
 
 .problem-suggestion-form input:focus,
@@ -426,9 +957,10 @@
   cursor: not-allowed;
 }
 
-.problem-suggestion-form textarea {
-  resize: vertical;
-  min-height: 120px;
+.problem-suggestion-form label small {
+  color: var(--color-muted);
+  font-size: 10px;
+  font-weight: 650;
 }
 
 .problem-suggestion-form-wide,
@@ -438,47 +970,67 @@
 }
 
 .problem-suggestion-form-error {
-  color: var(--color-danger-text);
-  background: var(--color-danger-bg);
-  border: 1px solid rgba(217, 48, 37, 0.12);
-  border-radius: 14px;
   padding: 12px;
+  border: 1px solid rgba(201, 60, 53, 0.12);
+  border-radius: 14px;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  font-size: 13px;
 }
 
 .problem-suggestion-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  padding-top: 2px;
 }
 
-.problem-suggestion-form-actions button {
-  border: 0;
+.problem-suggestion-secondary-button,
+.problem-suggestion-save-button {
+  min-height: 42px;
   border-radius: 14px;
-  padding: 12px 16px;
+  padding: 0 15px;
+  font: inherit;
   font-weight: 900;
   cursor: pointer;
 }
 
-.problem-suggestion-form-actions button:first-child {
+.problem-suggestion-secondary-button {
+  border: 1px solid var(--color-border-soft);
   background: var(--color-surface-soft);
   color: var(--color-primary);
 }
 
-.problem-suggestion-form-actions button:last-child {
-  background:
-    linear-gradient(
-      135deg,
-      var(--color-primary-dark),
-      var(--color-primary)
-    );
-  color: #ffffff;
-  box-shadow: 0 14px 34px rgba(9, 109, 242, 0.18);
+.problem-suggestion-secondary-button:hover {
+  background: var(--color-surface-strong);
 }
 
 .problem-suggestion-form-actions button:disabled {
-  opacity: 0.45;
+  opacity: 0.48;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+/* =========================
+   Responsividade
+========================= */
+
+@media (max-width: 1100px) {
+  .problem-suggestions-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .problem-suggestions-actions {
+    grid-template-columns: minmax(160px, 0.7fr) minmax(240px, 1.3fr);
+  }
+
+  .problem-suggestions-filter-actions {
+    grid-column: 1 / -1;
+  }
+
+  .problem-suggestions-filter-actions button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 1000px) {
@@ -487,8 +1039,7 @@
   }
 
   .problem-suggestions-header {
-    gap: 14px;
-    align-items: flex-start;
+    padding: 22px;
   }
 
   .problem-suggestions-header h1 {
@@ -497,136 +1048,90 @@
   }
 
   .problem-suggestions-header p {
-    font-size: 14px;
-    line-height: 1.5;
     max-width: 100%;
-  }
-
-  .problem-suggestions-header button {
-    min-height: 40px;
-    padding: 10px 14px;
-    border-radius: 14px;
     font-size: 14px;
-    align-self: flex-start;
   }
 
-  .problem-suggestions-summary {
-    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
-    gap: 10px;
+  .problem-suggestions-primary-action {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 13px;
   }
 
   .problem-suggestions-summary-card {
-    min-height: auto;
-    padding: 12px 14px;
-    border-radius: 16px;
+    min-height: 98px;
+    padding: 14px;
+    border-radius: 17px;
   }
 
-  .problem-suggestions-summary-card span {
-    font-size: 12px;
-  }
-
-  .problem-suggestions-summary-card strong {
-    font-size: 24px;
-    line-height: 1;
+  .problem-suggestions-summary-card > strong {
+    font-size: 25px;
   }
 
   .problem-suggestions-panel {
     padding: 14px;
     border-radius: 20px;
-    overflow: hidden;
-  }
-
-  .problem-suggestions-panel-header {
-    gap: 12px;
-    align-items: stretch;
   }
 
   .problem-suggestions-panel-header h2 {
     font-size: 20px;
   }
 
-  .problem-suggestions-panel-header p {
+  .problem-suggestions-refresh-action {
+    min-height: 40px;
     font-size: 13px;
-  }
-
-  .problem-suggestions-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 8px;
-    align-items: center;
-  }
-
-  .problem-suggestions-actions input,
-  .problem-suggestions-actions select {
-    width: 100%;
-    min-height: 38px;
-    padding: 8px 10px;
-    border-radius: 12px;
-    font-size: 13px;
-  }
-
-  .problem-suggestions-actions button {
-    min-height: 38px;
-    padding: 8px 12px;
-    border-radius: 12px;
-    font-size: 13px;
-  }
-
-  .problem-suggestions-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    border-radius: 16px;
-  }
-
-  .problem-suggestions-table {
-    min-width: 920px;
-    font-size: 13px;
-  }
-
-  .problem-suggestions-table th,
-  .problem-suggestions-table td {
-    padding: 10px 12px;
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 760px) {
   .problem-suggestions-page {
     gap: 14px;
   }
 
   .problem-suggestions-header {
     flex-direction: column;
-    padding: 22px;
-    border-radius: 24px;
+    padding: 18px;
+    border-radius: 22px;
   }
 
   .problem-suggestions-header h1 {
     font-size: 24px;
   }
 
-  .problem-suggestions-header button {
-    width: 100%;
-    min-height: 38px;
-    padding: 9px 12px;
+  .problem-suggestions-header p {
     font-size: 13px;
+    line-height: 1.48;
+  }
+
+  .problem-suggestions-primary-action {
+    width: 100%;
+    min-height: 42px;
   }
 
   .problem-suggestions-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 
   .problem-suggestions-summary-card {
-    padding: 10px;
+    min-height: 82px;
+    padding: 11px;
     border-radius: 14px;
   }
 
-  .problem-suggestions-summary-card span {
-    font-size: 11px;
+  .problem-suggestions-summary-card-header {
+    gap: 7px;
+    font-size: 10px;
   }
 
-  .problem-suggestions-summary-card strong {
-    font-size: 21px;
+  .problem-suggestions-summary-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+  }
+
+  .problem-suggestions-summary-card > strong {
+    margin-top: 8px;
+    font-size: 20px;
   }
 
   .problem-suggestions-panel {
@@ -634,37 +1139,144 @@
     border-radius: 18px;
   }
 
-  .problem-suggestions-actions {
-    grid-template-columns: 1fr 1fr;
+  .problem-suggestions-panel-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
   }
 
-  .problem-suggestions-actions input[type='search'] {
-    grid-column: 1 / -1;
+  .problem-suggestions-panel-title {
+    gap: 9px;
   }
 
-  .problem-suggestions-actions button {
-    width: 100%;
+  .problem-suggestions-panel-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
   }
 
-  .problem-suggestions-table {
-    min-width: 860px;
+  .problem-suggestions-panel-header h2 {
+    font-size: 18px;
+  }
+
+  .problem-suggestions-panel-header p {
     font-size: 12px;
   }
 
+  .problem-suggestions-refresh-action {
+    width: 100%;
+  }
+
+  .problem-suggestions-actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .problem-suggestions-filter-actions {
+    grid-column: auto;
+  }
+
+  .problem-suggestions-actions input,
+  .problem-suggestions-actions select {
+    min-height: 40px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .problem-suggestions-clear-action {
+    width: 100%;
+    min-height: 40px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+
+  .problem-suggestions-filter-status {
+    flex-direction: column;
+    padding: 12px;
+    border-radius: 15px;
+  }
+
+  .problem-suggestions-filter-chips {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .problem-suggestions-filter-chips span {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 11px;
+  }
+
+  .problem-suggestions-error {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 13px;
+    border-radius: 15px;
+  }
+
+  .problem-suggestions-error button {
+    width: 100%;
+  }
+
+  .problem-suggestions-table-wrapper {
+    display: none;
+  }
+
+  .problem-suggestions-mobile-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .problem-suggestion-form-layer {
+    padding: 10px;
+  }
+
   .problem-suggestion-form-panel {
-    inset: 10px;
     width: calc(100vw - 20px);
-    max-height: calc(100vh - 20px);
-    border-radius: 22px;
-    padding: 16px;
+    max-height: calc(100dvh - 20px);
+    padding: 15px;
+    border-radius: 20px;
+  }
+
+  .problem-suggestion-form-header {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .problem-suggestion-form-title {
+    gap: 9px;
+  }
+
+  .problem-suggestion-form-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .problem-suggestion-form-title h2 {
+    font-size: 19px;
+  }
+
+  .problem-suggestion-form-title p {
+    font-size: 11px;
   }
 
   .problem-suggestion-form {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .problem-suggestion-form input,
+  .problem-suggestion-form select,
+  .problem-suggestion-form textarea {
+    min-height: 42px;
+    border-radius: 12px;
+    font-size: 13px;
   }
 
   .problem-suggestion-form-actions {
-    flex-direction: column;
+    flex-direction: column-reverse;
   }
 
   .problem-suggestion-form-actions button {
@@ -674,22 +1286,47 @@
 
 @media (max-width: 430px) {
   .problem-suggestions-summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .problem-suggestions-actions {
+  .problem-suggestion-mobile-card-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .problem-suggestion-mobile-card-header
+    .problem-suggestion-status {
+    grid-column: 1 / -1;
+    margin-left: 45px;
+  }
+
+  .problem-suggestion-mobile-meta {
     grid-template-columns: 1fr;
   }
 }
 
+/* =========================
+   Motion
+========================= */
+
 @keyframes problemSuggestionFormEnter {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.98);
+    transform: translateY(10px) scale(0.985);
   }
 
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .problem-suggestions-primary-action,
+  .problem-suggestions-refresh-action {
+    transition: none;
+  }
+
+  .problem-suggestion-form-panel {
+    animation: none;
   }
 }
